@@ -1,0 +1,138 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.babygrowthmap (
+  babygrowthmap_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  timecourse smallint NOT NULL,
+  growthrecord character varying NOT NULL,
+  CONSTRAINT babygrowthmap_pkey PRIMARY KEY (babygrowthmap_id)
+);
+CREATE TABLE public.babyinformation (
+  baby_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  pregnancycase_id smallint NOT NULL,
+  name character varying NOT NULL,
+  birthdaytime date NOT NULL,
+  pregnancyweeks smallint,
+  baby_height real,
+  baby_weight real,
+  babyheadcircumference real,
+  chestcircumference real,
+  production_method character varying,
+  CONSTRAINT babyinformation_pkey PRIMARY KEY (baby_id),
+  CONSTRAINT babyinformation_pregnancycase_id_fkey FOREIGN KEY (pregnancycase_id) REFERENCES public.pregnancycase(pregnancycase_id)
+);
+CREATE TABLE public.babystatus (
+  serno smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  baby_id smallint NOT NULL,
+  babygrowthmap_id smallint NOT NULL,
+  date date NOT NULL,
+  record text NOT NULL,
+  photo character varying NOT NULL,
+  update_time timestamp with time zone NOT NULL,
+  CONSTRAINT babystatus_pkey PRIMARY KEY (serno),
+  CONSTRAINT babystatus_baby_id_fkey FOREIGN KEY (baby_id) REFERENCES public.babyinformation(baby_id),
+  CONSTRAINT babystatus_babygrowthmap_id_fkey FOREIGN KEY (babygrowthmap_id) REFERENCES public.babygrowthmap(babygrowthmap_id)
+);
+CREATE TABLE public.emotion_conversation (
+  emotion_conversation_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id character varying NOT NULL,
+  title character varying NOT NULL,
+  create_time timestamp with time zone NOT NULL,
+  CONSTRAINT emotion_conversation_pkey PRIMARY KEY (emotion_conversation_id),
+  CONSTRAINT emotion_conversation_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.userprofile(user_id)
+);
+CREATE TABLE public.emotion_message (
+  serno bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  emotion_conversation_id smallint NOT NULL,
+  role character varying NOT NULL,
+  message text NOT NULL,
+  create_time timestamp with time zone NOT NULL,
+  CONSTRAINT emotion_message_pkey PRIMARY KEY (serno),
+  CONSTRAINT emotion_message_emotion_conversation_id_fkey FOREIGN KEY (emotion_conversation_id) REFERENCES public.emotion_conversation(emotion_conversation_id)
+);
+CREATE TABLE public.familymember (
+  user_id character varying NOT NULL,
+  pregnancycase_id smallint NOT NULL,
+  role character varying NOT NULL,
+  join_time timestamp with time zone NOT NULL DEFAULT (now() AT TIME ZONE 'utc'::text),
+  CONSTRAINT familymember_pkey PRIMARY KEY (user_id, pregnancycase_id),
+  CONSTRAINT familymember_id_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.userprofile(user_id),
+  CONSTRAINT familymember_pregnancycase_id_fkey FOREIGN KEY (pregnancycase_id) REFERENCES public.pregnancycase(pregnancycase_id)
+);
+CREATE TABLE public.feeling (
+  feeling_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  feeling_name character varying NOT NULL,
+  CONSTRAINT feeling_pkey PRIMARY KEY (feeling_id)
+);
+CREATE TABLE public.physicalcondition (
+  physicalcondition_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  physicalcondition_name character varying NOT NULL,
+  CONSTRAINT physicalcondition_pkey PRIMARY KEY (physicalcondition_id)
+);
+CREATE TABLE public.pregnancycase (
+  pregnancycase_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id character varying NOT NULL,
+  menstruation date NOT NULL,
+  code character varying NOT NULL,
+  create_time timestamp with time zone NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Taipei'::text),
+  CONSTRAINT pregnancycase_pkey PRIMARY KEY (pregnancycase_id),
+  CONSTRAINT pregnancycase_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.userprofile(user_id)
+);
+CREATE TABLE public.pregnancyrecord (
+  pregnancyrecord_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  check_date date NOT NULL,
+  record character varying NOT NULL,
+  weight real,
+  sbp smallint,
+  dbp smallint,
+  fetal_heart_rate smallint,
+  urine_glucose character varying,
+  urine_protein character varying,
+  edema character varying,
+  photo character varying,
+  pregnancycase_id smallint NOT NULL,
+  CONSTRAINT pregnancyrecord_pkey PRIMARY KEY (pregnancyrecord_id),
+  CONSTRAINT pregnancyrecord_pregnancycase_id_fkey FOREIGN KEY (pregnancycase_id) REFERENCES public.pregnancycase(pregnancycase_id)
+);
+CREATE TABLE public.qa_conversation (
+  qa_conversation_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id character varying NOT NULL,
+  title character varying,
+  create_time timestamp with time zone,
+  CONSTRAINT qa_conversation_pkey PRIMARY KEY (qa_conversation_id),
+  CONSTRAINT qa_conversation_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.userprofile(user_id)
+);
+CREATE TABLE public.qa_message (
+  serno bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  qa_conversation_id smallint NOT NULL,
+  role character varying NOT NULL,
+  message text NOT NULL,
+  create_time timestamp with time zone NOT NULL,
+  CONSTRAINT qa_message_pkey PRIMARY KEY (serno),
+  CONSTRAINT qa_message_qa_conversation_id_fkey FOREIGN KEY (qa_conversation_id) REFERENCES public.qa_conversation(qa_conversation_id)
+);
+CREATE TABLE public.userfeeling (
+  userfeeling_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  pregnancyrecord_id smallint NOT NULL,
+  feeling_id smallint NOT NULL,
+  CONSTRAINT userfeeling_pkey PRIMARY KEY (userfeeling_id),
+  CONSTRAINT userfeeling_feeling_id_fkey FOREIGN KEY (feeling_id) REFERENCES public.feeling(feeling_id),
+  CONSTRAINT userfeeling_pregnancyrecord_id_fkey FOREIGN KEY (pregnancyrecord_id) REFERENCES public.pregnancyrecord(pregnancyrecord_id)
+);
+CREATE TABLE public.userphysicalcondition (
+  userphysicalcondition_id smallint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  pregnancyrecord_id smallint NOT NULL,
+  physicalcondition_id smallint NOT NULL,
+  CONSTRAINT userphysicalcondition_pkey PRIMARY KEY (userphysicalcondition_id),
+  CONSTRAINT userphysicalcondition_physicalcondition_id_fkey FOREIGN KEY (physicalcondition_id) REFERENCES public.physicalcondition(physicalcondition_id),
+  CONSTRAINT userphysicalcondition_pregnancyrecord_id_fkey FOREIGN KEY (pregnancyrecord_id) REFERENCES public.pregnancyrecord(pregnancyrecord_id)
+);
+CREATE TABLE public.userprofile (
+  user_id character varying NOT NULL,
+  line_name character varying NOT NULL,
+  avatar character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  birthday date NOT NULL,
+  create_time timestamp with time zone NOT NULL DEFAULT (now() AT TIME ZONE 'utc'::text),
+  CONSTRAINT userprofile_pkey PRIMARY KEY (user_id)
+);
