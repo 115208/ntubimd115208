@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Digital Sanctuary - 孕期紀錄</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#765c95",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#eae8e4",
+                        "secondary-fixed": "#e4e4cc",
+                        "inverse-on-surface": "#f2f0ed",
+                        "primary-container": "#f2e2ff",
+                        "on-primary-fixed": "#260e43",
+                        "primary-fixed-dim": "#d8bafa",
+                        "outline": "#77767d",
+                        "on-primary": "#ffffff",
+                        "primary": "#6c538b",
+                        "surface-variant": "#e4e2de",
+                        "on-tertiary-fixed-variant": "#444655",
+                        "surface-dim": "#dbdad6",
+                        "on-secondary-fixed-variant": "#474836",
+                        "secondary": "#5e604d",
+                        "tertiary-fixed-dim": "#c5c5d8",
+                        "on-primary-fixed-variant": "#543b71",
+                        "primary-fixed": "#eedbff",
+                        "on-surface": "#1b1c1a",
+                        "inverse-primary": "#d8bafa",
+                        "on-secondary-fixed": "#1b1d0e",
+                        "tertiary-fixed": "#e1e1f5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e4e2de",
+                        "background": "#fbf9f5",
+                        "surface-container-low": "#f5f3ef",
+                        "surface": "#fbf9f5",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#efeeea",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191b29",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e1e1c9",
+                        "on-background": "#1b1c1a",
+                        "secondary-fixed-dim": "#c8c8b0",
+                        "on-secondary-container": "#636451",
+                        "inverse-surface": "#30312e",
+                        "surface-tint": "#6c538b",
+                        "tertiary-container": "#e6e6fa",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5c5d6e",
+                        "outline-variant": "#c7c5cc",
+                        "on-surface-variant": "#46464c",
+                        "on-tertiary-container": "#656677",
+                        "surface-bright": "#fbf9f5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif TC", "serif"],
+                        "body": ["Plus Jakarta Sans", "Microsoft JhengHei", "sans-serif"],
+                        "label": ["Plus Jakarta Sans", "Microsoft JhengHei", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', 'Microsoft JhengHei', sans-serif; background-color: #fbf9f5; }
+        .serif-font { font-family: 'Noto Serif TC', serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="text-on-surface antialiased pb-32">
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl flex items-center h-16 px-4 w-full">
+<div class="flex items-center justify-between w-full max-w-screen-xl mx-auto">
+<a href="index.html" class="transition-all duration-300 ease-in-out active:scale-95 hover:bg-purple-50/50 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-purple-800" data-icon="home">home</span>
+</a>
+<h1 class="text-purple-800 font-serif font-bold text-lg tracking-tight">Digital Sanctuary</h1>
+<div class="w-10"></div> </div>
+</header>
+<main class="pt-20 px-6 max-w-screen-md mx-auto space-y-8">
+<section class="grid grid-cols-1 gap-4">
+<a href="profile.html" class="block hover:shadow-md transition-shadow bg-surface-container-lowest rounded-lg p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] border-l-4 border-primary">
+<div class="flex items-center justify-between mb-4">
+<span class="font-headline text-on-primary-container text-xs tracking-widest uppercase">孕媽個人資訊</span>
+<span class="material-symbols-outlined text-on-primary-container text-sm" data-icon="account_circle">account_circle</span>
+</div>
+<div class="flex flex-wrap gap-6 items-end">
+<div>
+<p class="text-[10px] text-on-surface-variant mb-1 font-label">孕媽姓名</p>
+<p class="text-xl font-headline text-primary">林舒雅</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant mb-1 font-label">小孩乳名</p>
+<p class="text-xl font-headline text-primary">小栗子</p>
+</div>
+<div class="ml-auto bg-tertiary-container/30 px-4 py-2 rounded-xl">
+<p class="text-[10px] text-on-tertiary-container mb-1 font-label">協助者</p>
+<p class="text-sm font-medium text-tertiary">王志明 (先生)</p>
+</div>
+</div>
+</a>
+</section>
+<section class="grid grid-cols-12 gap-4">
+<div class="col-span-12 md:col-span-5 space-y-4">
+<div class="bg-primary-container/20 rounded-lg p-5 flex flex-col justify-between h-[160px] relative overflow-hidden group">
+<div class="z-10">
+<span class="text-xs font-label text-on-primary-fixed-variant">今日心情輸入</span>
+<h3 class="text-lg font-headline mt-2 text-primary">妳今天感覺如何？</h3>
+</div>
+<div class="flex gap-3 z-10">
+<button class="bg-white/80 w-10 h-10 rounded-full flex items-center justify-center text-xl hover:bg-white transition-colors">🌸</button>
+<button class="bg-white/80 w-10 h-10 rounded-full flex items-center justify-center text-xl hover:bg-white transition-colors">☀️</button>
+<button class="bg-white/80 w-10 h-10 rounded-full flex items-center justify-center text-xl hover:bg-white transition-colors">☁️</button>
+</div>
+<div class="absolute -right-4 -bottom-4 w-24 h-24 bg-primary-container opacity-20 rounded-full blur-2xl"></div>
+</div>
+<div class="bg-secondary-container/20 rounded-lg p-5 h-[160px] flex flex-col">
+<span class="text-xs font-label text-on-secondary-fixed-variant">今日活動準備提醒</span>
+<div class="mt-3 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1" data-icon="lightbulb">lightbulb</span>
+<p class="text-sm text-on-surface leading-relaxed">別忘了晚上的第二次產檢諮詢，幫舒雅準備好媽媽手冊與溫水壺。</p>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-7 bg-surface-container-lowest rounded-lg p-6 flex flex-col h-full shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline text-lg text-primary">活動日曆</h2>
+<span class="text-xs text-on-surface-variant">2024年 5月</span>
+</div>
+<div class="grid grid-cols-7 gap-2 text-center text-[10px] font-label text-outline-variant uppercase tracking-widest mb-4">
+<div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+</div>
+<div class="grid grid-cols-7 gap-y-4 gap-x-2 text-center">
+<div class="text-sm text-outline-variant/40">28</div>
+<div class="text-sm text-outline-variant/40">29</div>
+<div class="text-sm text-outline-variant/40">30</div>
+<div class="text-sm font-medium">1</div>
+<div class="text-sm font-medium">2</div>
+<div class="text-sm font-medium">3</div>
+<div class="text-sm font-medium bg-primary-container text-primary rounded-full w-8 h-8 flex items-center justify-center mx-auto ring-4 ring-primary-container/20">4</div>
+<div class="text-sm font-medium">5</div>
+<div class="text-sm font-medium">6</div>
+<div class="text-sm font-medium relative after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full">7</div>
+<div class="text-sm font-medium">8</div>
+<div class="text-sm font-medium">9</div>
+<div class="text-sm font-medium">10</div>
+<div class="text-sm font-medium">11</div>
+</div>
+<div class="mt-auto pt-6 border-t border-surface-container-high/50">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<p class="text-xs text-on-surface-variant">下午 3:30 - 第二次產檢</p>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-lg p-6 relative overflow-hidden">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="font-headline text-lg text-primary">健康紀錄折線圖</h2>
+<p class="text-xs text-on-surface-variant font-label mt-1">近期體重與血壓趨勢</p>
+</div>
+<div class="flex gap-2">
+<span class="text-[10px] px-2 py-1 bg-surface-container-low rounded-md text-on-surface-variant">最近 7 天</span>
+</div>
+</div>
+<div class="h-40 w-full relative">
+<svg class="w-full h-full" viewbox="0 0 400 100">
+<line stroke="#f5f3ef" stroke-width="1" x1="0" x2="400" y1="20" y2="20"></line>
+<line stroke="#f5f3ef" stroke-width="1" x1="0" x2="400" y1="50" y2="50"></line>
+<line stroke="#f5f3ef" stroke-width="1" x1="0" x2="400" y1="80" y2="80"></line>
+<path d="M 0,80 Q 50,75 100,60 T 200,40 T 300,55 T 400,25" fill="none" stroke="#6c538b" stroke-linecap="round" stroke-width="3"></path>
+<circle cx="100" cy="60" fill="#ffffff" r="4" stroke="#6c538b" stroke-width="2"></circle>
+<circle cx="200" cy="40" fill="#ffffff" r="4" stroke="#6c538b" stroke-width="2"></circle>
+<circle cx="300" cy="55" fill="#ffffff" r="4" stroke="#6c538b" stroke-width="2"></circle>
+</svg>
+<div class="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent pointer-events-none"></div>
+</div>
+<div class="flex justify-between mt-4 px-2">
+<span class="text-[10px] text-outline-variant font-label">週一</span>
+<span class="text-[10px] text-outline-variant font-label">週三</span>
+<span class="text-[10px] text-outline-variant font-label">週五</span>
+<span class="text-[10px] text-outline-variant font-label">週日</span>
+</div>
+</section>
+</main>
+<div class="fixed bottom-32 right-6 z-[60] transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+    <div class="bg-white/95 backdrop-blur-md shadow-lg rounded-full py-2 px-4 flex items-center gap-2 border border-primary/20">
+        <span class="material-symbols-outlined text-base text-primary" data-icon="group_add">group_add</span>
+        <span class="text-xs font-label text-on-surface-variant tracking-wider">家庭碼: <span class="text-primary font-bold tracking-widest">L9-K822</span></span>
+    </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pt-3 pb-8 bg-stone-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] rounded-t-[2.5rem]">
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="profile.html">
+        <span class="material-symbols-outlined text-xl">account_circle</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">個人資訊</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="records.html">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕紀錄</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="growth.html">
+        <span class="material-symbols-outlined text-xl">map</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">成長地圖</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="care.html">
+        <span class="material-symbols-outlined text-xl">diversity_1</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">照顧協助</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="knowledge.html">
+        <span class="material-symbols-outlined text-xl">menu_book</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕知識</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="history.html">
+        <span class="material-symbols-outlined text-xl">history</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">歷史回顧</span>
+    </a>
+</nav>
+
+<div class="fixed top-1/4 -left-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="fixed bottom-1/4 -right-24 w-64 h-64 bg-secondary-container/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+</body></html>

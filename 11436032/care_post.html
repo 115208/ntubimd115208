@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>照顧協助 - 小孩紀錄</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#636451",
+                    "primary-fixed": "#eedbff",
+                    "on-surface": "#1b1c1a",
+                    "surface-variant": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#444655",
+                    "on-primary-fixed": "#260e43",
+                    "outline": "#77767d",
+                    "inverse-on-surface": "#f2f0ed",
+                    "on-background": "#1b1c1a",
+                    "surface-container-high": "#eae8e4",
+                    "surface-container-low": "#f5f3ef",
+                    "on-tertiary-fixed": "#191b29",
+                    "primary-container": "#f2e2ff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#fbf9f5",
+                    "tertiary-fixed": "#e1e1f5",
+                    "primary-fixed-dim": "#d8bafa",
+                    "surface-tint": "#6c538b",
+                    "tertiary": "#5c5d6e",
+                    "inverse-surface": "#30312e",
+                    "on-surface-variant": "#46464c",
+                    "surface-container-highest": "#e4e2de",
+                    "on-secondary-fixed": "#1b1d0e",
+                    "background": "#fbf9f5",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "surface-dim": "#dbdad6",
+                    "secondary-container": "#e1e1c9",
+                    "on-primary-container": "#765c95",
+                    "on-primary-fixed-variant": "#543b71",
+                    "on-tertiary-container": "#656677",
+                    "primary": "#6c538b",
+                    "secondary": "#5e604d",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#e6e6fa",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-fixed-dim": "#c8c8b0",
+                    "outline-variant": "#c7c5cc",
+                    "on-secondary-fixed-variant": "#474836",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#efeeea",
+                    "inverse-primary": "#d8bafa",
+                    "secondary-fixed": "#e4e4cc",
+                    "tertiary-fixed-dim": "#c5c5d8"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif TC", "serif"],
+                    "body": ["Plus Jakarta Sans", "sans-serif"],
+                    "label": ["Plus Jakarta Sans", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', 'Microsoft JhengHei', sans-serif;
+        background-color: #fbf9f5;
+        color: #1b1c1a;
+      }
+      .serif-headline {
+        font-family: 'Noto Serif TC', serif;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-24">
+<header class="fixed top-0 w-full z-50 bg-[#fbf9f5]/70 backdrop-blur-xl flex items-center justify-between px-6 h-16 shadow-sm shadow-black/5">
+<div class="flex items-center gap-4">
+<a href="index.html" class="flex items-center justify-center w-10 h-10 rounded-full bg-tertiary-container/50 transition-all active:scale-95 text-primary">
+    <span class="material-symbols-outlined text-[#6c538b]">home</span>
+</a>
+<h1 class="text-[#6c538b] font-headline font-semibold text-lg tracking-wide">照顧協助</h1>
+</div>
+<div class="w-10"></div> </header>
+
+<main class="pt-24 px-6 max-w-4xl mx-auto space-y-8">
+<div class="flex justify-center mb-12">
+    <div class="bg-surface-container-low p-2 rounded-full flex w-full max-w-md shadow-inner-sm">
+        <a href="care.html" class="flex-1 py-3 px-6 rounded-full text-stone-500 font-medium hover:bg-white/50 transition-all duration-300 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm" data-icon="pregnant_woman">pregnant_woman</span>
+            孕媽紀錄
+        </a>
+        <button class="flex-1 py-3 px-6 rounded-full bg-primary text-white font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm" data-icon="child_care">child_care</span>
+            小孩紀錄
+        </button>
+    </div>
+</div>
+
+<section class="mb-10">
+<h2 class="serif-headline text-2xl font-bold mb-6 flex items-center gap-2 text-on-surface">
+<span class="w-1.5 h-8 bg-primary rounded-full"></span>
+                生活用品必需品
+            </h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary/10 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary">baby_changing_station</span>
+</div>
+<span class="text-sm font-bold">尿布</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary/10 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary">nutrition</span>
+</div>
+<span class="text-sm font-bold">配方奶</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary/10 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary">clean_hands</span>
+</div>
+<span class="text-sm font-bold">濕紙巾</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary/10 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary">checkroom</span>
+</div>
+<span class="text-sm font-bold">換洗衣物</span>
+</div>
+</div>
+</section>
+
+<section class="mb-10">
+<h2 class="serif-headline text-2xl font-bold mb-6 flex items-center gap-2 text-on-surface">
+<span class="w-1.5 h-8 bg-secondary-fixed-dim rounded-full"></span>
+                小孩重要活動提醒
+            </h2>
+<div class="space-y-4">
+<div class="bg-white/60 backdrop-blur-md p-5 rounded-lg border border-white/40 flex items-center gap-5 shadow-sm">
+<div class="w-14 h-14 bg-error-container rounded-2xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">vaccines</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-lg">疫苗接種</h3>
+<span class="text-xs font-bold text-error bg-error-container/50 px-2 py-1 rounded">即將到來</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">五合一疫苗 (第1劑) - 建議於滿2個月時接種</p>
+</div>
+</div>
+<div class="bg-white/60 backdrop-blur-md p-5 rounded-lg border border-white/40 flex items-center gap-5 shadow-sm">
+<div class="w-14 h-14 bg-tertiary-container rounded-2xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary">medical_services</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-lg">定期健康檢查</h3>
+<p class="text-on-surface-variant text-sm mt-1">生長曲線追蹤 (身高、體重、頭圍)</p>
+</div>
+</div>
+<div class="bg-white/60 backdrop-blur-md p-5 rounded-lg border border-white/40 flex items-center gap-5 shadow-sm">
+<div class="w-14 h-14 bg-secondary-container rounded-2xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary">insights</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-lg">感官發展追蹤</h3>
+<p class="text-on-surface-variant text-sm mt-1">視力聚焦與追視練習、聽力反應觀察</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="mb-10 overflow-hidden -mx-6 px-6">
+<h2 class="serif-headline text-2xl font-bold mb-6 flex items-center gap-2 text-on-surface">
+<span class="w-1.5 h-8 bg-primary-fixed-dim rounded-full"></span>
+                陪伴方式
+            </h2>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+<div class="min-w-[240px] bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm flex flex-col">
+<div class="h-40 bg-cover bg-center" data-alt="Close up of a baby looking at high contrast black and white patterns on a card in a bright nursery" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAzULMyxXsfW1eH5M-tH4VqPgHB6NTP6qP8FcpOW2rNMsdUpRzdS7hPFm0BMMCIxExln5ChDvvP3RKWjL-UPnYyV3uJRG9rR7G28f1Uzm3lCx2PZLcz3yf5ztQ2GVYjN6EienZvdYLXEz44PiH82GRzIxqtg8qicPCr1Mcf2PQhpNdjCnu1f_appQDepefbXKlmET64vlgoM59s1PxdmjfxzUlVNum5XZRPD9X06M4Vg4VfLDYkrzIF6oVLu-NMu_BsmxLgyc2MKIE')"></div>
+<div class="p-4">
+<h4 class="font-bold mb-1">黑白卡視覺刺激</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">提供對比鮮明的圖案，幫助新生兒視覺焦距發展。</p>
+</div>
+</div>
+<div class="min-w-[240px] bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm flex flex-col">
+<div class="h-40 bg-cover bg-center" data-alt="A peaceful baby sleeping with a soft wooden music box nearby, warm natural afternoon light" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAHpoJObakAq7mlCmSlx8MRowQ3YXb8HhYlwh_y5FyKLLNGDvyteYhgCxsgjOHaBC5C1QiYjjMOI0eJn0SrTsdrAnULnq7okgoMCPPQxJzwHg7dZykiZU99BXR0r63OeVc6K14vXz9-O_ZLVoOjVUscm59kC_fYddrAtw1JE9sJM3BXGD4mQZa7KYioN8fKBiOgm73T8Nr_z3qI3vUrUyF47oCfamonRUSu_jBBwLwSOlthb4LOSaayjO7D5O5-GL-ebfM7pzTcLuM')"></div>
+<div class="p-4">
+<h4 class="font-bold mb-1">輕柔音樂聽覺發展</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">播放古典樂或白噪音，營造安定感並促進聽覺神經發育。</p>
+</div>
+</div>
+<div class="min-w-[240px] bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm flex flex-col">
+<div class="h-40 bg-cover bg-center" data-alt="A parent holding a newborn baby skin-to-skin wrapped in a soft beige blanket, tender and intimate moment" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAx32u58524bByj87VBUwzLrflyA-G1l7quNiuTQcgpj98ExUDXgTH9hT6JdduT8D2gNdWS0j4z3iOFVDeov8Qe-fdR3csF2e4XjdoDriAS8CR5kHmUEht4iGUqoe-UwFvtvn77c9isZYb4Dzoy41w4tnwySg9WCqHznU_TzN1g6PSHHc-TN3zdsTtwxEcOK0juEaWco7jRrk-M1mDtzhiB4A3j--EpHbJ9VSdKICXXVvnQDbD55wi4OeIopCBdlQm4CT9y9pG6Lk8')"></div>
+<div class="p-4">
+<h4 class="font-bold mb-1">袋鼠式護理</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">透過肌膚接觸，穩定寶寶心跳與體溫，建立安全感。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="mb-20">
+<h2 class="serif-headline text-2xl font-bold mb-6 flex items-center gap-2 text-on-surface">
+<span class="w-1.5 h-8 bg-on-secondary-container rounded-full"></span>
+                飲食注意
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-secondary-container/30 p-6 rounded-lg border-l-4 border-secondary">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-secondary">water_bottle</span>
+<h4 class="font-bold">0-6個月飲食原則</h4>
+</div>
+<ul class="text-sm text-on-surface-variant space-y-2 list-disc list-inside">
+<li>全母乳或配方奶為唯一營養來源</li>
+<li>無需額外添加開水，除非醫師建議</li>
+<li>定時餵養，觀察寶寶飢餓信號</li>
+</ul>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg border-l-4 border-outline-variant">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-outline">warning</span>
+<h4 class="font-bold">餵養禁忌提醒</h4>
+</div>
+<ul class="text-sm text-on-surface-variant space-y-2 list-disc list-inside">
+<li>避免過早（4個月前）添加固體食物</li>
+<li>嚴禁餵食蜂蜜（肉毒桿菌風險）</li>
+<li>配方奶沖泡比例須嚴格遵守說明</li>
+</ul>
+</div>
+</div>
+</section>
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pt-3 pb-8 bg-stone-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] rounded-t-[2.5rem]">
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="profile.html">
+        <span class="material-symbols-outlined text-xl">account_circle</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">個人資訊</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="records.html">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕紀錄</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="growth.html">
+        <span class="material-symbols-outlined text-xl">map</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">成長地圖</span>
+    </a>
+    <a class="flex flex-col items-center justify-center bg-purple-100 text-purple-900 rounded-full px-4 py-2 transition-all" href="care.html">
+        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">diversity_1</span>
+        <span class="font-sans text-[10px] font-bold tracking-tight mt-1">照顧協助</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="knowledge.html">
+        <span class="material-symbols-outlined text-xl">menu_book</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕知識</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="history.html">
+        <span class="material-symbols-outlined text-xl">history</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">歷史回顧</span>
+    </a>
+</nav>
+
+</body>
+</html>

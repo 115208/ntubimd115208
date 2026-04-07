@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>個人資訊 - 孕期紀錄</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#765c95",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#eae8e4",
+                    "secondary-fixed": "#e4e4cc",
+                    "inverse-on-surface": "#f2f0ed",
+                    "primary-container": "#f2e2ff",
+                    "on-primary-fixed": "#260e43",
+                    "primary-fixed-dim": "#d8bafa",
+                    "outline": "#77767d",
+                    "on-primary": "#ffffff",
+                    "primary": "#6c538b",
+                    "surface-variant": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#444655",
+                    "surface-dim": "#dbdad6",
+                    "on-secondary-fixed-variant": "#474836",
+                    "secondary": "#5e604d",
+                    "tertiary-fixed-dim": "#c5c5d8",
+                    "on-primary-fixed-variant": "#543b71",
+                    "primary-fixed": "#eedbff",
+                    "on-surface": "#1b1c1a",
+                    "inverse-primary": "#d8bafa",
+                    "on-secondary-fixed": "#1b1d0e",
+                    "tertiary-fixed": "#e1e1f5",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e4e2de",
+                    "background": "#fbf9f5",
+                    "surface-container-low": "#f5f3ef",
+                    "surface": "#fbf9f5",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#efeeea",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#191b29",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#e1e1c9",
+                    "on-background": "#1b1c1a",
+                    "secondary-fixed-dim": "#c8c8b0",
+                    "on-secondary-container": "#636451",
+                    "inverse-surface": "#30312e",
+                    "surface-tint": "#6c538b",
+                    "tertiary-container": "#e6e6fa",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#5c5d6e",
+                    "outline-variant": "#c7c5cc",
+                    "on-surface-variant": "#46464c",
+                    "on-tertiary-container": "#656677",
+                    "surface-bright": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif TC", "serif"],
+                    "body": ["Plus Jakarta Sans", "sans-serif"],
+                    "label": ["Plus Jakarta Sans", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', 'Microsoft JhengHei', sans-serif; }
+        .serif { font-family: 'Noto Serif TC', serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { min-height: max(884px, 100dvh); }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-32">
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl flex items-center h-16 px-4 w-full no-border shadow-none">
+<div class="flex items-center justify-between w-full">
+<div class="flex items-center gap-4">
+<a href="index.html" class="w-10 h-10 flex items-center justify-center rounded-full bg-tertiary-container/50 text-primary transition-all duration-300 ease-in-out active:scale-95">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<h1 class="text-purple-800 font-serif font-bold text-lg tracking-tight">孕媽個人資訊</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a glowing pregnant woman with a serene expression in soft natural morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKcoACd-h3MK_Aryy8cY8pwEEX1jTpNN2qGJxizOqMKTbzkOKD-J0nKPMuj_R8nvyuFHg4KMpI9HUXcTEHMpo6ZrcceR8XsDiOWTZgbLG5w88ZI2v9Z43_7-bC4EuSSxSJMI0j2-BY4-E318hWEIx01Y2LVyyEUKwXS6y8Uo60oh7d8apHtEkDpgzfDhWmYuC-Sv8c1KHbe9fHSVDaS8R2AlmKE6AxhUgyLPqaol20tg2gLX7obtDde-7-Ymgiqz3AZgqMRounjDo"/>
+</div>
+</div>
+</header>
+<main class="pt-20 px-6 max-w-md mx-auto">
+<section class="mb-8 flex flex-col items-center">
+<div class="relative mb-4">
+<div class="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary to-primary-container">
+<div class="w-full h-full rounded-full overflow-hidden border-4 border-surface">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="close-up of a smiling woman's face, gentle features, soft-focus background of lavender flowers" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8KccI-Tsb0gK9mEXKHFWbg7J-ZjdbBAwNjMvtZanB9xEBnRmpjeXKApe2nJXW9D1oj6248UJIH_q9DwB0ycYR08Qw7sMqk0NY7o0Z2HGVLiuLuLI4yUZ-Ur-cP9ZosfM9CAk0WRYMzqMk21AGWlyuK2bDdaVWSYEh4PI2JIcTC5_8yAYMrdwKVJrpVGn85Yu4FpR5SsfV9O6CAN38si_c53Hpz-Kbz2bFwD9P_swhe5qJR3qJbeNR4_DVnIH6BqLyBbgtQyM-cdo"/>
+</div>
+</div>
+<div class="absolute bottom-1 right-1 bg-secondary-fixed text-on-secondary-fixed text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    第 7 個月
+                </div>
+</div>
+<h2 class="text-3xl font-headline font-bold text-primary mb-1">林雅婷</h2>
+<p class="text-on-surface-variant font-medium tracking-wide">預產期：2024.11.24</p>
+</section>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center border border-surface-container-high/20">
+<span class="text-on-surface-variant text-sm mb-2">身高</span>
+<div class="flex items-baseline gap-1">
+<span class="text-2xl font-bold text-on-surface">162</span>
+<span class="text-xs text-on-surface-variant">cm</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center border border-surface-container-high/20">
+<span class="text-on-surface-variant text-sm mb-2">目前體重</span>
+<div class="flex items-baseline gap-1">
+<span class="text-2xl font-bold text-on-surface">58.5</span>
+<span class="text-xs text-on-surface-variant">kg</span>
+</div>
+</div>
+<div class="bg-primary-container/30 p-6 rounded-lg col-span-1 flex flex-col items-center justify-center">
+<span class="text-on-primary-container text-sm mb-2">孕期月份</span>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-headline font-bold text-primary">28</span>
+<span class="text-xs text-primary font-bold">週</span>
+</div>
+</div>
+<div class="bg-secondary-container/30 p-6 rounded-lg col-span-1 flex flex-col items-center justify-center">
+<span class="text-on-secondary-container text-sm mb-2">懷孕胎數</span>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-headline font-bold text-secondary">1</span>
+<span class="text-xs text-secondary font-bold">胎</span>
+</div>
+</div>
+</div>
+<section class="mb-8">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+                    健康歷程
+                </h3>
+<span class="text-xs text-primary font-bold bg-primary-container px-2 py-1 rounded-full">+2.4kg 本月</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-6 relative overflow-hidden h-48 flex items-end justify-between gap-2">
+<div class="w-full h-24 bg-primary/10 rounded-t-full relative group">
+<div class="absolute bottom-0 w-full h-1/2 bg-primary/40 rounded-t-full transition-all duration-500"></div>
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100">W24</span>
+</div>
+<div class="w-full h-32 bg-primary/10 rounded-t-full relative group">
+<div class="absolute bottom-0 w-full h-2/3 bg-primary/40 rounded-t-full"></div>
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100">W25</span>
+</div>
+<div class="w-full h-28 bg-primary/10 rounded-t-full relative group">
+<div class="absolute bottom-0 w-full h-3/5 bg-primary/40 rounded-t-full"></div>
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100">W26</span>
+</div>
+<div class="w-full h-40 bg-primary/10 rounded-t-full relative group">
+<div class="absolute bottom-0 w-full h-4/5 bg-primary/40 rounded-t-full"></div>
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100">W27</span>
+</div>
+<div class="w-full h-44 bg-primary rounded-t-full relative group shadow-lg shadow-primary/20">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-primary">W28</span>
+</div>
+</div>
+</section>
+<section class="mb-12">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="sentiment_satisfied">sentiment_satisfied</span>
+                    心情歷程
+                </h3>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-center mb-6">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-3xl text-yellow-500 mb-1" data-icon="mood" style="font-variation-settings: 'FILL' 1;">mood</span>
+<span class="text-[10px] text-on-surface-variant">週一</span>
+</div>
+<div class="flex flex-col items-center opacity-40">
+<span class="material-symbols-outlined text-3xl text-zinc-400 mb-1" data-icon="sentiment_neutral">sentiment_neutral</span>
+<span class="text-[10px] text-on-surface-variant">週二</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-3xl text-yellow-500 mb-1" data-icon="sentiment_very_satisfied" style="font-variation-settings: 'FILL' 1;">sentiment_very_satisfied</span>
+<span class="text-[10px] text-on-surface-variant">週三</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-3xl text-purple-400 mb-1" data-icon="sentiment_dissatisfied">sentiment_dissatisfied</span>
+<span class="text-[10px] text-on-surface-variant">週四</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-3xl text-yellow-500 mb-1" data-icon="mood" style="font-variation-settings: 'FILL' 1;">mood</span>
+<span class="text-[10px] text-on-surface-variant">今天</span>
+</div>
+</div>
+<p class="text-sm text-center italic text-on-surface-variant px-4 border-l-2 border-primary-container">
+                    「今天感覺小寶寶踢得很用力，心情非常平靜且快樂。」
+                </p>
+</div>
+</section>
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pt-3 pb-8 bg-stone-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] rounded-t-[2.5rem]">
+    <a class="flex flex-col items-center justify-center bg-purple-100 text-purple-900 rounded-full px-4 py-2 transition-all" href="profile.html">
+        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+        <span class="font-sans text-[10px] font-bold tracking-tight mt-1">個人資訊</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="records.html">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕紀錄</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="growth.html">
+        <span class="material-symbols-outlined text-xl">map</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">成長地圖</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="care.html">
+        <span class="material-symbols-outlined text-xl">diversity_1</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">照顧協助</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="knowledge.html">
+        <span class="material-symbols-outlined text-xl">menu_book</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">懷孕知識</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-stone-500 px-3 py-2 hover:opacity-80 transition-all" href="history.html">
+        <span class="material-symbols-outlined text-xl">history</span>
+        <span class="font-sans text-[10px] font-medium tracking-tight mt-1">歷史回顧</span>
+    </a>
+</nav>
+
+<button class="fixed bottom-32 right-6 w-14 h-14 bg-gradient-to-tr from-primary to-primary-container text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 z-40">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+
+<div class="fixed top-1/4 -left-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="fixed bottom-1/4 -right-24 w-64 h-64 bg-secondary-container/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+</body>
+</html>
