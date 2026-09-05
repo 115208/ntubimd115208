@@ -32,19 +32,18 @@
                 <div class="space-y-5">
                     <!-- 頭像編輯 -->
                     <div class="flex flex-col items-center gap-3 pb-2">
-                        <div class="relative group">
-                            <div id="avatar-preview" class="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border-4 border-surface-container-lowest shadow-sm cursor-pointer">
+                        <div id="avatar-container" class="relative group cursor-pointer">
+                            <div id="avatar-preview" class="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border-4 border-surface-container-lowest shadow-sm">
                                 {% if current_user.avatar %}
                                 <img id="avatar-preview-img" src="{{ current_user.avatar }}" alt="{{ current_user.name }}" class="w-full h-full object-cover">
                                 {% else %}
                                 <span id="avatar-preview-icon" class="material-symbols-outlined text-primary text-4xl">face_3</span>
                                 {% endif %}
                             </div>
-                            <div class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md border-2 border-surface-container-lowest group-hover:scale-110 transition-transform">
+                            <div id="camera-btn" class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md border-2 border-surface-container-lowest group-hover:scale-110 transition-transform cursor-pointer">
                                 <span class="material-symbols-outlined text-[16px]">photo_camera</span>
                             </div>
                         </div>
-                        <span id="change-avatar-text" class="text-xs font-bold text-primary cursor-pointer hover:underline">更換大頭貼</span>
                         <input type="file" name="avatar_file" id="avatar-file-input" accept="image/*" class="hidden" />
                     </div>
 
@@ -83,18 +82,20 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // avatar file picker & preview
+        const avatarContainer = document.getElementById('avatar-container');
         const avatarPreview = document.getElementById('avatar-preview');
+        const cameraBtn = document.getElementById('camera-btn');
         const avatarFileInput = document.getElementById('avatar-file-input');
         const avatarImg = document.getElementById('avatar-preview-img');
         const avatarIcon = document.getElementById('avatar-preview-icon');
-        const changeAvatarText = document.getElementById('change-avatar-text');
 
         const triggerFilePicker = () => {
             if (avatarFileInput) avatarFileInput.click();
         };
 
+        if (avatarContainer) avatarContainer.addEventListener('click', triggerFilePicker);
         if (avatarPreview) avatarPreview.addEventListener('click', triggerFilePicker);
-        if (changeAvatarText) changeAvatarText.addEventListener('click', triggerFilePicker);
+        if (cameraBtn) cameraBtn.addEventListener('click', triggerFilePicker);
 
         if (avatarFileInput) {
             avatarFileInput.addEventListener('change', (e) => {

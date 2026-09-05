@@ -249,8 +249,9 @@
         </div>
         </div>
 
-        <!-- 歷史回顧入口卡片 (首頁內容最底部) -->
-        <section class="px-6 lg:px-6 mt-6 mb-4 w-full">
+        <!-- 歷史回顧入口卡片區塊 (包含兩版本雙入口) -->
+        <section class="px-6 lg:px-6 mt-6 mb-4 w-full space-y-4">
+            <!-- 歷史回顧 (第一版) -->
             <a href="/history-review/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="group relative block w-full rounded-3xl bg-gradient-to-r from-[#f6efff] via-[#fff0f4] to-[#f4f0ff] p-6 border border-[#c8b1f0]/40 shadow-[0_10px_30px_rgba(101,81,138,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(101,81,138,0.15)] active:scale-[0.98] overflow-hidden">
                 <!-- 裝飾性柔和背景光圈 -->
                 <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#d6beff]/30 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none"></div>
@@ -264,11 +265,12 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <h3 class="text-lg font-bold text-[#362459] font-['Plus_Jakarta_Sans'] group-hover:text-[#65518a] transition-colors">
-                                    歷史回顧
+                                    歷史回顧（第一版）
                                 </h3>
+                                <span class="px-2 py-0.5 text-[10px] font-extrabold text-[#65518a] bg-white/80 rounded-full border border-[#c8b1f0]/40">時光軸與相簿</span>
                             </div>
                             <p class="text-xs text-[#5b5c5a] font-medium mt-0.5 font-['Be_Vietnam_Pro']">
-                                回顧你與寶寶的成長旅程
+                                探索每日成長軌跡、相片牆與孕期 graduation 精華
                             </p>
                         </div>
                     </div>
@@ -278,11 +280,35 @@
                     </div>
                 </div>
             </a>
-        </section>
-        <section class="px-6 lg:px-6 mt-6 mb-4 w-full">
-            <a href="/s/">階段總結</a>
-            <a href="/1/">AI 成長足跡</a>
-            <a href="/m/">回憶牆</a>
+
+            <!-- 歷史回顧 (第二版) - 合併 階段總結 / AI成長足跡 / 回憶牆 -->
+            <a href="/s/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="group relative block w-full rounded-3xl bg-gradient-to-r from-[#f6efff] via-[#fff0f4] to-[#f4f0ff] p-6 border border-[#c8b1f0]/40 shadow-[0_10px_30px_rgba(101,81,138,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(101,81,138,0.15)] active:scale-[0.98] overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#d6beff]/30 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none"></div>
+                <div class="absolute -left-6 -bottom-6 w-28 h-28 bg-[#f8bbd0]/30 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none"></div>
+
+                <div class="relative z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-md shadow-xs flex items-center justify-center text-[#65518a] group-hover:scale-110 group-hover:bg-white transition-all duration-300 shrink-0">
+                            <span class="material-symbols-outlined text-2xl text-primary" data-icon="auto_awesome">auto_awesome</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-bold text-[#362459] font-['Plus_Jakarta_Sans'] group-hover:text-[#65518a] transition-colors">
+                                    歷史回顧（第二版）
+                                </h3>
+                                <span class="px-2 py-0.5 text-[10px] font-extrabold text-[#7d4d5f] bg-[#f8bbd0]/40 rounded-full border border-[#f8bbd0]/60">精華版</span>
+                            </div>
+                            <p class="text-xs text-[#5b5c5a] font-medium mt-0.5 font-['Be_Vietnam_Pro']">
+                                階段總結 · AI 成長足跡 · 回憶牆
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="w-9 h-9 rounded-full bg-white/80 flex items-center justify-center text-[#65518a] shadow-xs group-hover:translate-x-1 group-hover:bg-[#65518a] group-hover:text-white transition-all duration-300 shrink-0 ml-2">
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                    </div>
+                </div>
+            </a>
         </section>
     </main>
 

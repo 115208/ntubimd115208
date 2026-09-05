@@ -5,15 +5,24 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/history.css' %}">
 
-<main class="mx-auto px-4 pt-5 pb-32 max-w-md w-full transition-all duration-300">
+<main class="mx-auto px-4 sm:px-6 pt-5 pb-32 max-w-md md:max-w-3xl lg:max-w-4xl w-full transition-all duration-300">
+
+    <!-- 返回首頁按鈕 -->
+    <div class="mb-4">
+        <a href="/" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group">
+            <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+            <span>返回首頁</span>
+        </a>
+    </div>
 
     <!-- ========================================== -->
     <!-- 📖 頁面 Header & 右上 Icon -->
     <!-- ========================================== -->
     <header class="flex items-center justify-between mb-5">
         <div>
-            <h1 class="text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans'] tracking-tight mb-0.5">
-                階段總結
+            <h1 class="text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans'] tracking-tight mb-0.5 flex items-center gap-1.5">
+                <span>階段總結</span>
+                <span class="text-[#8064A2] text-xl font-normal">♡</span>
             </h1>
             <p class="text-xs text-[#81758A] font-medium font-['Be_Vietnam_Pro']">
                 回顧我們一起走過的美好時光
@@ -21,34 +30,37 @@
         </div>
 
         <div class="flex items-center gap-2 text-[#8064A2]">
-            <a href="/history-review/share-card/" class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#EDE5F5]/80 transition-colors">
+            <a href="/history-review/share-card/" class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#65518a] hover:text-white transition-colors cursor-pointer" title="分享卡片">
                 <span class="material-symbols-outlined text-base">share</span>
             </a>
         </div>
     </header>
 
     <!-- ========================================== -->
-    <!-- 🎛️ 三大 Tab 切換 Bar -->
+    <!-- 🎛️ 三大 Tab 切換 Bar (時光軸 / 相簿牆 / 紀念冊) -->
     <!-- ========================================== -->
-    <div class="grid grid-cols-3 bg-[#EDE5F5] p-1 rounded-full mb-5 border border-[#E8E0EF] shadow-2xs">
-        <a href="/history-review/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-white text-[#4A4052] hover:text-[#8064A2]">
-            時光軸
+    <div class="grid grid-cols-3 bg-[#EDE5F5]/60 p-1.5 rounded-full mb-5 border border-[#E8E0EF] shadow-2xs backdrop-blur-xs">
+        <a href="/history-review/pregnancy-journey/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-white text-[#4A4052] hover:text-[#65518a] shadow-2xs border border-[#E8E0EF]/60">
+            <span class="material-symbols-outlined text-[18px]">schedule</span>
+            <span>時光軸</span>
         </a>
-        <a href="/history-review/memory-wall/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-white text-[#4A4052] hover:text-[#8064A2]">
-            相簿牆
+        <a href="/history-review/memory-wall/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-white text-[#4A4052] hover:text-[#65518a] shadow-2xs border border-[#E8E0EF]/60">
+            <span class="material-symbols-outlined text-[18px]">photo_library</span>
+            <span>相簿牆</span>
         </a>
-        <a href="/history-review/baby-growth/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-[#8064A2] text-white shadow-xs">
-            紀念冊
+        <a href="/history-review/baby-growth/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-[#65518a] text-white shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">school</span>
+            <span>紀念冊</span>
         </a>
     </div>
 
     <!-- 階段報告雙模式切換 Pills -->
-    <div class="flex items-center gap-2 mb-6">
-        <a href="/history-review/baby-growth/?mode=pregnancy" class="text-xs font-bold px-3.5 py-1.5 rounded-full transition-colors {% if mode == 'pregnancy' %}bg-[#EDE5F5] text-[#8064A2] border border-[#E8E0EF]{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#FAF8FC]{% endif %}">
-            【 孕期畢業報告 】
+    <div class="grid grid-cols-2 gap-2 p-1 bg-[#FAF8FC] rounded-2xl mb-6 border border-[#E8E0EF]">
+        <a href="/history-review/baby-growth/?mode=pregnancy" class="py-2 px-3 rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 {% if mode == 'pregnancy' %}bg-[#65518a] text-white shadow-xs{% else %}text-[#4A4052] hover:text-[#65518a]{% endif %}">
+            <span>🤰 孕期畢業報告</span>
         </a>
-        <a href="/history-review/baby-growth/?mode=baby" class="text-xs font-bold px-3.5 py-1.5 rounded-full transition-colors {% if mode == 'baby' %}bg-[#EDE5F5] text-[#8064A2] border border-[#E8E0EF]{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#FAF8FC]{% endif %}">
-            【 寶寶 1 歲精華 】
+        <a href="/history-review/baby-growth/?mode=baby" class="py-2 px-3 rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 {% if mode == 'baby' %}bg-[#65518a] text-white shadow-xs{% else %}text-[#4A4052] hover:text-[#65518a]{% endif %}">
+            <span>👶 寶寶 1 歲精華</span>
         </a>
     </div>
 
@@ -79,7 +91,7 @@
     <!-- ========================================== -->
     <!-- 📊 4 大馬卡龍統計卡片 (粉、黃、藍、綠) -->
     <!-- ========================================== -->
-    <section class="grid grid-cols-2 gap-3 mb-6">
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <!-- 1. 陪伴天數 (粉紅) -->
         <div class="bg-[#fff0f5] rounded-3xl p-4 border border-[#f8bbd0]/40 text-center shadow-2xs">
             <span class="text-xl mb-0.5 block">📅</span>
@@ -222,11 +234,13 @@
     <!-- 📤 底部 Action Buttons (儲存精華卡 / 分享) -->
     <!-- ========================================== -->
     <section class="flex gap-3">
-        <a href="/history-review/share-card/" class="flex-1 py-3 px-4 rounded-full bg-[#8064A2] hover:bg-[#6c518d] text-white text-xs font-bold text-center transition-colors shadow-xs">
-            儲存精華卡
+        <a href="/history-review/share-card/" class="flex-1 py-3 px-4 rounded-full bg-white hover:bg-[#FAF8FC] text-[#65518a] border border-[#65518a] text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 shadow-2xs">
+            <span class="material-symbols-outlined text-[18px]">image</span>
+            <span>儲存精華卡</span>
         </a>
-        <a href="/history-review/share-card/" class="flex-1 py-3 px-4 rounded-full bg-[#EDE5F5] hover:bg-[#EDE5F5]/80 text-[#8064A2] text-xs font-bold text-center transition-colors">
-            分享至 LINE / IG
+        <a href="/history-review/share-card/" class="flex-1 py-3 px-4 rounded-full bg-[#65518a] hover:bg-[#524172] text-white text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">ios_share</span>
+            <span>分享至 LINE / IG</span>
         </a>
     </section>
 

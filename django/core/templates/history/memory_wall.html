@@ -5,15 +5,24 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/history.css' %}">
 
-<main class="mx-auto px-4 pt-5 pb-32 max-w-md w-full transition-all duration-300">
+<main class="mx-auto px-4 sm:px-6 pt-5 pb-32 max-w-md md:max-w-3xl lg:max-w-4xl w-full transition-all duration-300">
+
+    <!-- 返回首頁按鈕 -->
+    <div class="mb-4">
+        <a href="/" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group">
+            <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+            <span>返回首頁</span>
+        </a>
+    </div>
 
     <!-- ========================================== -->
     <!-- 📖 頁面 Header & 右上 Icon -->
     <!-- ========================================== -->
     <header class="flex items-center justify-between mb-5">
         <div>
-            <h1 class="text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans'] tracking-tight mb-0.5">
-                回顧牆
+            <h1 class="text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans'] tracking-tight mb-0.5 flex items-center gap-1.5">
+                <span>回顧牆</span>
+                <span class="text-[#8064A2] text-xl font-normal">♡</span>
             </h1>
             <p class="text-xs text-[#81758A] font-medium font-['Be_Vietnam_Pro']">
                 用照片與影片，珍藏每個重要時刻
@@ -21,27 +30,30 @@
         </div>
 
         <div class="flex items-center gap-2 text-[#8064A2]">
-            <button class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#EDE5F5]/80 transition-colors">
+            <button class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#65518a] hover:text-white transition-colors cursor-pointer" title="搜尋">
                 <span class="material-symbols-outlined text-base">search</span>
             </button>
-            <button class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#EDE5F5]/80 transition-colors">
+            <button class="w-8 h-8 rounded-full bg-[#EDE5F5] flex items-center justify-center hover:bg-[#65518a] hover:text-white transition-colors cursor-pointer" title="日曆查看">
                 <span class="material-symbols-outlined text-base">calendar_month</span>
             </button>
         </div>
     </header>
 
     <!-- ========================================== -->
-    <!-- 🎛️ 三大 Tab 切換 Bar -->
+    <!-- 🎛️ 三大 Tab 切換 Bar (時光軸 / 相簿牆 / 紀念冊) -->
     <!-- ========================================== -->
-    <div class="grid grid-cols-3 bg-[#EDE5F5] p-1 rounded-full mb-6 border border-[#E8E0EF] shadow-2xs">
-        <a href="/history-review/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-white text-[#4A4052] hover:text-[#8064A2]">
-            時光軸
+    <div class="grid grid-cols-3 bg-[#EDE5F5]/60 p-1.5 rounded-full mb-6 border border-[#E8E0EF] shadow-2xs backdrop-blur-xs">
+        <a href="/history-review/pregnancy-journey/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-white text-[#4A4052] hover:text-[#65518a] shadow-2xs border border-[#E8E0EF]/60">
+            <span class="material-symbols-outlined text-[18px]">schedule</span>
+            <span>時光軸</span>
         </a>
-        <a href="/history-review/memory-wall/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-[#8064A2] text-white shadow-xs">
-            相簿牆
+        <a href="/history-review/memory-wall/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-[#65518a] text-white shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">photo_library</span>
+            <span>相簿牆</span>
         </a>
-        <a href="/history-review/baby-growth/" class="py-2 px-3 rounded-full text-xs font-bold text-center transition-all bg-white text-[#4A4052] hover:text-[#8064A2]">
-            紀念冊
+        <a href="/history-review/baby-growth/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}" class="py-2.5 px-3 rounded-full text-xs font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 bg-white text-[#4A4052] hover:text-[#65518a] shadow-2xs border border-[#E8E0EF]/60">
+            <span class="material-symbols-outlined text-[18px]">school</span>
+            <span>紀念冊</span>
         </a>
     </div>
 
@@ -118,7 +130,7 @@
             </div>
 
             <!-- 3 欄相片 Grid -->
-            <div class="grid grid-cols-3 gap-2.5">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {% for photo in group.photos %}
                 <div class="group flex flex-col bg-[#FAF8FC] rounded-2xl overflow-hidden border border-[#E8E0EF]">
                     <div class="aspect-square relative overflow-hidden">
