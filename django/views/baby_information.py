@@ -194,8 +194,12 @@ def edit_baby_information(request):
     # ── GET 請求 ──────────────────────────────────────────────────────
     lmp_date_value = ''
     birth_weeks_value = ''
+    due_date_value = ''
     if active_baby.pregnancycase and active_baby.pregnancycase.menstruation:
-        lmp_date_value = active_baby.pregnancycase.menstruation.strftime('%Y-%m-%d')
+        lmp = active_baby.pregnancycase.menstruation
+        lmp_date_value = lmp.strftime('%Y-%m-%d')
+    if active_baby.pregnancycase and active_baby.pregnancycase.expecteddate:
+        due_date_value = active_baby.pregnancycase.expecteddate.strftime('%Y-%m-%d')
     if active_baby.birthdaytime and active_baby.pregnancycase and active_baby.pregnancycase.menstruation:
         birth_weeks_value = baby_utils.get_birth_week(active_baby) or ''
 
@@ -207,6 +211,7 @@ def edit_baby_information(request):
         'birthdaytime_value': birthdaytime_value,
         'join_code': join_code,
         'lmp_date_value': lmp_date_value,
+        'due_date_value': due_date_value,
         'birth_weeks_value': birth_weeks_value,
         'locks': {
             'birthdaytime':       active_baby.birthdaytime is not None,

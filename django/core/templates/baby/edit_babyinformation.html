@@ -70,6 +70,18 @@
                         </div>
                     </div>
 
+                    <!-- 預產期（唯讀，LMP + 280天） -->
+                    {% if due_date_value %}
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">預產期</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[20px]">event_available</span>
+                            <input type="text" value="{{ due_date_value }}" readonly
+                                   class="w-full bg-surface-container-low/40 border-none rounded-xl pl-11 pr-3 py-3.5 text-on-surface-variant/60 text-sm outline-none font-medium cursor-not-allowed" />
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- 出生週數（唯讀，自動計算） -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">出生週數</label>
@@ -193,12 +205,38 @@
             </section>
 
             <!-- 儲存按鈕 -->
-            <button type="submit"
+            <button type="button" id="save-btn"
                     class="w-full py-4 bg-primary text-white rounded-2xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-xl">save</span>
                 儲存變更
             </button>
         </form>
+
+        <!-- ── 出生體徵確認 Modal ── -->
+        <div id="birth-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div class="bg-surface rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-amber-600 text-[22px]" style="font-variation-settings:'FILL' 1">warning</span>
+                    </div>
+                    <h3 class="font-headline font-bold text-base text-on-surface">確認出生體徵資料</h3>
+                </div>
+                <div id="birth-confirm-list" class="bg-surface-container-lowest rounded-2xl px-4 py-3 space-y-2 text-sm text-on-surface"></div>
+                <p class="text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5 font-medium leading-relaxed">
+                    ⚠️ 已填入的欄位儲存後將<span class="font-bold">鎖定</span>，無法再次修改，請確認資料正確。
+                </p>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" id="confirm-cancel-btn"
+                            class="flex-1 py-3 rounded-2xl border border-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-surface-container transition-all">
+                        取消
+                    </button>
+                    <button type="button" id="confirm-save-btn"
+                            class="flex-1 py-3 rounded-2xl bg-primary text-white font-bold text-sm hover:bg-primary/90 active:scale-95 transition-all">
+                        確認儲存
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 {% endblock %}
 
@@ -260,6 +298,64 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon.textContent = 'check';
                 setTimeout(function() { icon.textContent = 'content_copy'; }, 2000);
             }
+        });
+    }
+
+    // ── 儲存攔截：出生體徵確認 Modal ──────────────────────────────
+    var saveBtn          = document.getElementById('save-btn');
+    var mainForm         = document.querySelector('form');
+    var modal            = document.getElementById('birth-confirm-modal');
+    var confirmList      = document.getElementById('birth-confirm-list');
+    var confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+    var confirmSaveBtn   = document.getElementById('confirm-save-btn');
+
+    var vitalLabels = {
+        birth_weight:      { label: '出生體重', unit: 'kg' },
+        birth_height:      { label: '出生身長', unit: 'cm' },
+        birth_head:        { label: '出生頭圍', unit: 'cm' },
+        birth_chest:       { label: '出生胸圍', unit: 'cm' },
+        production_method: { label: '生產方式', unit: ''   },
+    };
+
+    function getUnlockedVitals() {
+        var filled = [];
+        Object.keys(vitalLabels).forEach(function(name) {
+            var el = mainForm.querySelector('[name="' + name + '"]:not([readonly])');
+            if (el && el.value && el.value.trim()) {
+                var info = vitalLabels[name];
+                filled.push({ label: info.label, value: el.value.trim(), unit: info.unit });
+            }
+        });
+        return filled;
+    }
+
+    if (saveBtn && mainForm && modal) {
+        saveBtn.addEventListener('click', function() {
+            var vitals = getUnlockedVitals();
+            if (vitals.length === 0) {
+                mainForm.submit();
+                return;
+            }
+            confirmList.innerHTML = vitals.map(function(v) {
+                return '<div class="flex justify-between items-center py-0.5">'
+                     + '<span class="text-on-surface-variant">' + v.label + '</span>'
+                     + '<span class="font-bold">' + v.value + (v.unit ? '\u00a0' + v.unit : '') + '</span>'
+                     + '</div>';
+            }).join('');
+            modal.classList.remove('hidden');
+        });
+
+        confirmCancelBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+
+        confirmSaveBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+            mainForm.submit();
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.classList.add('hidden');
         });
     }
 });

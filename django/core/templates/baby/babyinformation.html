@@ -55,11 +55,13 @@
             </div>
             <!-- 第 56-59 行 -->
             {% if can_edit_baby %}
-            <a href="{% url 'edit_baby_information' %}"
-               class="inline-flex items-center gap-2 mt-3 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold rounded-2xl transition-all active:scale-95 duration-200 shadow-sm border border-primary/10">
-                <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1,'wght' 600">edit</span>
-                編輯嬰幼兒資料
-            </a>
+            <div class="flex justify-center mt-3">
+                <a href="{% url 'edit_baby_information' %}"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold rounded-2xl transition-all active:scale-95 duration-200 shadow-sm border border-primary/10">
+                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1,'wght' 600">edit</span>
+                    編輯嬰幼兒資料
+                </a>
+            </div>
             {% endif %}
         </section>
         <!-- Component 2: Growth Calendar -->
