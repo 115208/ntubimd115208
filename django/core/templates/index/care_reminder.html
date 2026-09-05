@@ -3,89 +3,104 @@
 {% block title %}{% if carerecord_id %}編輯待辦清單{% else %}新增待辦清單{% endif %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index/add_care_reminder.css' %}">
+<style>
+    html, body {
+        overflow: hidden !important;
+        height: 100%;
+    }
+
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    * {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
 {% endblock %}
 {% block content %}
-<div class="bg-surface text-on-surface min-h-screen py-6">
-    <header class="max-w-2xl lg:max-w-3xl mx-auto px-4 md:px-6 mb-4">
-        <div class="flex flex-col items-start gap-2">
-            <a href="javascript:history.back()" class="inline-flex items-center gap-2 rounded-full px-3 py-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回待辦清單">
-                <span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
-                <span class="text-xl font-bold text-primary">{% if carerecord_id %}編輯待辦清單{% else %}新增待辦清單{% endif %}</span>
+<div class="bg-surface text-on-surface h-screen py-3 overflow-hidden">
+    <header class="max-w-2xl lg:max-w-3xl mx-auto px-4 md:px-6 mb-2">
+        <div class="flex flex-col items-start gap-1">
+            <a href="javascript:history.back()" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回待辦清單">
+                <span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
+                <span class="text-lg font-bold text-primary">{% if carerecord_id %}編輯待辦清單{% else %}新增待辦清單{% endif %}</span>
             </a>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="mx-auto max-w-2xl lg:max-w-3xl w-full px-4 md:px-6 pb-20 md:pb-16">
-        <form method="post" class="space-y-6">
+    <main class="mx-auto max-w-2xl lg:max-w-3xl w-full px-4 md:px-6 pb-6 md:pb-8">
+        <form method="post" class="space-y-4">
             {% csrf_token %}
             {% if carerecord_id %}
                 <input type="hidden" name="carerecord_id" value="{{ carerecord_id }}" />
                 <input type="hidden" name="selected_date" value="{{ selected_date_iso }}" />
             {% endif %}
 
-            <section class="bg-surface-container-lowest rounded-3xl p-6 md:p-8 shadow-sm border border-surface-container-high space-y-6">
-                <div class="flex items-center gap-3 pb-2 border-b border-surface-container-low">
-                    <div class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                        <span class="material-symbols-outlined text-primary text-[26px]">{% if carerecord_id %}edit_notifications{% else %}notifications_active{% endif %}</span>
+            <section class="bg-surface-container-lowest rounded-2xl p-4 md:p-5 shadow-sm border border-surface-container-high space-y-4">
+                <div class="flex items-center gap-2 pb-2 border-b border-surface-container-low">
+                    <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-[20px]">{% if carerecord_id %}edit_notifications{% else %}notifications_active{% endif %}</span>
                     </div>
-                    <h2 class="font-headline font-bold text-xl text-primary">待辦內容設定</h2>
+                    <h2 class="font-headline font-bold text-base text-primary">待辦內容設定</h2>
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-3">
                     <!-- 提醒日期 -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒日期</label>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒日期</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">calendar_month</span>
-                            <input name="record_date" type="date" required value="{{ form_data.record_date|default:selected_date_iso }}" class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-4 py-4 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-base outline-none font-medium" />
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">calendar_month</span>
+                            <input name="record_date" type="date" required value="{{ form_data.record_date|default:selected_date_iso }}" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-3 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium" />
                         </div>
                     </div>
 
                     <!-- 提醒類別 -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒類別</label>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒類別</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">category</span>
-                            <select name="carestatus_id" required class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-10 py-4 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-base outline-none font-medium appearance-none bg-none">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">category</span>
+                            <select name="carestatus_id" required class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-9 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium appearance-none bg-none">
                                 <option value="" disabled {% if not form_data.carestatus_id %}selected{% endif %}>請選擇類別...</option>
                                 {% for cs in carestatus_list %}
                                     <option value="{{ cs.carestatus_id }}" {% if form_data.carestatus_id|stringformat:"s" == cs.carestatus_id|stringformat:"s" %}selected{% endif %}>{{ cs.carestatus }}</option>
                                 {% endfor %}
                             </select>
-                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
                         </div>
                     </div>
 
                     <!-- 提醒時間 -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒時間 (時:分)</label>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">提醒時間 (時:分)</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">schedule</span>
-                            <input name="record_time" type="time" required value="{{ form_data.record_time|default:"" }}" class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-4 py-4 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-base outline-none font-medium" />
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">schedule</span>
+                            <input name="record_time" type="time" required value="{{ form_data.record_time|default:"" }}" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-3 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium" />
                         </div>
                     </div>
 
                     <!-- 詳細內容 -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦內容說明 (100字以內)</label>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦內容說明 (100字以內)</label>
                         <div class="relative">
-                            <textarea name="content" maxlength="100" placeholder="例如：記得帶寶寶手冊和健保卡" rows="4" class="w-full bg-surface-container-low border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-base outline-none font-medium resize-none placeholder:text-on-surface-variant/40">{{ form_data.content|default:"" }}</textarea>
+                            <textarea name="content" maxlength="100" placeholder="例如：記得帶寶寶手冊和健保卡" rows="2" class="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium resize-none placeholder:text-on-surface-variant/40">{{ form_data.content|default:"" }}</textarea>
                         </div>
                     </div>
                 </div>
             </section>
 
             {% if error_message %}
-                <p class="text-red-600 text-sm text-center font-bold">{{ error_message }}</p>
+                <p class="text-red-600 text-xs text-center font-bold">{{ error_message }}</p>
             {% endif %}
 
             <!-- Submit Button -->
-            <button type="submit" class="w-full py-4.5 bg-primary text-white rounded-2xl font-headline font-bold text-lg shadow-[0_10px_20px_rgba(125,77,95,0.2)] hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-2xl">{% if carerecord_id %}save{% else %}add_alert{% endif %}</span>
+            <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(125,77,95,0.2)] hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-xl">{% if carerecord_id %}save{% else %}add_alert{% endif %}</span>
                 {% if carerecord_id %}更新提醒{% else %}新增提醒{% endif %}
             </button>
         </form>
     </main>
 </div>
-{% endblock %}
+{% endblock %}
