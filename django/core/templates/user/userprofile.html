@@ -109,21 +109,23 @@
             </div>
         </section>
         <!-- Helper List Section -->
-        {% if can_manage_helpers %}
+        {% if show_family_section %}
         <section class="bg-surface-container-lowest rounded-lg shadow-[0_20px_40px_rgba(46,47,45,0.06)] overflow-hidden">
             <div class="p-6 pb-4 flex justify-between items-center border-b border-surface-container-high/50">
                 <div class="space-y-0.5">
-                    <h3 class="font-bold text-on-surface text-base">協助者名單</h3>
+                    <h3 class="font-bold text-on-surface text-base">家庭成員</h3>
                     <p class="text-xs text-on-surface-variant font-medium">共同管理嬰幼兒紀錄的家人</p>
                 </div>
+                {% if can_manage_helpers %}
                 <a href="{% url 'edit_family_member' %}"
                    class="relative inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all active:scale-95 border border-primary/10">
-                    <span class="material-symbols-outlined text-[16px]">{% if is_case_owner %}manage_accounts{% else %}visibility{% endif %}</span>
-                    <span>{% if is_case_owner %}管理{% else %}查看{% endif %}</span>
+                    <span class="material-symbols-outlined text-[16px]">manage_accounts</span>
+                    <span>管理</span>
                     {% if pending_count %}
                     <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm">{{ pending_count }}</span>
                     {% endif %}
                 </a>
+                {% endif %}
             </div>
             <div class="p-4 space-y-2">
                 {% for member in family_members %}
@@ -144,7 +146,7 @@
                             {{ member.role_label }}
                         </span>
                         {% endif %}
-                        {% if is_case_owner %}
+                        {% if is_case_owner and member.familymember_id %}
                         <a href="{% url 'edit_family_member' %}?member_id={{ member.familymember_id }}"
                            class="member-manage-link">
                             <span class="material-symbols-outlined text-[20px]">manage_accounts</span>
