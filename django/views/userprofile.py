@@ -1,4 +1,5 @@
 from datetime import timedelta
+from types import SimpleNamespace
 
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -157,6 +158,17 @@ def userprofile(request):
             pending_members = pending_reqs
         else:
             pending_members = []
+        # 養育者永遠排第一，協助者也能看到誰是養育者
+        case.select_related('user') if hasattr(case, 'select_related') else None
+        owner_user = getattr(case, 'user', None)
+        if owner_user:
+            owner_entry = SimpleNamespace(
+                user=owner_user,
+                role_label='養育者',
+                is_owner_member=True,
+                familymember_id=None,
+            )
+            family_members = [owner_entry] + family_members
 
     return render(request, 'user/userprofile.html', {
         'current_user': current_user,
@@ -167,6 +179,7 @@ def userprofile(request):
         'pending_members': pending_members,
         'can_manage_helpers': can_manage_helpers,
         'is_case_owner': is_case_owner,
+        'show_family_section': bool(case),
     })
 
 def join_family(request):
@@ -225,6 +238,16 @@ def join_family(request):
             pending_reqs = join_request.get_pending_requests(active_case.pregnancycase_id)
             pending_count = len(pending_reqs)
             pending_members = pending_reqs
+        # 養育者永遠排第一
+        owner_user = getattr(active_case, 'user', None)
+        if owner_user:
+            owner_entry = SimpleNamespace(
+                user=owner_user,
+                role_label='養育者',
+                is_owner_member=True,
+                familymember_id=None,
+            )
+            family_members = [owner_entry] + family_members
 
     return render(request, 'user/userprofile.html', {
         'current_user': current_user,
@@ -237,6 +260,7 @@ def join_family(request):
         'pending_members': pending_members,
         'can_manage_helpers': can_manage_helpers,
         'is_case_owner': is_case_owner,
+        'show_family_section': bool(active_case),
     })
 
 
