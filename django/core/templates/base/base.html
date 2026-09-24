@@ -33,8 +33,12 @@
                     <div class="px-4 py-2 bg-surface-container-low/50 border-b border-surface-container-highest">
                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">切換嬰幼兒</span>
                     </div>
-                    {% if switcher_items %}
-                        {% for item in switcher_items %}
+                    {% if switcher_items_own or switcher_items_shared %}
+                        {% if switcher_items_own %}
+                        <div class="px-4 py-1.5 bg-surface-container-low/60 border-b border-surface-container-highest">
+                            <span class="text-[9px] font-bold text-primary/60 uppercase tracking-widest">養育者</span>
+                        </div>
+                        {% for item in switcher_items_own %}
                         <div class="w-full text-left px-4 py-3 {% if item == switcher_active_item %}bg-primary/5{% else %}hover:bg-surface-container-low{% endif %} transition-colors flex items-center justify-between border-b border-surface-container-highest group">
                             <div class="flex items-center gap-3 cursor-pointer w-full" onclick="window.location.href='{{ item.url }}'">
                                 <div class="w-8 h-8 rounded-full {% if item == switcher_active_item %}bg-primary/10{% else %}bg-surface-container-high{% endif %} flex items-center justify-center shrink-0">
@@ -47,6 +51,25 @@
                             </div>
                         </div>
                         {% endfor %}
+                        {% endif %}
+                        {% if switcher_items_shared %}
+                        <div class="px-4 py-1.5 bg-surface-container-low/60 border-b border-surface-container-highest">
+                            <span class="text-[9px] font-bold text-[#2e9e6b]/60 uppercase tracking-widest">協助者</span>
+                        </div>
+                        {% for item in switcher_items_shared %}
+                        <div class="w-full text-left px-4 py-3 {% if item == switcher_active_item %}bg-primary/5{% else %}hover:bg-surface-container-low{% endif %} transition-colors flex items-center justify-between border-b border-surface-container-highest group">
+                            <div class="flex items-center gap-3 cursor-pointer w-full" onclick="window.location.href='{{ item.url }}'">
+                                <div class="w-8 h-8 rounded-full {% if item == switcher_active_item %}bg-primary/10{% else %}bg-surface-container-high{% endif %} flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined {% if item == switcher_active_item %}text-primary{% else %}text-on-surface-variant{% endif %} text-[18px]">{{ item.icon }}</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold {% if item == switcher_active_item %}text-primary{% else %}text-on-surface{% endif %}">{{ item.name }}</span>
+                                    <span class="text-[10px] {% if item == switcher_active_item %}text-primary/70{% else %}text-on-surface-variant{% endif %} font-medium">{{ item.desc }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     {% else %}
                         <div class="px-4 py-4 text-center text-xs text-on-surface-variant border-b border-surface-container-highest">
                             目前無懷孕或嬰幼兒紀錄
