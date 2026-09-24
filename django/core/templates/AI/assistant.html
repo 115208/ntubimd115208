@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}成長評估助理{% endblock %}
+{% block title %}成長評估助手{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/assistant.css' %}" />
 {% endblock %}
@@ -9,7 +9,7 @@
     <div class="flex items-center gap-3">
         <a href="/babyinformation/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
             <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
-            <span class="font-extrabold text-2xl text-primary tracking-tight">嬰幼兒成長評估助理</span>
+            <span class="font-extrabold text-2xl text-primary tracking-tight">嬰幼兒成長評估助手</span>
         </a>
     </div>
 </header>
@@ -18,6 +18,11 @@
 
         <!-- CSRF for AJAX -->
         <input type="hidden" id="csrf-token" value="{{ csrf_token }}" />
+
+        <!-- ── 醫療免責聲明（固定顯示） ── -->
+        <p class="assistant-disclaimer rounded-xl bg-primary/5 border border-primary/20 px-4 py-2 text-[11px] leading-relaxed text-on-surface-variant" role="note">
+            {{ medical_disclaimer|default:"本內容為一般衛教資訊，不能取代專業醫療診斷，如有不適請諮詢醫師。" }}
+        </p>
 
         <!-- ── Messages ── -->
         <div id="assistant-messages" class="assistant-messages" aria-live="polite">
@@ -38,6 +43,7 @@
                         <button
                             class="assistant-baby-card"
                             type="button"
+                            data-baby-id="{{ item.baby.baby_id }}"
                             data-baby-name="{{ item.baby.name }}"
                             role="listitem"
                         >
@@ -65,16 +71,16 @@
                                     目前成長
                                 </h3>
                                 <div class="assistant-question-buttons">
-                                    <button type="button" data-question="目前身高是否符合WHO標準？">
+                                    <button type="button" data-question="目前身高是否符合WHO標準？" data-metric="height">
                                         <span class="material-symbols-outlined">height</span>身高
                                     </button>
-                                    <button type="button" data-question="目前體重是否符合WHO標準？">
+                                    <button type="button" data-question="目前體重是否符合WHO標準？" data-metric="weight">
                                         <span class="material-symbols-outlined">monitor_weight</span>體重
                                     </button>
-                                    <button type="button" data-question="目前頭圍是否符合WHO標準？">
+                                    <button type="button" data-question="目前頭圍是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="目前成長狀況如何？">
+                                    <button type="button" data-question="目前成長狀況如何？" data-metric="height">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -86,16 +92,16 @@
                                     歷史成長
                                 </h3>
                                 <div class="assistant-question-buttons">
-                                    <button type="button" data-question="歷史身高變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史身高變化是否符合WHO標準？" data-metric="height">
                                         <span class="material-symbols-outlined">height</span>身高
                                     </button>
-                                    <button type="button" data-question="歷史體重變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史體重變化是否符合WHO標準？" data-metric="weight">
                                         <span class="material-symbols-outlined">monitor_weight</span>體重
                                     </button>
-                                    <button type="button" data-question="歷史頭圍變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史頭圍變化是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="歷史成長狀況如何？">
+                                    <button type="button" data-question="歷史成長狀況如何？" data-metric="height">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -114,6 +120,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
     (() => {
         /* ── DOM refs ── */
@@ -125,6 +132,7 @@
         const qlWrap         = document.getElementById('question-list-wrap');
         const allQBtns       = document.querySelectorAll('.assistant-question-buttons button');
         let   selectedBaby   = '';
+        let   selectedBabyId = '';
         let   isSubmitting   = false;
 
         /* ════════════════════════════════
@@ -153,6 +161,157 @@
         const setQBtnsDisabled = (val) => allQBtns.forEach(b => b.disabled = val);
 
         /* ════════════════════════════════
+           成長曲線圖
+        ════════════════════════════════ */
+        const METRIC_CONFIGS = {
+            height: {
+                label: '身高 (cm)',
+                borderColor: '#7c5cbf',
+                backgroundColor: 'rgba(124,92,191,0.15)',
+            },
+            weight: {
+                label: '體重 (kg)',
+                borderColor: '#3d9e6e',
+                backgroundColor: 'rgba(61,158,110,0.12)',
+            },
+            head: {
+                label: '頭圍 (cm)',
+                borderColor: '#d4883f',
+                backgroundColor: 'rgba(212,136,63,0.12)',
+            },
+        };
+
+        let growthChartInstance = null;   // 保留目前圖表實例
+
+        const renderGrowthChart = (chartData, initialMetric = 'height') => {
+            if (!chartData || !chartData.labels || chartData.labels.length === 0) return;
+
+            // ── 建立圖卡容器 ──
+            const card = document.createElement('div');
+            card.className = 'assistant-chart-card';
+            card.setAttribute('role', 'img');
+            card.setAttribute('aria-label', `${chartData.baby_name} 成長曲線圖`);
+
+            // 標題列 + 指標切換按鈕
+            const header = document.createElement('div');
+            header.className = 'assistant-chart-header';
+            header.innerHTML = `
+                <span class="assistant-chart-title">
+                    <span class="material-symbols-outlined" aria-hidden="true"
+                          style="font-variation-settings:'FILL' 1,'wght' 600;">show_chart</span>
+                    ${chartData.baby_name} 成長曲線
+                </span>
+                <div class="assistant-chart-tabs" role="group" aria-label="指標切換">
+                    <button class="chart-tab is-active" data-metric="height">身高</button>
+                    <button class="chart-tab" data-metric="weight">體重</button>
+                    <button class="chart-tab" data-metric="head">頭圍</button>
+                </div>`;
+
+            // ── 用 wrapper div 包住 canvas，讓 Chart.js 讀到正確高度 ──
+            // （Chart.js responsive 模式會讀父層尺寸；直接放在 flex 容器裡時
+            //   可能拿到 0，包一層有明確高度的 wrapper 可避免此問題）
+            const canvasWrap = document.createElement('div');
+            canvasWrap.className = 'assistant-chart-canvas-wrap';
+
+            const canvas = document.createElement('canvas');
+            canvas.setAttribute('aria-hidden', 'true');
+
+            canvasWrap.appendChild(canvas);
+            card.appendChild(header);
+            card.appendChild(canvasWrap);
+            messages.appendChild(card);
+
+            // ── 讓圖表卡片捲入視線（不論 messages 是否滿版皆有效）──
+            requestAnimationFrame(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+
+            // ── 建立初始圖表（身高）──
+            // 延遲一幀讓 DOM 尺寸穩定後再初始化，避免 canvas 高度計算為 0
+            let activeMetric = initialMetric;
+
+            const buildDatasets = (metric) => {
+                const cfg = METRIC_CONFIGS[metric];
+                const data = chartData[metric];
+                return [{
+                    label: cfg.label,
+                    data: chartData.labels.map((m, i) => ({ x: m, y: data[i] })),
+                    borderColor: cfg.borderColor,
+                    backgroundColor: cfg.backgroundColor,
+                    pointBackgroundColor: cfg.borderColor,
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.38,
+                }];
+            };
+
+            // 先把 tab 高亮調整為 initialMetric
+            card.querySelectorAll('.chart-tab').forEach(btn => {
+                btn.classList.toggle('is-active', btn.dataset.metric === initialMetric);
+            });
+
+            if (growthChartInstance) growthChartInstance.destroy();
+
+            requestAnimationFrame(() => {
+                growthChartInstance = new Chart(canvas, {
+                    type: 'line',
+                    data: { datasets: buildDatasets(initialMetric) },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 520, easing: 'easeOutQuart' },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: { display: true, text: '月齡（月）', color: '#9a8fa2', font: { size: 11 } },
+                                ticks: { stepSize: 1, color: '#b8afc4', font: { size: 11 } },
+                                grid: { color: 'rgba(101,81,138,0.07)' },
+                            },
+                            y: {
+                                title: { display: true, text: METRIC_CONFIGS['height'].label, color: '#9a8fa2', font: { size: 11 } },
+                                ticks: { color: '#b8afc4', font: { size: 11 } },
+                                grid: { color: 'rgba(101,81,138,0.07)' },
+                            },
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(52,41,64,0.92)',
+                                titleColor: '#e8d8ff',
+                                bodyColor: '#fff',
+                                padding: 10,
+                                cornerRadius: 10,
+                                callbacks: {
+                                    title: (items) => `月齡 ${items[0].parsed.x} 個月`,
+                                },
+                            },
+                        },
+                    },
+                });
+            });
+
+            // ── 切換指標 ──
+            const switchMetric = (metric) => {
+                activeMetric = metric;
+                const cfg = METRIC_CONFIGS[metric];
+                growthChartInstance.data.datasets = buildDatasets(metric);
+                growthChartInstance.options.scales.y.title.text = cfg.label;
+                growthChartInstance.update();
+
+                card.querySelectorAll('.chart-tab').forEach(btn => {
+                    btn.classList.toggle('is-active', btn.dataset.metric === metric);
+                });
+            };
+
+            card.querySelectorAll('.chart-tab').forEach(btn => {
+                btn.addEventListener('click', () => switchMetric(btn.dataset.metric));
+            });
+        };
+
+        /* ════════════════════════════════
            Question-list slide animation
         ════════════════════════════════ */
         const staggerButtons = () => {
@@ -176,6 +335,27 @@
             }
         };
 
+        const closeQuestionList = () => {
+            if (!qlWrap || !qlWrap.classList.contains('is-open')) return;
+            qlWrap.querySelectorAll('.btn-pop').forEach(b => b.classList.remove('btn-pop'));
+
+            const h = qlWrap.scrollHeight;
+
+            /* 先移除 is-open，讓 CSS base class 接管（max-height:0; opacity:0） */
+            qlWrap.classList.remove('is-open');
+
+            /* 用 Web Animations API 執行收合，不依賴 CSS transition 觸發時機 */
+            const anim = qlWrap.animate(
+                [
+                    { maxHeight: h + 'px', opacity: '1' },
+                    { maxHeight: '0px',    opacity: '0' }
+                ],
+                { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+            );
+            /* 動畫結束後 cancel 移除 fill 效果，讓 CSS base class（max-height:0; opacity:0）接手 */
+            anim.onfinish = () => anim.cancel();
+        };
+
         /* ════════════════════════════════
            Baby card selection
         ════════════════════════════════ */
@@ -185,6 +365,7 @@
                 babyCards.forEach(c => c.classList.remove('is-selected'));
                 card.classList.add('is-selected');
                 selectedBaby = card.dataset.babyName;
+                selectedBabyId = card.dataset.babyId || '';
 
                 if (questionHint) {
                     questionHint.classList.remove('hint-slide');
@@ -204,10 +385,12 @@
         ════════════════════════════════ */
         allQBtns.forEach((btn) => {
             btn.addEventListener('click', async () => {
-                if (isSubmitting || !selectedBaby) return;
+                if (isSubmitting || !selectedBabyId) return;
 
-                const question = `${selectedBaby}${btn.dataset.question}`;
-                appendMessage(question, 'user');
+                // 送給後端的只有「問題本文」與 baby_id，寶寶名稱由後端驗證歸屬後自行組合；
+                // 這裡串上名字只是為了畫面顯示。
+                const question = btn.dataset.question || '';
+                appendMessage(`${selectedBaby}${question}`, 'user');
 
                 isSubmitting = true;
                 setQBtnsDisabled(true);
@@ -216,6 +399,7 @@
                 try {
                     const body = new FormData();
                     body.append('question', question);
+                    body.append('baby_id', selectedBabyId);
                     body.append('csrfmiddlewaretoken', csrfToken);
 
                     const res  = await fetch(window.location.href, {
@@ -229,14 +413,21 @@
                         credentials: 'same-origin',
                     });
                     const data = await res.json();
-                    if (!res.ok || !data.ok) throw new Error(data.error || '助理暫時無法回覆。');
+                    if (!res.ok || !data.ok) throw new Error(data.error || '助手暫時無法回覆。');
                     appendMessage(data.answer, 'bot');
+
+                    // ── 有成長資料時繪製曲線圖 ──
+                    if (data.chart_data) {
+                        const metric = btn.dataset.metric || 'height';
+                        renderGrowthChart(data.chart_data, metric);
+                    }
                 } catch (err) {
                     appendMessage(err.message, 'error');
                 } finally {
                     hideTyping();
                     isSubmitting = false;
                     setQBtnsDisabled(false);
+                    closeQuestionList();
                 }
             });
         });

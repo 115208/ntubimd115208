@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -8,7 +9,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
-from core.models import BabyInformation
+from core.models import BabyInformation, BabyRecord
 from views.session_utils import get_current_user_profile
 from views.health_safety import (
     MEDICAL_DISCLAIMER,
@@ -187,6 +188,59 @@ def _get_born_babies(current_user):
     ).select_related("pregnancycase").distinct().order_by("birthdaytime", "baby_id")
 
 
+def _build_chart_data(baby):
+    """將寶寶的歷史成長紀錄轉成 Chart.js 資料格式。
+
+    回傳 dict，包含 labels（月齡）、以及 height / weight / head 三條序列。
+    若資料不足則回傳 None。
+    """
+    records = list(
+        BabyRecord.objects
+        .filter(baby=baby)
+        .exclude(height__isnull=True, weight__isnull=True, headcircumference__isnull=True)
+        .order_by("date")
+        .values("date", "height", "weight", "headcircumference")
+    )
+    if not records:
+        return None
+
+    # 計算月齡（整數）
+    birth = baby.birthdaytime
+    if hasattr(birth, "date"):
+        birth = birth.date()
+
+    labels = []
+    heights, weights, heads = [], [], []
+
+    for rec in records:
+        rec_date = rec["date"]
+        if isinstance(rec_date, datetime.datetime):
+            rec_date = rec_date.date()
+        if rec_date < birth:
+            continue
+        months = (rec_date.year - birth.year) * 12 + (rec_date.month - birth.month)
+        if rec_date.day < birth.day:
+            months -= 1
+        months = max(0, months)
+
+        labels.append(months)
+        heights.append(rec["height"])
+        weights.append(rec["weight"])
+        heads.append(rec["headcircumference"])
+
+    if not labels:
+        return None
+
+    return {
+        "labels": labels,
+        "height": heights,
+        "weight": weights,
+        "head": heads,
+        "baby_name": baby.name,
+        "gender": baby.gender,  # '1'=男, '2'=女
+    }
+
+
 def assistant(request):
     current_user = get_current_user_profile(request)
     if not current_user:
@@ -238,7 +292,8 @@ def assistant(request):
         if red_flags:
             logger.info("Assistant red flag keywords matched: %s", red_flags)
 
-        return JsonResponse({"ok": True, "answer": answer})
+        chart_data = _build_chart_data(baby)
+        return JsonResponse({"ok": True, "answer": answer, "chart_data": chart_data})
 
     assistant_babies = [
         {
@@ -247,7 +302,7 @@ def assistant(request):
         }
         for baby in _get_born_babies(current_user)
     ]
-    return render(request, "base/assistant.html", {
+    return render(request, "AI/assistant.html", {
         "current_user": current_user,
         "assistant_babies": assistant_babies,
         "medical_disclaimer": MEDICAL_DISCLAIMER,
