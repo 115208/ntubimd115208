@@ -45,7 +45,7 @@
 <div id="pageOuterBg" class="relative bg-background min-h-screen text-on-surface transition-colors duration-700 overflow-hidden">
 
     <!-- 系統背景柔光暈渲染 (確保橫螢幕與直螢幕皆與系統完美相容) -->
-    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-purple-200/40 via-pink-100/30 to-sky-200/40 blur-3xl opacity-70 pointer-events-none rounded-full"></div>
+    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-purple-200/40 via-purple-100/30 to-indigo-200/40 blur-3xl opacity-70 pointer-events-none rounded-full"></div>
 
     <!-- Version 3 Top Navigation Tab Bar & Back to Home -->
     <div class="relative z-10 max-w-md md:max-w-5xl lg:max-w-6xl mx-auto px-4 pt-6 pb-2 space-y-3">
@@ -59,20 +59,21 @@
             <!-- 時間篩選 + 模式切換按鈕群 -->
             <div class="flex items-center gap-2">
                 <!-- 時間篩選下拉選單 (影片與列表視圖皆支援) -->
-                <form method="GET" class="inline-flex items-center gap-1.5 bg-white/90 border border-[#E8E0EF] shadow-2xs rounded-full px-3.5 py-1.5 backdrop-blur-md transition-all hover:border-[#65518a]/40">
+                <form method="GET" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group cursor-pointer">
                     <input type="hidden" name="mode" value="{{ mode|default:'video' }}">
                     {% if filter_type %}<input type="hidden" name="filter" value="{{ filter_type }}">{% endif %}
-                    <span class="material-symbols-outlined text-[#65518a] text-[18px]">calendar_month</span>
-                    <select name="time_range" onchange="this.form.submit()" class="bg-transparent text-xs font-bold text-[#4A4052] focus:outline-none cursor-pointer pr-1">
-                        <option value="all" {% if time_range == 'all' or not time_range %}selected{% endif %}>全部時間</option>
-                        <option value="1m" {% if time_range == '1m' %}selected{% endif %}>近一個月</option>
-                        <option value="3m" {% if time_range == '3m' %}selected{% endif %}>近三個月</option>
-                        <option value="6m" {% if time_range == '6m' %}selected{% endif %}>近半年</option>
-                        <option value="1y" {% if time_range == '1y' %}selected{% endif %}>近一年</option>
+                    <span class="material-symbols-outlined text-[#65518a] group-hover:text-white text-[18px] transition-colors">calendar_month</span>
+                    <select name="time_range" onchange="this.form.submit()" class="bg-transparent border-0 outline-none text-xs font-bold text-[#65518a] group-hover:text-white focus:outline-none focus:ring-0 cursor-pointer appearance-none p-0 m-0" style="-webkit-appearance: none; -moz-appearance: none; appearance: none; border: none; outline: none; box-shadow: none;">
+                        <option value="all" {% if time_range == 'all' or not time_range %}selected{% endif %} class="bg-white text-[#4A4052]">全部時間</option>
+                        <option value="1m" {% if time_range == '1m' %}selected{% endif %} class="bg-white text-[#4A4052]">近一個月</option>
+                        <option value="3m" {% if time_range == '3m' %}selected{% endif %} class="bg-white text-[#4A4052]">近三個月</option>
+                        <option value="6m" {% if time_range == '6m' %}selected{% endif %} class="bg-white text-[#4A4052]">近半年</option>
+                        <option value="1y" {% if time_range == '1y' %}selected{% endif %} class="bg-white text-[#4A4052]">近一年</option>
                         {% for y in available_years %}
-                        <option value="{{ y }}" {% if time_range == y|stringformat:"s" %}selected{% endif %}>{{ y }} 年</option>
+                        <option value="{{ y }}" {% if time_range == y|stringformat:"s" %}selected{% endif %} class="bg-white text-[#4A4052]">{{ y }} 年</option>
                         {% endfor %}
                     </select>
+                    <span class="material-symbols-outlined text-[#65518a] group-hover:text-white text-[18px] pointer-events-none transition-colors">expand_more</span>
                 </form>
 
                 {% if mode == 'video' or not mode %}
@@ -222,13 +223,13 @@
             const ultrasoundPhotos = readJsonScript('ultrasound-photos-data', []) || [];
             const physicalStats = readJsonScript('physical-stats-data', []) || [];
 
-            // 構建影片 Scene 列表 (保留原有各項功能與原色主題)
+            // 構建影片 Scene 列表 (全數對齊 CoLoGrowth 紫色系統主題)
             const scenes = [
                 {
                     type: 'days_template',
                     title: '陪伴天數',
-                    badge: '紫色主題',
-                    badgeBg: 'bg-[#d6beff]/30 text-[#65518a]',
+                    badge: '陪伴天數',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'calendar_month',
                     iconColor: '#65518a',
                     themeGradient: 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)',
@@ -237,48 +238,48 @@
                 {
                     type: 'photos_template',
                     title: '超音波與成長照',
-                    badge: '藍色主題',
-                    badgeBg: 'bg-[#b2e4fb]/30 text-[#2f6275]',
+                    badge: '照片總數',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'photo_library',
-                    iconColor: '#2f6275',
-                    themeGradient: 'linear-gradient(135deg, #e0f7fa 0%, #b2e4fb 50%, #e0f2fe 100%)',
+                    iconColor: '#65518a',
+                    themeGradient: 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)',
                     duration: 6500,
                 },
                 {
                     type: 'mom_records_template',
                     title: '媽媽的紀錄筆數',
-                    badge: '粉色主題',
-                    badgeBg: 'bg-[#f8bbd0]/30 text-[#7d4d5f]',
+                    badge: '媽媽紀錄',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'face_3',
-                    iconColor: '#7d4d5f',
-                    themeGradient: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #fbcfe8 100%)',
+                    iconColor: '#65518a',
+                    themeGradient: 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)',
                     duration: 5000,
                 },
                 {
                     type: 'baby_records_template',
                     title: '小孩紀錄筆數',
-                    badge: '綠色主題',
-                    badgeBg: 'bg-[#c8e6c9]/40 text-[#2e7d32]',
+                    badge: '寶寶紀錄',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'child_care',
-                    iconColor: '#2e7d32',
-                    themeGradient: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #d1fae5 100%)',
+                    iconColor: '#65518a',
+                    themeGradient: 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)',
                     duration: 5000,
                 },
                 {
                     type: 'ai_qa_template',
                     title: 'Growth AI 解答次數',
-                    badge: '黃色主題',
-                    badgeBg: 'bg-[#fefccf] text-amber-800',
+                    badge: 'AI 問答',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'psychology',
-                    iconColor: '#b45309',
-                    themeGradient: 'linear-gradient(135deg, #fffde7 0%, #fefccf 50%, #fef08a 100%)',
+                    iconColor: '#65518a',
+                    themeGradient: 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)',
                     duration: 5000,
                 },
                 {
                     type: 'physical_template',
                     title: '身體狀況分布',
-                    badge: '百分比統計',
-                    badgeBg: 'bg-[#d6beff]/30 text-[#65518a]',
+                    badge: '身體狀況',
+                    badgeBg: 'bg-[#EDE5F5] text-[#65518a] border border-[#E8E0EF]',
                     icon: 'health_and_safety',
                     iconColor: '#65518a',
                     themeGradient: 'linear-gradient(135deg, #f3e5f5 0%, #ede5f5 100%)',
@@ -287,9 +288,9 @@
                 {
                     type: 'outro_template',
                     title: '回顧完成',
-                    badge: '結束頁',
-                    badgeBg: 'bg-white/20 text-white',
-                    icon: 'sparkles',
+                    badge: '溫馨結尾',
+                    badgeBg: 'bg-[#362459] text-white',
+                    icon: 'auto_awesome',
                     iconColor: '#ffffff',
                     themeGradient: 'linear-gradient(135deg, #362459 0%, #1a1523 100%)',
                     duration: 8000,
@@ -328,20 +329,20 @@
                     });
                 }
 
-                // 產生右側電腦版播放清單
+                // 產生右側電腦版播放清單 (全數統一系統紫主題)
                 if (desktopPlaylistEl) {
                     desktopPlaylistEl.innerHTML = '';
                     scenes.forEach((s, idx) => {
                         if (idx === scenes.length - 1) return; // 不列出結束頁
                         const btn = document.createElement('button');
                         btn.id = `playlist-item-${idx}`;
-                        btn.className = `w-full p-3 rounded-2xl border flex items-center justify-between text-left transition-all duration-300 cursor-pointer ${s.badgeBg}`;
+                        btn.className = `w-full p-3 rounded-2xl border border-[#E8E0EF] bg-white hover:bg-[#EDE5F5]/60 flex items-center justify-between text-left transition-all duration-300 cursor-pointer shadow-2xs`;
                         btn.innerHTML = `
                             <div class="flex items-center gap-2.5">
-                                <span class="material-symbols-outlined text-lg">${s.icon}</span>
+                                <span class="material-symbols-outlined text-lg text-[#65518a]">${s.icon}</span>
                                 <span class="text-xs font-bold text-[#362459]">${s.title}</span>
                             </div>
-                            <span class="text-[10px] font-bold opacity-75">${idx + 1}/${scenes.length - 1}</span>
+                            <span class="text-[10px] font-bold text-[#65518a] bg-[#EDE5F5] px-2.5 py-0.5 rounded-full border border-[#E8E0EF]">${idx + 1}/${scenes.length - 1}</span>
                         `;
                         btn.addEventListener('click', () => {
                             startScene(idx);
@@ -356,9 +357,11 @@
                     const item = document.getElementById(`playlist-item-${idx}`);
                     if (!item) return;
                     if (idx === index) {
-                        item.classList.add('ring-2', 'ring-[#65518a]', 'scale-[1.02]', 'shadow-sm');
+                        item.classList.add('ring-2', 'ring-[#65518a]', 'bg-[#EDE5F5]/80', 'scale-[1.02]', 'shadow-sm');
+                        item.classList.remove('bg-white');
                     } else {
-                        item.classList.remove('ring-2', 'ring-[#65518a]', 'scale-[1.02]', 'shadow-sm');
+                        item.classList.remove('ring-2', 'ring-[#65518a]', 'bg-[#EDE5F5]/80', 'scale-[1.02]', 'shadow-sm');
+                        item.classList.add('bg-white');
                     }
                 });
             }
@@ -412,22 +415,22 @@
                     animateCounter('countDay', stats.days);
 
                 } else if (scene.type === 'photos_template') {
-                    // 超音波照片: 橫螢幕 (md:) 圖片與文字左右並排
-                    reelContainer.style.background = 'linear-gradient(135deg, #e0f7fa 0%, #b2e4fb 50%, #e0f2fe 100%)';
+                    // 超音波照片: 橫螢幕 (md:) 圖片與文字左右並排 (統一系統紫主題)
+                    reelContainer.style.background = 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)';
                     // 沒有真實超音波照時顯示空狀態，不再用網路圖庫的照片冒充使用者的產檢照
                     const photo = ultrasoundPhotos[0] || null;
 
                     sceneStageEl.innerHTML = `
                         <div class="w-full max-w-sm md:max-w-2xl mx-auto">
-                            <div class="bg-[#b2e4fb]/40 p-5 md:p-6 rounded-[32px] border border-[#b2e4fb]/60 shadow-2xl backdrop-blur-md text-[#014154] space-y-4">
+                            <div class="bg-[#EDE5F5]/70 p-5 md:p-6 rounded-[32px] border border-[#E8E0EF] shadow-2xl backdrop-blur-md text-[#362459] space-y-4">
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
-                                            <span class="material-symbols-outlined text-[#2f6275] text-xl">photo_library</span>
+                                            <span class="material-symbols-outlined text-[#65518a] text-xl">photo_library</span>
                                         </div>
-                                        <span class="text-sm md:text-base font-extrabold text-[#1f5467]">超音波與成長照</span>
+                                        <span class="text-sm md:text-base font-extrabold text-[#362459]">超音波與成長照</span>
                                     </div>
-                                    <span class="text-lg md:text-xl font-black text-[#014154] bg-white/70 px-3 py-1 rounded-full text-xs">${stats.photos} <span class="font-normal">Photos</span></span>
+                                    <span class="text-lg md:text-xl font-black text-[#362459] bg-white/80 px-3 py-1 rounded-full text-xs">${stats.photos} <span class="font-normal text-[#65518a]">Photos</span></span>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
@@ -438,8 +441,8 @@
                                     </div>
 
                                     <div class="space-y-3 text-left">
-                                        <p id="scene-photo-note" class="text-xs md:text-sm font-bold text-[#1f5467] leading-relaxed bg-white/60 p-3.5 rounded-2xl border border-white/40"></p>
-                                        <div class="text-[11px] font-bold text-[#2f6275]/80 bg-white/40 px-3 py-2 rounded-xl">
+                                        <p id="scene-photo-note" class="text-xs md:text-sm font-bold text-[#65518a] leading-relaxed bg-white/70 p-3.5 rounded-2xl border border-white/40"></p>
+                                        <div class="text-[11px] font-bold text-[#65518a]/90 bg-white/50 px-3 py-2 rounded-xl">
                                             💡 提示：點擊右側段落可隨時切換觀看其他回顧項目
                                         </div>
                                     </div>
@@ -477,27 +480,27 @@
                     }
 
                 } else if (scene.type === 'mom_records_template') {
-                    // 媽媽紀錄: 雙向相容
-                    reelContainer.style.background = 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #fbcfe8 100%)';
+                    // 媽媽紀錄: 雙向相容 (統一系統紫主題)
+                    reelContainer.style.background = 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)';
                     sceneStageEl.innerHTML = `
                         <div class="w-full max-w-sm md:max-w-2xl particle-float mx-auto">
-                            <div class="bg-[#f8bbd0]/40 p-6 md:p-8 rounded-[32px] border border-[#f8bbd0]/60 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                            <div class="bg-[#EDE5F5]/70 p-6 md:p-8 rounded-[32px] border border-[#E8E0EF] shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                                 <div class="space-y-3 flex-1">
                                     <div class="inline-flex items-center gap-2 bg-white/90 px-3.5 py-1.5 rounded-2xl shadow-xs">
-                                        <span class="material-symbols-outlined text-[#7d4d5f] text-xl">face_3</span>
-                                        <span class="text-xs font-bold text-[#7d4d5f]">孕期與心情日記</span>
+                                        <span class="material-symbols-outlined text-[#65518a] text-xl">face_3</span>
+                                        <span class="text-xs font-bold text-[#65518a]">孕期與心情日記</span>
                                     </div>
-                                    <h3 class="text-[#623648] text-base md:text-lg font-bold">媽媽的紀錄筆數</h3>
-                                    <p class="text-xs md:text-sm font-bold text-[#623648]/90 bg-white/40 p-3 rounded-2xl leading-relaxed">
+                                    <h3 class="text-[#362459] text-base md:text-lg font-bold">媽媽的紀錄筆數</h3>
+                                    <p class="text-xs md:text-sm font-bold text-[#65518a] bg-white/50 p-3 rounded-2xl leading-relaxed">
                                         「紀錄媽媽的產檢數據、心情變化與每一刻感受 🌸」
                                     </p>
                                 </div>
 
-                                <div class="bg-white/80 md:bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
-                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-[#4b2334] drop-shadow-sm">
+                                <div class="bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
+                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-[#362459] drop-shadow-sm">
                                         <span id="countMom">0</span>
                                     </p>
-                                    <span class="text-xs md:text-sm font-bold text-[#7d4d5f] uppercase tracking-wider">Records</span>
+                                    <span class="text-xs md:text-sm font-bold text-[#65518a] uppercase tracking-wider">Records</span>
                                 </div>
                             </div>
                         </div>
@@ -505,27 +508,27 @@
                     animateCounter('countMom', stats.momRecords);
 
                 } else if (scene.type === 'baby_records_template') {
-                    // 小孩紀錄: 雙向相容
-                    reelContainer.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #d1fae5 100%)';
+                    // 小孩紀錄: 雙向相容 (統一系統紫主題)
+                    reelContainer.style.background = 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)';
                     sceneStageEl.innerHTML = `
                         <div class="w-full max-w-sm md:max-w-2xl particle-float mx-auto">
-                            <div class="bg-[#c8e6c9]/50 p-6 md:p-8 rounded-[32px] border border-[#a5d6a7]/60 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                            <div class="bg-[#EDE5F5]/70 p-6 md:p-8 rounded-[32px] border border-[#E8E0EF] shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                                 <div class="space-y-3 flex-1">
                                     <div class="inline-flex items-center gap-2 bg-white/90 px-3.5 py-1.5 rounded-2xl shadow-xs">
-                                        <span class="material-symbols-outlined text-[#2e7d32] text-xl">child_care</span>
-                                        <span class="text-xs font-bold text-[#2e7d32]">寶貝成長軌跡</span>
+                                        <span class="material-symbols-outlined text-[#65518a] text-xl">child_care</span>
+                                        <span class="text-xs font-bold text-[#65518a]">寶貝成長軌跡</span>
                                     </div>
-                                    <h3 class="text-[#1b5e20] text-base md:text-lg font-bold">小孩紀錄筆數</h3>
-                                    <p class="text-xs md:text-sm font-bold text-[#1b5e20]/90 bg-white/50 p-3 rounded-2xl leading-relaxed">
+                                    <h3 class="text-[#362459] text-base md:text-lg font-bold">小孩紀錄筆數</h3>
+                                    <p class="text-xs md:text-sm font-bold text-[#65518a] bg-white/50 p-3 rounded-2xl leading-relaxed">
                                         「身高、體重與每個無可取代的第一次 🍼」
                                     </p>
                                 </div>
 
-                                <div class="bg-white/80 md:bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
-                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-[#1b5e20] drop-shadow-sm">
+                                <div class="bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
+                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-[#362459] drop-shadow-sm">
                                         <span id="countBaby">0</span>
                                     </p>
-                                    <span class="text-xs md:text-sm font-bold text-[#2e7d32] uppercase tracking-wider">Records</span>
+                                    <span class="text-xs md:text-sm font-bold text-[#65518a] uppercase tracking-wider">Records</span>
                                 </div>
                             </div>
                         </div>
@@ -533,27 +536,27 @@
                     animateCounter('countBaby', stats.babyRecords);
 
                 } else if (scene.type === 'ai_qa_template') {
-                    // Growth AI: 雙向相容
-                    reelContainer.style.background = 'linear-gradient(135deg, #fffde7 0%, #fefccf 50%, #fef08a 100%)';
+                    // Growth AI: 雙向相容 (統一系統紫主題)
+                    reelContainer.style.background = 'linear-gradient(135deg, #f3e8ff 0%, #d6beff 50%, #ede5f5 100%)';
                     sceneStageEl.innerHTML = `
                         <div class="w-full max-w-sm md:max-w-2xl particle-float mx-auto">
-                            <div class="bg-[#fefccf]/70 p-6 md:p-8 rounded-[32px] border border-amber-200/80 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                            <div class="bg-[#EDE5F5]/70 p-6 md:p-8 rounded-[32px] border border-[#E8E0EF] shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                                 <div class="space-y-3 flex-1">
                                     <div class="inline-flex items-center gap-2 bg-white/90 px-3.5 py-1.5 rounded-2xl shadow-xs">
-                                        <span class="material-symbols-outlined text-amber-700 text-xl">psychology</span>
-                                        <span class="text-xs font-bold text-amber-800">智能育兒助手</span>
+                                        <span class="material-symbols-outlined text-[#65518a] text-xl">psychology</span>
+                                        <span class="text-xs font-bold text-[#65518a]">智能育兒助手</span>
                                     </div>
-                                    <h3 class="text-amber-900 text-base md:text-lg font-bold">Growth AI 解答次數</h3>
-                                    <p class="text-xs md:text-sm font-bold text-amber-900/90 bg-white/50 p-3 rounded-2xl leading-relaxed">
+                                    <h3 class="text-[#362459] text-base md:text-lg font-bold">Growth AI 解答次數</h3>
+                                    <p class="text-xs md:text-sm font-bold text-[#65518a] bg-white/50 p-3 rounded-2xl leading-relaxed">
                                         「隨時陪伴您解答孕期與照顧寶寶的各種疑問 🤖」
                                     </p>
                                 </div>
 
-                                <div class="bg-white/80 md:bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
-                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-amber-900 drop-shadow-sm">
+                                <div class="bg-white/90 p-6 md:p-8 rounded-3xl shadow-lg border border-white/60 min-w-[200px] text-center">
+                                    <p class="text-5xl md:text-6xl font-black font-['Plus_Jakarta_Sans'] text-[#362459] drop-shadow-sm">
                                         <span id="countAi">0</span>
                                     </p>
-                                    <span class="text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider">Q&As</span>
+                                    <span class="text-xs md:text-sm font-bold text-[#65518a] uppercase tracking-wider">Q&As</span>
                                 </div>
                             </div>
                         </div>
@@ -741,86 +744,87 @@
                 </div>
 
                 <div class="self-end sm:self-auto">
-                    <form method="GET" class="inline-flex items-center gap-1.5 bg-white/90 border border-[#E8E0EF] shadow-2xs rounded-full px-4 py-2 backdrop-blur-md transition-all hover:border-[#65518a]/40">
+                    <form method="GET" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group cursor-pointer">
                         <input type="hidden" name="mode" value="classic">
                         {% if filter_type %}<input type="hidden" name="filter" value="{{ filter_type }}">{% endif %}
-                        <span class="material-symbols-outlined text-[#65518a] text-[18px]">calendar_month</span>
-                        <select name="time_range" onchange="this.form.submit()" class="bg-transparent text-xs font-bold text-[#4A4052] focus:outline-none cursor-pointer pr-1">
-                            <option value="all" {% if time_range == 'all' or not time_range %}selected{% endif %}>全部時間</option>
-                            <option value="1m" {% if time_range == '1m' %}selected{% endif %}>近一個月</option>
-                            <option value="3m" {% if time_range == '3m' %}selected{% endif %}>近三個月</option>
-                            <option value="6m" {% if time_range == '6m' %}selected{% endif %}>近半年</option>
-                            <option value="1y" {% if time_range == '1y' %}selected{% endif %}>近一年</option>
+                        <span class="material-symbols-outlined text-[#65518a] group-hover:text-white text-[18px] transition-colors">calendar_month</span>
+                        <select name="time_range" onchange="this.form.submit()" class="bg-transparent border-0 outline-none text-xs font-bold text-[#65518a] group-hover:text-white focus:outline-none focus:ring-0 cursor-pointer appearance-none p-0 m-0" style="-webkit-appearance: none; -moz-appearance: none; appearance: none; border: none; outline: none; box-shadow: none;">
+                            <option value="all" {% if time_range == 'all' or not time_range %}selected{% endif %} class="bg-white text-[#4A4052]">全部時間</option>
+                            <option value="1m" {% if time_range == '1m' %}selected{% endif %} class="bg-white text-[#4A4052]">近一個月</option>
+                            <option value="3m" {% if time_range == '3m' %}selected{% endif %} class="bg-white text-[#4A4052]">近三個月</option>
+                            <option value="6m" {% if time_range == '6m' %}selected{% endif %} class="bg-white text-[#4A4052]">近半年</option>
+                            <option value="1y" {% if time_range == '1y' %}selected{% endif %} class="bg-white text-[#4A4052]">近一年</option>
                             {% for y in available_years %}
-                            <option value="{{ y }}" {% if time_range == y|stringformat:"s" %}selected{% endif %}>{{ y }} 年</option>
+                            <option value="{{ y }}" {% if time_range == y|stringformat:"s" %}selected{% endif %} class="bg-white text-[#4A4052]">{{ y }} 年</option>
                             {% endfor %}
                         </select>
+                        <span class="material-symbols-outlined text-[#65518a] group-hover:text-white text-[18px] pointer-events-none transition-colors">expand_more</span>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- Stats Grid (Bento Style - 橫螢幕 3欄適應 layout) -->
+        <!-- Stats Grid (Bento Style - 橫螢幕 3欄適應 layout 統一系統紫顏色) -->
         <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             <!-- Stat 1: 陪伴天數 -->
-            <div class="bento-card bg-[#d6beff]/30 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#d6beff]/40 shadow-xs">
+            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
-                    <div class="bg-white/80 p-2 rounded-2xl shadow-xs">
+                    <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
                         <span class="material-symbols-outlined text-[#65518a]">calendar_month</span>
                     </div>
-                    <span class="text-[10px] font-bold text-[#65518a] bg-white/70 px-2 py-0.5 rounded-full">從懷孕起算</span>
+                    <span class="text-[10px] font-bold text-[#65518a] bg-white/90 px-2.5 py-0.5 rounded-full border border-[#E8E0EF]">從懷孕起算</span>
                 </div>
                 <div>
-                    <p class="text-[#4b386e] text-xs font-semibold mb-0.5">陪伴天數</p>
-                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.days_accompanied|default:"0" }} <span class="text-sm font-normal">Days</span></p>
+                    <p class="text-[#65518a] text-xs font-bold mb-0.5">陪伴天數</p>
+                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.days_accompanied|default:"0" }} <span class="text-sm font-normal text-[#5b5c5a]">Days</span></p>
                 </div>
             </div>
             <!-- Stat 2: 超音波與成長照 -->
-            <div class="bento-card bg-[#b2e4fb]/30 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#b2e4fb]/40 shadow-xs">
+            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
-                    <div class="bg-white/80 p-2 rounded-2xl shadow-xs">
-                        <span class="material-symbols-outlined text-[#2f6275]">photo_library</span>
+                    <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
+                        <span class="material-symbols-outlined text-[#65518a]">photo_library</span>
                     </div>
                 </div>
                 <div>
-                    <p class="text-[#1f5467] text-xs font-semibold mb-0.5">超音波與成長照</p>
-                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#014154]">{{ stats.total_photos|default:"0" }} <span class="text-sm font-normal">Photos</span></p>
+                    <p class="text-[#65518a] text-xs font-bold mb-0.5">超音波與成長照</p>
+                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.total_photos|default:"0" }} <span class="text-sm font-normal text-[#5b5c5a]">Photos</span></p>
                 </div>
             </div>
             <!-- Stat 3: 媽媽紀錄筆數 -->
-            <div class="bento-card bg-[#f8bbd0]/30 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#f8bbd0]/40 shadow-xs">
+            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
-                    <div class="bg-white/80 p-2 rounded-2xl shadow-xs">
-                        <span class="material-symbols-outlined text-[#7d4d5f]">face_3</span>
+                    <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
+                        <span class="material-symbols-outlined text-[#65518a]">face_3</span>
                     </div>
                 </div>
                 <div>
-                    <p class="text-[#623648] text-xs font-semibold mb-0.5">媽媽的紀錄筆數</p>
-                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#4b2334]">{{ stats.mom_record_count|default:"0" }} <span class="text-sm font-normal">Records</span></p>
+                    <p class="text-[#65518a] text-xs font-bold mb-0.5">媽媽的紀錄筆數</p>
+                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.mom_record_count|default:"0" }} <span class="text-sm font-normal text-[#5b5c5a]">Records</span></p>
                 </div>
             </div>
             <!-- Stat 4: 小孩紀錄筆數 -->
-            <div class="bento-card bg-[#c8e6c9]/40 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#a5d6a7]/50 shadow-xs">
+            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
-                    <div class="bg-white/80 p-2 rounded-2xl shadow-xs">
-                        <span class="material-symbols-outlined text-[#2e7d32]">child_care</span>
+                    <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
+                        <span class="material-symbols-outlined text-[#65518a]">child_care</span>
                     </div>
                 </div>
                 <div>
-                    <p class="text-[#1b5e20] text-xs font-semibold mb-0.5">小孩紀錄筆數</p>
-                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#1b5e20]">{{ stats.baby_record_count|default:"0" }} <span class="text-sm font-normal">Records</span></p>
+                    <p class="text-[#65518a] text-xs font-bold mb-0.5">小孩紀錄筆數</p>
+                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.baby_record_count|default:"0" }} <span class="text-sm font-normal text-[#5b5c5a]">Records</span></p>
                 </div>
             </div>
             <!-- Stat 5: Growth AI 解答次數 -->
-            <div class="bento-card bg-[#fefccf]/50 p-5 rounded-3xl flex flex-col justify-between h-40 border border-amber-200/50 shadow-xs col-span-2 md:col-span-1">
+            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs col-span-2 md:col-span-1">
                 <div class="flex justify-between items-start">
-                    <div class="bg-white/80 p-2 rounded-2xl shadow-xs">
-                        <span class="material-symbols-outlined text-amber-700">psychology</span>
+                    <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
+                        <span class="material-symbols-outlined text-[#65518a]">psychology</span>
                     </div>
                 </div>
                 <div>
-                    <p class="text-amber-900/70 text-xs font-semibold mb-0.5">Growth AI 解答次數</p>
-                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-amber-900">{{ stats.ai_qa_count|default:"0" }} <span class="text-sm font-normal">Q&As</span></p>
+                    <p class="text-[#65518a] text-xs font-bold mb-0.5">Growth AI 解答次數</p>
+                    <p class="text-3xl font-black font-['Plus_Jakarta_Sans'] text-[#362459]">{{ stats.ai_qa_count|default:"0" }} <span class="text-sm font-normal text-[#5b5c5a]">Q&As</span></p>
                 </div>
             </div>
         </section>
@@ -879,14 +883,14 @@
                     {% endif %}
                 </div>
 
-                <!-- Mood Donut -->
+                <!-- Mood Donut (統一系統紫主題) -->
                 <div class="bg-surface-container-lowest p-6 rounded-3xl shadow-xs border border-surface-container-high">
                     <h4 class="font-bold text-[#362459] mb-6">心情分佈</h4>
                     <div class="flex items-center justify-center relative h-32">
                         <svg class="w-24 h-24 transform -rotate-90">
                             <circle cx="48" cy="48" fill="transparent" r="40" stroke="#f1f1ee" stroke-width="8"></circle>
                             <circle cx="48" cy="48" fill="transparent" r="40" stroke="#65518a" stroke-dasharray="251" stroke-dashoffset="62" stroke-width="8"></circle>
-                            <circle cx="48" cy="48" fill="transparent" r="40" stroke="#b2e4fb" stroke-dasharray="251" stroke-dashoffset="180" stroke-width="8"></circle>
+                            <circle cx="48" cy="48" fill="transparent" r="40" stroke="#d6beff" stroke-dasharray="251" stroke-dashoffset="180" stroke-width="8"></circle>
                         </svg>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span class="text-sm font-bold text-[#362459]">快樂</span>
@@ -895,11 +899,105 @@
                     </div>
                     <div class="mt-4 flex justify-around">
                         <div class="flex items-center text-xs font-medium text-[#5b5c5a]"><span class="w-2 h-2 rounded-full bg-[#65518a] mr-1.5"></span>快樂</div>
-                        <div class="flex items-center text-xs font-medium text-[#5b5c5a]"><span class="w-2 h-2 rounded-full bg-[#b2e4fb] mr-1.5"></span>平靜</div>
-                        <div class="flex items-center text-xs font-medium text-[#5b5c5a]"><span class="w-2 h-2 rounded-full bg-[#e3e3df] mr-1.5"></span>焦慮</div>
+                        <div class="flex items-center text-xs font-medium text-[#5b5c5a]"><span class="w-2 h-2 rounded-full bg-[#9b7bbd] mr-1.5"></span>平靜</div>
+                        <div class="flex items-center text-xs font-medium text-[#5b5c5a]"><span class="w-2 h-2 rounded-full bg-[#d6beff] mr-1.5"></span>焦慮</div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- 歷史紀錄列表 Section (列表呈現 - 統一系統紫主題) -->
+        <section class="space-y-4 pt-2">
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-lg font-bold flex items-center text-[#362459] font-['Plus_Jakarta_Sans']">
+                    <span class="w-1.5 h-5 bg-[#65518a] rounded-full mr-2.5"></span>
+                    歷史紀錄列表
+                </h3>
+                <span class="text-xs font-bold text-[#65518a] bg-[#EDE5F5] px-3 py-1 rounded-full border border-[#E8E0EF]">
+                    共 {{ events|length }} 筆紀錄
+                </span>
+            </div>
+
+            <!-- 分類標籤切換 -->
+            <div class="flex flex-wrap items-center gap-2 pb-1">
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=all" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'all' or not filter_type %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    全部 ({{ events|length }})
+                </a>
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=prenatal" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'prenatal' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    🩺 產檢
+                </a>
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=feeling" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'feeling' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    📝 心情
+                </a>
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=baby" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'baby' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    🍼 寶寶
+                </a>
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=task" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'task' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    ✅ 待辦
+                </a>
+            </div>
+
+            {% if events %}
+            <!-- 垂直時間軸列表 -->
+            <div class="relative border-l-2 border-[#E8E0EF] ml-4 sm:ml-6 pl-5 sm:pl-7 space-y-5">
+                {% for event in events %}
+                <div class="relative bg-white rounded-3xl p-5 border border-[#E8E0EF] shadow-[0_4px_16px_rgba(101,81,138,0.05)] hover:shadow-md transition-all">
+                    <!-- 時間軸節點圓點 -->
+                    <div class="absolute -left-[27px] sm:-left-[35px] top-6 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#65518a] border-4 border-white shadow-xs"></div>
+
+                    <!-- 頂部日期與類型標籤 -->
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-[#65518a] font-['Plus_Jakarta_Sans'] flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                            {{ event.date_str }}
+                        </span>
+                        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border {{ event.badge_color }}">
+                            {{ event.type_label }}
+                        </span>
+                    </div>
+
+                    <!-- 標題 -->
+                    <h4 class="font-extrabold text-sm sm:text-base text-[#362459] font-['Plus_Jakarta_Sans'] mb-1.5">
+                        {{ event.title }}
+                    </h4>
+
+                    <!-- 內容敘述 -->
+                    <p class="text-xs sm:text-sm text-[#4A4052] font-medium leading-relaxed mb-3">
+                        {{ event.content }}
+                    </p>
+
+                    {% if event.note %}
+                    <div class="bg-[#FAF8FC] p-3 rounded-2xl border border-[#E8E0EF] text-xs text-[#5b5c5a] mb-3">
+                        <span class="font-bold text-[#65518a]">備註：</span>{{ event.note }}
+                    </div>
+                    {% endif %}
+
+                    <!-- 照片影像 (若有) -->
+                    {% if event.photo %}
+                    <div class="rounded-2xl overflow-hidden max-h-64 bg-[#FAF8FC] border border-[#E8E0EF] mt-2">
+                        <img src="{{ event.photo }}" alt="{{ event.title }}" class="w-full h-auto max-h-64 object-cover rounded-2xl">
+                    </div>
+                    {% endif %}
+
+                    <!-- 底部紀錄者資訊 -->
+                    {% if event.creator %}
+                    <div class="mt-3 pt-2.5 border-t border-[#E8E0EF]/60 flex items-center justify-between text-[11px] text-[#81758A]">
+                        <span>紀錄者：{{ event.creator }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- 無資料空狀態 -->
+            <div class="text-center py-12 px-6 bg-white rounded-3xl border border-[#E8E0EF] shadow-2xs">
+                <span class="material-symbols-outlined text-[#65518a] text-4xl mb-2">calendar_today</span>
+                <h4 class="text-sm font-bold text-[#362459] mb-1">尚無歷史紀錄</h4>
+                <p class="text-xs text-[#81758A] max-w-xs mx-auto">
+                    在產檢紀錄、孕期心情或寶寶成長中新增紀錄後，這裡將會呈現完整的成長歷史。
+                </p>
+            </div>
+            {% endif %}
         </section>
 
         <!-- Action Buttons -->

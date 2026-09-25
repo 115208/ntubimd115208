@@ -391,9 +391,24 @@ urlpatterns = [
         name='history_review_v3'
     ),
     path(
+        'history_review_v3/',
+        history_review_v3.v3_timeline,
+        name='history_review_v3_underscore_alias'
+    ),
+    path(
         'history-review-v3/memory-wall/',
         history_review_v3.v3_memory_wall,
         name='history_review_v3_memory_wall'
+    ),
+    path(
+        'history_review_v3/memory_wall/',
+        history_review_v3.v3_memory_wall,
+        name='history_review_v3_memory_wall_alias'
+    ),
+    path(
+        'history_review_v3/memory-wall/',
+        history_review_v3.v3_memory_wall,
+        name='history_review_v3_memory_wall_alias2'
     ),
     path(
         'history-review-v3/baby-growth/',

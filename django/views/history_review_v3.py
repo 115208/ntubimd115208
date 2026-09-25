@@ -205,7 +205,7 @@ def v3_timeline(request):
             'date_str': dt.strftime('%Y-%m-%d'),
             'type': 'prenatal',
             'type_label': '產檢',
-            'badge_color': 'bg-purple-100 text-purple-700 border-purple-300',
+            'badge_color': 'bg-[#EDE5F5] text-[#65518a] border-[#E8E0EF]',
             'dot_color': 'bg-[#65518a]',
             'title': f'產檢紀錄',
             'content': f'體重: {weight_str} | 血壓: {bp_str}',
@@ -239,8 +239,8 @@ def v3_timeline(request):
             'date_str': dt.strftime('%Y-%m-%d'),
             'type': 'feeling',
             'type_label': '心情',
-            'badge_color': 'bg-pink-100 text-pink-700 border-pink-300',
-            'dot_color': 'bg-[#f8bbd0]',
+            'badge_color': 'bg-[#EDE5F5] text-[#65518a] border-[#E8E0EF]',
+            'dot_color': 'bg-[#65518a]',
             'title': f'{emoji} 心情紀錄：{f_name}',
             'content': rec.record if rec and rec.record else '分享今日好心情',
             'photo': None,
@@ -265,8 +265,8 @@ def v3_timeline(request):
             'date_str': dt.strftime('%Y-%m-%d'),
             'type': 'task',
             'type_label': '待辦',
-            'badge_color': 'bg-amber-100 text-amber-700 border-amber-300',
-            'dot_color': 'bg-amber-400',
+            'badge_color': 'bg-[#EDE5F5] text-[#65518a] border-[#E8E0EF]',
+            'dot_color': 'bg-[#65518a]',
             'title': f'待辦：{c.content or "待辦清單"}',
             'content': f'狀態: {"已完成" if c.state else "未完成"}',
             'photo': None,
@@ -292,8 +292,8 @@ def v3_timeline(request):
             'date_str': dt.strftime('%Y-%m-%d'),
             'type': 'baby',
             'type_label': '寶寶',
-            'badge_color': 'bg-emerald-100 text-emerald-700 border-emerald-300',
-            'dot_color': 'bg-emerald-400',
+            'badge_color': 'bg-[#EDE5F5] text-[#65518a] border-[#E8E0EF]',
+            'dot_color': 'bg-[#65518a]',
             'title': f'{b.baby.name if b.baby else "寶寶"} 成長紀錄',
             'content': f'身高: {b.height or "-"} cm | 體重: {b.weight or "-"} kg',
             'photo': _format_photo_url(b.photo),
@@ -307,6 +307,10 @@ def v3_timeline(request):
 
     # 可選年份
     available_years = sorted(list({e['date'].year for e in events if e.get('date')}), reverse=True)
+
+    # 類型篩選 (filter_type: 'prenatal', 'feeling', 'task', 'baby', 'all')
+    if filter_type and filter_type != 'all':
+        events = [e for e in events if e['type'] == filter_type]
 
     # 時間範圍篩選 (time_range)
     if time_range and time_range != 'all':
@@ -340,10 +344,10 @@ def v3_timeline(request):
 
     color_palette = [
         {'bg': 'bg-[#65518a]', 'hex': '#65518a'},
-        {'bg': 'bg-[#f8bbd0]', 'hex': '#f8bbd0'},
-        {'bg': 'bg-[#b2e4fb]', 'hex': '#b2e4fb'},
-        {'bg': 'bg-[#c8e6c9]', 'hex': '#c8e6c9'},
-        {'bg': 'bg-[#fefccf]', 'hex': '#fefccf'},
+        {'bg': 'bg-[#8064a2]', 'hex': '#8064a2'},
+        {'bg': 'bg-[#9b7bbd]', 'hex': '#9b7bbd'},
+        {'bg': 'bg-[#c3aed6]', 'hex': '#c3aed6'},
+        {'bg': 'bg-[#d6beff]', 'hex': '#d6beff'},
     ]
 
     if total_physical_count > 0:
@@ -581,7 +585,7 @@ def v3_baby_growth(request):
                 'icon': '📝',
                 'title': '第一筆孕期紀錄',
                 'badge': '孕期紀錄',
-                'badge_class': 'text-pink-700 bg-pink-100 border-pink-300',
+                'badge_class': 'text-[#65518a] bg-[#EDE5F5] border-[#E8E0EF]',
                 'date_str': first_preg.check_date.strftime('%Y.%m.%d'),
                 'note': (first_preg.record or '').strip(),
             })
@@ -600,7 +604,7 @@ def v3_baby_growth(request):
                 'icon': '🩺',
                 'title': '第一次產檢紀錄',
                 'badge': '健康檢查',
-                'badge_class': 'text-purple-700 bg-purple-100 border-purple-300',
+                'badge_class': 'text-[#65518a] bg-[#EDE5F5] border-[#E8E0EF]',
                 'date_str': first_scan.pregnancyrecord.check_date.strftime('%Y.%m.%d'),
                 'note': (first_scan.pregnancyrecord.record or '').strip(),
             })
@@ -612,7 +616,7 @@ def v3_baby_growth(request):
             'icon': '👶',
             'title': f'{active_baby.name or "寶寶"} 誕生',
             'badge': '圓滿誕生',
-            'badge_class': 'text-emerald-700 bg-emerald-100 border-emerald-300',
+            'badge_class': 'text-[#65518a] bg-[#EDE5F5] border-[#E8E0EF]',
             'date_str': birth_dt.strftime('%Y.%m.%d'),
             'note': (active_baby.production_method or '').strip(),
         })
@@ -632,7 +636,7 @@ def v3_baby_growth(request):
                 'icon': '⭐',
                 'title': st.babygrowthmap.growthrecord,
                 'badge': f'{st.babygrowthmap.timecourse} 個月',
-                'badge_class': 'text-amber-700 bg-amber-100 border-amber-300',
+                'badge_class': 'text-[#65518a] bg-[#EDE5F5] border-[#E8E0EF]',
                 'date_str': rec.date.strftime('%Y.%m.%d') if (rec and rec.date) else '',
                 'note': (rec.record or '').strip() if rec else '',
             })

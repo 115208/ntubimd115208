@@ -116,7 +116,7 @@
                             <div class="aspect-square bg-cover bg-center" style="background-image: url('/media/baby_records/smiling_baby_demo.jpg')"></div>
                             <div class="p-4">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <span class="px-2.5 py-0.5 bg-[#b2e4fb]/40 text-[#014154] text-[10px] font-bold rounded-full">寶寶成長</span>
+                                    <span class="px-2.5 py-0.5 bg-[#EDE5F5] text-[#65518a] text-[10px] font-bold rounded-full border border-[#E8E0EF]">寶寶成長</span>
                                 </div>
                                 <h4 class="font-bold text-[#362459] text-sm">寶寶燦爛笑容</h4>
                             </div>
@@ -127,7 +127,7 @@
                             <div class="aspect-square bg-cover bg-center" style="background-image: url('/media/baby_records/newborn_demo.jpg')"></div>
                             <div class="p-4">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <span class="px-2.5 py-0.5 bg-[#f8bbd0]/40 text-[#7d4d5f] text-[10px] font-bold rounded-full">新生滿月</span>
+                                    <span class="px-2.5 py-0.5 bg-[#EDE5F5] text-[#65518a] text-[10px] font-bold rounded-full border border-[#E8E0EF]">新生滿月</span>
                                 </div>
                                 <h4 class="font-bold text-[#362459] text-sm">熟睡的小天使</h4>
                             </div>
@@ -136,22 +136,6 @@
                 </div>
             </section>
         {% endif %}
-
-        <!-- AI Share Card Section -->
-        <section class="mt-16 mb-8">
-            <div class="bg-gradient-to-br from-[#65518a] via-[#59467d] to-[#2f6275] p-8 rounded-3xl relative overflow-hidden group shadow-md">
-                <div class="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                <div class="relative z-10 flex flex-col items-center text-center">
-                    <span class="material-symbols-outlined text-[#b2e4fb] text-4xl mb-4">auto_awesome</span>
-                    <h3 class="text-2xl font-bold text-white font-['Plus_Jakarta_Sans'] mb-2">AI 分享卡</h3>
-                    <p class="text-white/80 text-sm max-w-xs mb-8 leading-relaxed font-['Be_Vietnam_Pro']">讓 AI 為您精選本月最動人的瞬間，生成專屬的成長紀念報，與親友分享這份喜悅。</p>
-                    <a href="{% url 'social_sharing_card' %}" class="bg-white text-[#65518a] px-8 py-3 rounded-full font-bold text-sm shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                        立即生成分享卡
-                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
-                    </a>
-                </div>
-            </div>
-        </section>
     </main>
 </div>
 {% endblock %}

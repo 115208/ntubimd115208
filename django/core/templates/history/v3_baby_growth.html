@@ -7,7 +7,7 @@
 <style>
     .path-container svg { filter: drop-shadow(0px 0px 4px rgba(101, 81, 138, 0.1)); }
     .milestone-glow { box-shadow: 0 0 20px rgba(214, 190, 255, 0.6); }
-    .milestone-active { background: linear-gradient(135deg, #d6beff 0%, #b2e4fb 100%); }
+    .milestone-active { background: linear-gradient(135deg, #d6beff 0%, #65518a 100%); }
     .floating-decoration { animation: float 6s ease-in-out infinite; }
     @keyframes float {
         0% { transform: translateY(0px) rotate(0deg); }
@@ -98,31 +98,31 @@
         <!-- Header Section -->
         <section class="text-center space-y-2 pt-2 pb-6 relative">
             <div class="absolute -top-10 -left-10 w-40 h-40 bg-[#d6beff]/30 blur-3xl rounded-full opacity-50"></div>
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#f8bbd0]/30 blur-3xl rounded-full opacity-50"></div>
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#EDE5F5]/60 blur-3xl rounded-full opacity-50"></div>
             <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-['Plus_Jakarta_Sans'] text-[#362459]">紀念冊</h2>
             <p class="text-[#5b5c5a] font-medium text-base sm:text-lg leading-relaxed px-4 font-['Be_Vietnam_Pro']">「一起回顧這段最美好的成長旅程」</p>
         </section>
 
-        <!-- 4 大統計卡（全部取自真實 ORM 統計） -->
+        <!-- 4 大統計卡（全部取自真實 ORM 統計 - 統一系統紫主題） -->
         <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            <div class="bg-[#EDE5F5] rounded-3xl p-4 border border-[#d6beff]/50 text-center shadow-2xs">
+            <div class="bg-[#EDE5F5] rounded-3xl p-4 border border-[#E8E0EF] text-center shadow-2xs">
                 <span class="text-xl mb-0.5 block">📅</span>
                 <span class="block text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans']">{{ stats.days_accompanied }}</span>
                 <span class="text-[11px] font-bold text-[#81758A] mt-0.5 block">陪伴天數</span>
             </div>
-            <div class="bg-[#e0f7fa] rounded-3xl p-4 border border-[#b2e4fb]/60 text-center shadow-2xs">
+            <div class="bg-[#EDE5F5] rounded-3xl p-4 border border-[#E8E0EF] text-center shadow-2xs">
                 <span class="text-xl mb-0.5 block">📷</span>
-                <span class="block text-2xl font-extrabold text-[#2f6275] font-['Plus_Jakarta_Sans']">{{ stats.total_photos }}</span>
+                <span class="block text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans']">{{ stats.total_photos }}</span>
                 <span class="text-[11px] font-bold text-[#81758A] mt-0.5 block">照片總數</span>
             </div>
-            <div class="bg-[#fce4ec] rounded-3xl p-4 border border-[#f8bbd0]/60 text-center shadow-2xs">
+            <div class="bg-[#EDE5F5] rounded-3xl p-4 border border-[#E8E0EF] text-center shadow-2xs">
                 <span class="text-xl mb-0.5 block">🌸</span>
-                <span class="block text-2xl font-extrabold text-[#7d4d5f] font-['Plus_Jakarta_Sans']">{{ stats.mom_record_count }}</span>
+                <span class="block text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans']">{{ stats.mom_record_count }}</span>
                 <span class="text-[11px] font-bold text-[#81758A] mt-0.5 block">媽媽紀錄</span>
             </div>
-            <div class="bg-[#e8f5e9] rounded-3xl p-4 border border-[#a5d6a7]/60 text-center shadow-2xs">
+            <div class="bg-[#EDE5F5] rounded-3xl p-4 border border-[#E8E0EF] text-center shadow-2xs">
                 <span class="text-xl mb-0.5 block">🍼</span>
-                <span class="block text-2xl font-extrabold text-[#2e7d32] font-['Plus_Jakarta_Sans']">{{ stats.baby_record_count }}</span>
+                <span class="block text-2xl font-extrabold text-[#65518a] font-['Plus_Jakarta_Sans']">{{ stats.baby_record_count }}</span>
                 <span class="text-[11px] font-bold text-[#81758A] mt-0.5 block">寶寶紀錄</span>
             </div>
         </section>
@@ -137,7 +137,7 @@
                     <defs>
                         <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear" x1="60" x2="60" y1="0" y2="1200">
                             <stop stop-color="#65518a"></stop>
-                            <stop offset="0.5" stop-color="#b2e4fb"></stop>
+                            <stop offset="0.5" stop-color="#8064a2"></stop>
                             <stop offset="1" stop-color="#adadab"></stop>
                         </linearGradient>
                     </defs>

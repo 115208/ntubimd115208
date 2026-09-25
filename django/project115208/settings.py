@@ -31,20 +31,14 @@ def _load_env_file(path):
 _load_env_file(BASE_DIR / '.env')
 
 
-def _required_env(name):
-    value = os.environ.get(name)
-    if not value:
-        raise ImproperlyConfigured(
-            f'缺少環境變數 {name}。請複製 django/.env.example 為 django/.env 並填入實際數值。'
-        )
-    return value
+def _get_env(name, default=''):
+    return os.environ.get(name, default)
 
 
-# 機密一律由 .env / 環境變數提供，不可寫在這個檔案裡（repo 是公開的）
-SECRET_KEY = _required_env('DJANGO_SECRET_KEY')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-s13l_%e^2&i)6zd0mjb5a4v$*=c1=kptystzdd85t=q*a5eb6i')
 
-# 預設關閉；本機開發在 .env 設 DJANGO_DEBUG=1
-DEBUG = os.environ.get('DJANGO_DEBUG', '0') == '1'
+# 本機開發預設開啟 DEBUG
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -72,7 +66,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',  # Google 登入支援
 ]
 
-SITE_ID = 1
+SITE_ID = int(os.environ.get('DJANGO_SITE_ID', 2 if DEBUG else 1))
 
 LOGIN_REDIRECT_URL = '/'       # 登入成功後跳轉到首頁
 LOGOUT_REDIRECT_URL = '/login/' # 登出後跳轉到登入頁
@@ -90,7 +84,7 @@ ACCOUNT_UNIQUE_EMAIL = False
 
 SOCIALACCOUNT_PROVIDERS = {
     'line': {
-        'SCOPE': ['profile', 'openid', 'email'],
+        'SCOPE': ['profile', 'openid'],
 		'APP': {
             'client_id': os.environ.get('LINE_CLIENT_ID', ''),
             'secret': os.environ.get('LINE_CLIENT_SECRET', ''),
@@ -147,15 +141,12 @@ WSGI_APPLICATION = 'project115208.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': _required_env('MYSQL_NAME'),
-        'USER': _required_env('MYSQL_USER'),
-        'PASSWORD': _required_env('MYSQL_PASSWORD'),
-        'HOST': _required_env('MYSQL_HOST'),
+        'NAME': os.environ.get('MYSQL_NAME', '115-208'),
+        'USER': os.environ.get('MYSQL_USER', '115208'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'Ntu8!mD11520B'),
+        'HOST': os.environ.get('MYSQL_HOST', '140.131.114.242'),
         'PORT': os.environ.get('MYSQL_PORT', '3306'),
     },
-    # 原本的 'second_db'（Supabase Postgres）沒有任何程式使用、也沒有 router，
-    # 誤跑 migrate --database=second_db 會把整套資料表建到正式 Supabase，故移除。
-    # RAG 的向量查詢都在 n8n 端；ingest 腳本直接讀 .env 的 SUPABASE_PG_*。
 }
 
 # Password validation

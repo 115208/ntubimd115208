@@ -150,6 +150,8 @@ def _create_user_profile(name, email, line_id='', avatar=''):
     avatar 欄位是 unique=True，沒有頭像時不能寫空字串（第二個人就會撞唯一鍵），
     改寫入每人專屬的佔位值；模板請用 `user.avatar_url` 顯示。
     """
+    name = (name or '')[:20]
+    avatar = (avatar or '')[:255]
     last_error = None
     for attempt in range(_USER_ID_RETRY_LIMIT):
         user_id = _next_user_id()
@@ -167,7 +169,7 @@ def _create_user_profile(name, email, line_id='', avatar=''):
                 )
                 user_profile.save(force_insert=True)
             return user_profile
-        except IntegrityError as exc:
+        except Exception as exc:
             last_error = exc
             logger.warning('建立 UserProfile 失敗（user_id=%s，第 %s 次），重試中：%s', user_id, attempt + 1, exc)
     raise last_error
@@ -196,14 +198,14 @@ def handle_allauth_login_success(request, user, **kwargs):
         picture = extra_data.get('picture', '')
     elif is_line:
         email = extra_data.get('email', '')
-        # 🎯 根據 Log 顯示，這裡直接抓 'name' 跟 'picture' 才是對的！
-        raw_name = extra_data.get('name', '')
-        picture = extra_data.get('picture', '')
-        line_user_id = extra_data.get('sub') or social_account.uid
+        # 🎯 根據 Log 顯示，抓取 LINE 人名與頭像（支援不同 allauth provider 格式）
+        raw_name = extra_data.get('name', '') or extra_data.get('displayName', '')
+        picture = extra_data.get('picture', '') or extra_data.get('pictureUrl', '')
+        line_user_id = extra_data.get('sub') or extra_data.get('userId') or social_account.uid
 
     if not email:
         email = f"{line_user_id or social_account.uid}@line.platform"
-    display_name = (raw_name or email.split('@')[0])[:50]
+    display_name = (raw_name or email.split('@')[0])[:20]
 
     try:
         user_profile = _user_profile_by_email(email)
