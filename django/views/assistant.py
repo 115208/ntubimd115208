@@ -210,6 +210,7 @@ def _build_chart_data(baby):
         birth = birth.date()
 
     labels = []
+    dates = []
     heights, weights, heads = [], [], []
 
     for rec in records:
@@ -224,6 +225,7 @@ def _build_chart_data(baby):
         months = max(0, months)
 
         labels.append(months)
+        dates.append(rec_date.strftime("%Y/%m/%d") if hasattr(rec_date, "strftime") else str(rec_date))
         heights.append(rec["height"])
         weights.append(rec["weight"])
         heads.append(rec["headcircumference"])
@@ -233,6 +235,7 @@ def _build_chart_data(baby):
 
     return {
         "labels": labels,
+        "dates": dates,
         "height": heights,
         "weight": weights,
         "head": heads,

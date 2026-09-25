@@ -671,7 +671,7 @@ def qa_conversation(request):
         "current_user_avatar": _safe_avatar_url(current_user),
         "medical_disclaimer": MEDICAL_DISCLAIMER,
     }
-    return render(request, "base/qa_conversation.html", context)
+    return render(request, "AI/qa_conversation.html", context)
 
 
 def qa_delete_conversation(request):

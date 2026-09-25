@@ -80,7 +80,7 @@
                                     <button type="button" data-question="目前頭圍是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="目前成長狀況如何？" data-metric="height">
+                                    <button type="button" data-question="目前成長狀況如何？" data-metric="all">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -101,7 +101,7 @@
                                     <button type="button" data-question="歷史頭圍變化是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="歷史成長狀況如何？" data-metric="height">
+                                    <button type="button" data-question="歷史成長狀況如何？" data-metric="all">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -166,50 +166,81 @@
         const METRIC_CONFIGS = {
             height: {
                 label: '身高 (cm)',
+                title: '身高曲線',
+                icon: 'height',
+                iconColor: '#7c5cbf',
                 borderColor: '#7c5cbf',
                 backgroundColor: 'rgba(124,92,191,0.15)',
             },
             weight: {
                 label: '體重 (kg)',
+                title: '體重曲線',
+                icon: 'monitor_weight',
+                iconColor: '#3d9e6e',
                 borderColor: '#3d9e6e',
                 backgroundColor: 'rgba(61,158,110,0.12)',
             },
             head: {
                 label: '頭圍 (cm)',
+                title: '頭圍曲線',
+                icon: 'face',
+                iconColor: '#d4883f',
                 borderColor: '#d4883f',
                 backgroundColor: 'rgba(212,136,63,0.12)',
             },
         };
 
-        let growthChartInstance = null;   // 保留目前圖表實例
+        const buildXLabels = (chartData) => {
+            const hasDates = Array.isArray(chartData.dates) && chartData.dates.length === chartData.labels.length;
+            return chartData.labels.map((m, i) => {
+                if (hasDates && chartData.dates[i]) {
+                    const raw = String(chartData.dates[i]);
+                    const parts = raw.split(/[-/]/);
+                    const shortDate = parts.length >= 3 ? `${Number(parts[1])}/${Number(parts[2])}` : raw;
+                    return `${m}個月 (${shortDate})`;
+                }
+                return `${m}個月 (#${i + 1})`;
+            });
+        };
 
-        const renderGrowthChart = (chartData, initialMetric = 'height') => {
+        const renderGrowthChart = (chartData, initialMetric = 'all') => {
             if (!chartData || !chartData.labels || chartData.labels.length === 0) return;
+
+            const isAll = (initialMetric === 'all');
+            const initialCfg = METRIC_CONFIGS[initialMetric];
+            const cardTitle = isAll ? `${chartData.baby_name} 綜合成長曲線` : `${chartData.baby_name} ${initialCfg?.title || '成長曲線'}`;
+            const cardIcon = isAll ? 'insights' : (initialCfg?.icon || 'show_chart');
+            const cardIconColor = isAll ? '#65518a' : (initialCfg?.iconColor || '#7c5cbf');
 
             // ── 建立圖卡容器 ──
             const card = document.createElement('div');
             card.className = 'assistant-chart-card';
             card.setAttribute('role', 'img');
-            card.setAttribute('aria-label', `${chartData.baby_name} 成長曲線圖`);
+            card.setAttribute('aria-label', cardTitle);
 
-            // 標題列 + 指標切換按鈕
+            // 標題列：若點選綜合評估則顯示全部指標切換分頁，否則只輸出該指標圖表（不顯示其他指標分頁）
             const header = document.createElement('div');
             header.className = 'assistant-chart-header';
-            header.innerHTML = `
-                <span class="assistant-chart-title">
-                    <span class="material-symbols-outlined" aria-hidden="true"
-                          style="font-variation-settings:'FILL' 1,'wght' 600;">show_chart</span>
-                    ${chartData.baby_name} 成長曲線
-                </span>
+
+            let tabsHtml = '';
+            if (isAll) {
+                tabsHtml = `
                 <div class="assistant-chart-tabs" role="group" aria-label="指標切換">
-                    <button class="chart-tab is-active" data-metric="height">身高</button>
+                    <button class="chart-tab is-active" data-metric="all">全部</button>
+                    <button class="chart-tab" data-metric="height">身高</button>
                     <button class="chart-tab" data-metric="weight">體重</button>
                     <button class="chart-tab" data-metric="head">頭圍</button>
                 </div>`;
+            }
 
-            // ── 用 wrapper div 包住 canvas，讓 Chart.js 讀到正確高度 ──
-            // （Chart.js responsive 模式會讀父層尺寸；直接放在 flex 容器裡時
-            //   可能拿到 0，包一層有明確高度的 wrapper 可避免此問題）
+            header.innerHTML = `
+                <span class="assistant-chart-title">
+                    <span class="material-symbols-outlined" aria-hidden="true"
+                          style="color:${cardIconColor};font-variation-settings:'FILL' 1,'wght' 600;">${cardIcon}</span>
+                    <span>${cardTitle}</span>
+                </span>
+                ${tabsHtml}`;
+
             const canvasWrap = document.createElement('div');
             canvasWrap.className = 'assistant-chart-canvas-wrap';
 
@@ -221,21 +252,65 @@
             card.appendChild(canvasWrap);
             messages.appendChild(card);
 
-            // ── 讓圖表卡片捲入視線（不論 messages 是否滿版皆有效）──
             requestAnimationFrame(() => {
                 card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
 
-            // ── 建立初始圖表（身高）──
-            // 延遲一幀讓 DOM 尺寸穩定後再初始化，避免 canvas 高度計算為 0
-            let activeMetric = initialMetric;
+            const xLabels = buildXLabels(chartData);
 
-            const buildDatasets = (metric) => {
+            const buildDatasetsForMetric = (metric) => {
+                if (metric === 'all') {
+                    return [
+                        {
+                            label: METRIC_CONFIGS.height.label,
+                            data: chartData.height || [],
+                            borderColor: METRIC_CONFIGS.height.borderColor,
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: METRIC_CONFIGS.height.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yLength',
+                        },
+                        {
+                            label: METRIC_CONFIGS.head.label,
+                            data: chartData.head || [],
+                            borderColor: METRIC_CONFIGS.head.borderColor,
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: METRIC_CONFIGS.head.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yLength',
+                        },
+                        {
+                            label: METRIC_CONFIGS.weight.label,
+                            data: chartData.weight || [],
+                            borderColor: METRIC_CONFIGS.weight.borderColor,
+                            backgroundColor: METRIC_CONFIGS.weight.backgroundColor,
+                            pointBackgroundColor: METRIC_CONFIGS.weight.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yWeight',
+                        },
+                    ];
+                }
+
                 const cfg = METRIC_CONFIGS[metric];
-                const data = chartData[metric];
+                const data = chartData[metric] || [];
                 return [{
                     label: cfg.label,
-                    data: chartData.labels.map((m, i) => ({ x: m, y: data[i] })),
+                    data: data,
                     borderColor: cfg.borderColor,
                     backgroundColor: cfg.backgroundColor,
                     pointBackgroundColor: cfg.borderColor,
@@ -244,40 +319,90 @@
                     pointHoverRadius: 7,
                     fill: true,
                     tension: 0.38,
+                    spanGaps: true,
+                    yAxisID: 'y',
                 }];
             };
 
-            // 先把 tab 高亮調整為 initialMetric
-            card.querySelectorAll('.chart-tab').forEach(btn => {
-                btn.classList.toggle('is-active', btn.dataset.metric === initialMetric);
-            });
+            const buildScalesForMetric = (metric) => {
+                const baseScaleX = {
+                    title: {
+                        display: true,
+                        text: '月齡與紀錄日期',
+                        color: '#9a8fa2',
+                        font: { size: 11 },
+                    },
+                    ticks: {
+                        color: '#b8afc4',
+                        font: { size: 10 },
+                        maxRotation: 40,
+                        minRotation: 0,
+                    },
+                    grid: { color: 'rgba(101,81,138,0.07)' },
+                };
 
-            if (growthChartInstance) growthChartInstance.destroy();
+                if (metric === 'all') {
+                    return {
+                        x: baseScaleX,
+                        yLength: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '身長 / 頭圍 (cm)', color: '#7c5cbf', font: { size: 11 } },
+                            ticks: { color: '#7c5cbf', font: { size: 10 } },
+                            grid: { color: 'rgba(101,81,138,0.07)' },
+                        },
+                        yWeight: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '體重 (kg)', color: '#3d9e6e', font: { size: 11 } },
+                            ticks: { color: '#3d9e6e', font: { size: 10 } },
+                            grid: { drawOnChartArea: false },
+                        },
+                    };
+                }
+
+                const cfg = METRIC_CONFIGS[metric];
+                return {
+                    x: baseScaleX,
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: cfg.label, color: '#9a8fa2', font: { size: 11 } },
+                        ticks: { color: '#b8afc4', font: { size: 11 } },
+                        grid: { color: 'rgba(101,81,138,0.07)' },
+                    },
+                };
+            };
+
+            let currentChart = null;
 
             requestAnimationFrame(() => {
-                growthChartInstance = new Chart(canvas, {
+                currentChart = new Chart(canvas, {
                     type: 'line',
-                    data: { datasets: buildDatasets(initialMetric) },
+                    data: {
+                        labels: xLabels,
+                        datasets: buildDatasetsForMetric(initialMetric),
+                    },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: { duration: 520, easing: 'easeOutQuart' },
                         interaction: { mode: 'index', intersect: false },
-                        scales: {
-                            x: {
-                                type: 'linear',
-                                title: { display: true, text: '月齡（月）', color: '#9a8fa2', font: { size: 11 } },
-                                ticks: { stepSize: 1, color: '#b8afc4', font: { size: 11 } },
-                                grid: { color: 'rgba(101,81,138,0.07)' },
-                            },
-                            y: {
-                                title: { display: true, text: METRIC_CONFIGS['height'].label, color: '#9a8fa2', font: { size: 11 } },
-                                ticks: { color: '#b8afc4', font: { size: 11 } },
-                                grid: { color: 'rgba(101,81,138,0.07)' },
-                            },
-                        },
+                        scales: buildScalesForMetric(initialMetric),
                         plugins: {
-                            legend: { display: false },
+                            legend: {
+                                display: (initialMetric === 'all'),
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    usePointStyle: true,
+                                    font: { size: 10 },
+                                    color: '#65518a',
+                                    padding: 8,
+                                },
+                            },
                             tooltip: {
                                 backgroundColor: 'rgba(52,41,64,0.92)',
                                 titleColor: '#e8d8ff',
@@ -285,7 +410,18 @@
                                 padding: 10,
                                 cornerRadius: 10,
                                 callbacks: {
-                                    title: (items) => `月齡 ${items[0].parsed.x} 個月`,
+                                    title: (items) => {
+                                        if (!items.length) return '';
+                                        const idx = items[0].dataIndex;
+                                        const m = chartData.labels[idx];
+                                        const d = (chartData.dates && chartData.dates[idx]) ? chartData.dates[idx] : '';
+                                        return d ? `${d}（月齡 ${m} 個月）` : `月齡 ${m} 個月`;
+                                    },
+                                    label: (context) => {
+                                        const val = context.parsed.y;
+                                        if (val === null || val === undefined || Number.isNaN(val)) return '';
+                                        return ` ${context.dataset.label}: ${val}`;
+                                    },
                                 },
                             },
                         },
@@ -293,13 +429,13 @@
                 });
             });
 
-            // ── 切換指標 ──
+            // ── 切換指標（僅綜合評估時有 tabs） ──
             const switchMetric = (metric) => {
-                activeMetric = metric;
-                const cfg = METRIC_CONFIGS[metric];
-                growthChartInstance.data.datasets = buildDatasets(metric);
-                growthChartInstance.options.scales.y.title.text = cfg.label;
-                growthChartInstance.update();
+                if (!currentChart) return;
+                currentChart.data.datasets = buildDatasetsForMetric(metric);
+                currentChart.options.scales = buildScalesForMetric(metric);
+                currentChart.options.plugins.legend.display = (metric === 'all');
+                currentChart.update();
 
                 card.querySelectorAll('.chart-tab').forEach(btn => {
                     btn.classList.toggle('is-active', btn.dataset.metric === metric);
@@ -416,9 +552,10 @@
                     if (!res.ok || !data.ok) throw new Error(data.error || '助手暫時無法回覆。');
                     appendMessage(data.answer, 'bot');
 
-                    // ── 有成長資料時繪製曲線圖 ──
-                    if (data.chart_data) {
-                        const metric = btn.dataset.metric || 'height';
+                    // ── 圖表僅在點選「歷史成長」選項且有成長資料時出現 ──
+                    const isHistory = Boolean(btn.closest('.assistant-question-group--history'));
+                    if (isHistory && data.chart_data) {
+                        const metric = btn.dataset.metric || 'all';
                         renderGrowthChart(data.chart_data, metric);
                     }
                 } catch (err) {
