@@ -105,9 +105,6 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="member_id" value="{{ mid }}">
                                 <input type="hidden" name="next" value="edit_family_member">
-                                {# 確認訊息放在 data- 屬性，由 JS 用 dataset 讀出；
-                                   姓名若直接內插進 inline JS 字串，屬性內的 HTML 實體會先被
-                                   解碼再交給 JS，引號就能跳脫字串造成 XSS。 #}
                                 <button type="submit"
                                         class="confirm-action inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer"
                                         data-confirm-message="確定要將「{{ member.user.name }}」移出家庭成員嗎？移除後他將無法再檢視這個家庭的紀錄。"
@@ -129,6 +126,7 @@
                             <input type="hidden" id="perm_baby_records_{{ mid }}" name="perm_baby_records" value="{{ member.permissions.baby_records|default:'view' }}">
                             <input type="hidden" id="perm_mom_records_{{ mid }}" name="perm_mom_records" value="{{ member.permissions.mom_records|default:'view' }}">
                             <input type="hidden" id="perm_care_records_{{ mid }}" name="perm_care_records" value="{{ member.permissions.care_records|default:'view' }}">
+                            <input type="hidden" id="perm_growth_assistant_{{ mid }}" name="perm_growth_assistant" value="{{ member.permissions.growth_assistant|default:'view' }}">
 
                             <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">功能權限</p>
 
@@ -168,6 +166,19 @@
                                 <div class="flex bg-surface-container-low rounded-xl p-0.5 shrink-0" data-feature="care_records" data-member="{{ mid }}">
                                     <button type="button" class="seg-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {% if cur != 'edit' %}active{% endif %}" data-value="view">檢視</button>
                                     <button type="button" class="seg-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {% if cur == 'edit' %}active{% endif %}" data-value="edit">修改</button>
+                                </div>
+                            </div>
+                            {% endwith %}
+
+                            <!-- 成長評估助手：關閉/使用 -->
+                            {% with cur=member.permissions.growth_assistant|default:"view" %}
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sm font-medium text-on-surface flex items-center gap-1.5 shrink-0">
+                                    <span class="material-symbols-outlined text-on-surface-variant text-[17px]">smart_toy</span>成長評估助手
+                                </span>
+                                <div class="flex bg-surface-container-low rounded-xl p-0.5 shrink-0" data-feature="growth_assistant" data-member="{{ mid }}">
+                                    <button type="button" class="seg-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {% if cur == 'off' %}active{% endif %}" data-value="off">關閉</button>
+                                    <button type="button" class="seg-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {% if cur != 'off' %}active{% endif %}" data-value="view">使用</button>
                                 </div>
                             </div>
                             {% endwith %}

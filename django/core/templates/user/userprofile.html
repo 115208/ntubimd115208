@@ -98,8 +98,6 @@
                         <span class="material-symbols-outlined text-[13px] mr-0.5">check_circle</span>已綁定
                     </span>
                     {% else %}
-                    {# 這裡必須走綁定流程（process=connect）。
-                       若用 provider_login_url（登入流程），會把目前的使用者切換成另一個帳號。 #}
                     <a href="{% url 'bind_line_account' %}" class="shrink-0 bg-primary/10 text-primary text-xs font-bold px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all cursor-pointer">
                         綁定
                     </a>
@@ -321,6 +319,55 @@
         </section>
         {% endif %}
 
+        <!-- 連絡方式 / 官方客服與支援 -->
+        <section class="bg-surface-container-lowest rounded-2xl shadow-[0_8px_24px_rgba(46,47,45,0.06)] overflow-hidden border border-surface-container-high">
+            <div class="p-6 pb-4 border-b border-surface-container-high/50 flex justify-between items-center">
+                <div class="space-y-0.5">
+                    <h3 class="font-bold text-on-surface text-base flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-primary">support_agent</span>聯絡我們
+                    </h3>
+                    <p class="text-xs text-on-surface-variant font-medium">如有任何使用問題、回饋建議或異常回報，歡迎隨時與我們聯繫</p>
+                </div>
+            </div>
+            <div class="p-5 space-y-3">
+                <!-- 客服電子郵件 -->
+                <div class="p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-2xl transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[20px]">mail</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">客服電子郵件</p>
+                            <p class="text-sm font-bold text-on-surface truncate select-all">cologrowth@gmail.com</p>
+                            <p class="text-[11px] text-on-surface-variant/70">來信請註明您的帳號與問題描述</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <button type="button"
+                                onclick="copyTextToClipboard('cologrowth@gmail.com', '已複製客服信箱！')"
+                                class="h-9 px-3.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold rounded-xl transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                                title="複製信箱">
+                            <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                            <span>複製</span>
+                        </button>
+                        <a href="mailto:cologrowth@gmail.com?subject=CoLoGrowth%20%E5%AE%A2%E6%9C%8D%E8%AB%AE%E8%A9%A2"
+                           class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-sm">
+                            <span class="material-symbols-outlined text-[15px]">send</span>
+                            <span>寄信</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 服務時間提示框 -->
+                <div class="p-3.5 bg-primary/5 border border-primary/10 rounded-xl flex items-start gap-2.5 text-on-surface-variant">
+                    <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">schedule</span>
+                    <div class="text-[11px] leading-relaxed">
+                        <span class="font-bold text-primary">服務時間：</span>週一至週五 09:00 - 18:00（國定假日除外）。我們將於 1-2 個工作天內盡速回覆您的問題與需求。
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- Action Area -->
         <section class="flex flex-col items-center pt-2">
@@ -333,6 +380,13 @@
             </form>
         </section>
     </main>
+
+<!-- 複製提示 Toast -->
+<div id="copy-toast"
+     class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2.5 bg-on-surface text-surface text-sm font-medium px-5 py-3 rounded-2xl shadow-xl opacity-0 translate-y-4 transition-all duration-300 pointer-events-none whitespace-nowrap">
+    <span class="material-symbols-outlined text-[18px] text-emerald-400">check_circle</span>
+    <span id="copy-toast-msg">已複製至剪貼簿</span>
+</div>
 
 <!-- 功能權限不足 Toast -->
 <div id="perm-error-toast"
@@ -381,6 +435,52 @@ document.querySelectorAll('.confirm-action').forEach(function (btn) {
         }
     });
 });
+
+// 一鍵複製文字與 Toast 提示
+var copyToastTimer = null;
+function showCopyToast(message) {
+    var toast = document.getElementById('copy-toast');
+    var msg = document.getElementById('copy-toast-msg');
+    if (!toast || !msg) return;
+    msg.textContent = message || '已複製至剪貼簿！';
+    toast.classList.remove('opacity-0', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    if (copyToastTimer) clearTimeout(copyToastTimer);
+    copyToastTimer = setTimeout(function () {
+        toast.classList.add('opacity-0', 'translate-y-4');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+    }, 2200);
+}
+
+function copyTextToClipboard(text, successMsg) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function () {
+            showCopyToast(successMsg);
+        }).catch(function () {
+            fallbackCopy(text, successMsg);
+        });
+    } else {
+        fallbackCopy(text, successMsg);
+    }
+}
+
+function fallbackCopy(text, successMsg) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        showCopyToast(successMsg);
+    } catch (err) {
+        console.error('複製失敗', err);
+    }
+    document.body.removeChild(textArea);
+}
 </script>
 
 {% endblock %}

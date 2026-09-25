@@ -175,18 +175,18 @@ def build_growth_timeline_context(baby):
     }
 
 
-# mom_records 支援 off（完全隱藏媽媽紀錄）；其他功能只有 view/edit
-FEATURE_KEYS = ('baby_records', 'mom_records', 'care_records')
+# mom_records 與 growth_assistant 支援 off（完全隱藏媽媽紀錄 / 關閉成長評估助手）；其他功能只有 view/edit
+FEATURE_KEYS = ('baby_records', 'mom_records', 'care_records', 'growth_assistant')
 PERMISSION_LEVELS = ('off', 'view', 'edit')
 
-# features 中，只有 mom_records 的 off 真正有效（拒絕查看）；
+# features 中，mom_records 與 growth_assistant 的 off 真正有效（拒絕查看／使用）；
 # 其他 feature 的 off 視為 view（向下相容舊資料）
-_OFF_BLOCKS_VIEW = {'mom_records'}
+_OFF_BLOCKS_VIEW = {'mom_records', 'growth_assistant'}
 
 def get_permission(member, feature, default='view'):
     """讀取某位協助者對某功能的權限等級。
     - member 為 None（非擁有者且無 FamilyMember 列）→ 'off'，一律拒絕（fail closed）
-    - mom_records 的 off 代表「不可查看」
+    - mom_records、growth_assistant 的 off 代表「不可查看／不可使用」
     - 其他 feature 的 off 向下相容視為 view
 
     注意：default 只用於「有 FamilyMember 列、但 permissions 缺這個 key」的舊資料，
@@ -198,7 +198,7 @@ def get_permission(member, feature, default='view'):
     value = (member.permissions or {}).get(feature, default)
     if value not in PERMISSION_LEVELS:
         return default
-    # 非 mom_records 的 off 轉為 view
+    # 非 _OFF_BLOCKS_VIEW 的 off 轉為 view
     if value == 'off' and feature not in _OFF_BLOCKS_VIEW:
         return 'view'
     return value

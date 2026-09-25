@@ -338,6 +338,7 @@
         </div>
     </div>
 
+    {% if can_use_assistant %}
     <!-- ── 浮動「詢問 AI 助手」圓形按鈕 ── -->
     <a
         href="{% url 'assistant' %}"
@@ -349,6 +350,7 @@
             smart_toy
         </span>
     </a>
+    {% endif %}
 
     <style>
         /* ── 圓形 FAB ── */

@@ -9,7 +9,8 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
-from core.models import BabyInformation, BabyRecord
+from core.models import BabyInformation, BabyRecord, FamilyMember
+from views import baby_utils
 from views.session_utils import get_current_user_profile
 from views.health_safety import (
     MEDICAL_DISCLAIMER,
@@ -180,10 +181,19 @@ def _post_to_n8n(question, user_id):
 
 
 def _get_born_babies(current_user):
-    """登入者可以存取（養育者或協助者）且已出生的寶寶。"""
+    """登入者可以存取（身為擁有者，或具備成長評估助手權限之協助者）且已出生的寶寶。"""
+    owned_q = Q(pregnancycase__user=current_user)
+
+    shared_memberships = FamilyMember.objects.filter(user=current_user)
+    allowed_case_ids = [
+        m.pregnancycase_id
+        for m in shared_memberships
+        if baby_utils.has_permission(m, 'growth_assistant', 'view')
+    ]
+    shared_q = Q(pregnancycase_id__in=allowed_case_ids)
+
     return BabyInformation.objects.filter(
-        Q(pregnancycase__user=current_user)
-        | Q(pregnancycase__familymember__user=current_user),
+        owned_q | shared_q,
         birthdaytime__isnull=False,
     ).select_related("pregnancycase").distinct().order_by("birthdaytime", "baby_id")
 
@@ -282,7 +292,7 @@ def assistant(request):
                 current_user.user_id,
                 baby_id,
             )
-            return JsonResponse({"ok": False, "error": "找不到這個寶寶，或它不屬於你。"}, status=403)
+            return JsonResponse({"ok": False, "error": "找不到這個寶寶，或您沒有使用成長評估助手的權限。"}, status=403)
 
         # n8n 目前依賴的欄位不變，只是問題前面的寶寶名稱改由後端串
         full_question = f"{baby.name}{question}"
