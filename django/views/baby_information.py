@@ -1,4 +1,5 @@
 import datetime
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from core.models import BabyInformation, FamilyMember
@@ -102,7 +103,9 @@ def delete_baby_information(request):
         request.session.pop('active_baby_id', None)
         request.session.modified = True
 
+    baby_name = baby.name
     baby.delete()
+    messages.success(request, f'已刪除「{baby_name}」的嬰幼兒資訊。')
     return redirect('pregnancy_case')
 
 # ==================== 2. 編輯功能 ====================

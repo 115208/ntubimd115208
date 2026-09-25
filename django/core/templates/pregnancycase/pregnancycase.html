@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
             <a href="/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
                 <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
-                <span class="tfont-headline font-extrabold text-2xl text-primary tracking-tight">管理胎數</span>
+                <span class="text-lg font-bold text-primary">管理胎數</span>
             </a>
         </div>
         <button onclick="window.location.href='/add_pregnancy_baby/'" class="bg-primary/10 text-primary p-2 rounded-full hover:bg-primary/20 transition-colors cursor-pointer">
@@ -102,9 +102,7 @@
                             <button onclick="window.location.href='/edit_pregnancy_case/?id={{ baby.case_id_for_edit  }}'" class="p-2 hover:bg-primary/10 rounded-full text-primary transition-colors cursor-pointer" title="編輯孕期">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                             </button>
-                            <a href="{% url 'add_baby_information' %}?case_id={{ baby.case_id_for_edit }}" class="p-2 hover:bg-primary/10 rounded-full text-primary transition-colors cursor-pointer" title="為這一胎新增寶寶（雙胞胎／多胞胎）">
-                                <span class="material-symbols-outlined text-[20px]">person_add</span>
-                            </a>
+
                             <!--
                                 安全性：不可把 {{ baby.name }} 直接寫進 onsubmit 的 JS 字串。
                                 HTML 屬性內的 &#x27; 會先被瀏覽器解碼再交給 JS 解析，

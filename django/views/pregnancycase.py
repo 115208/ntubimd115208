@@ -4,6 +4,7 @@ import string
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -571,8 +572,10 @@ def baby_switcher(request):
 
     switcher_items = []
     current_date = timezone.localdate()
+    own_case_ids = {c.pregnancycase_id for c in cases_own}
 
     for case in cases:
+        is_own = case.pregnancycase_id in own_case_ids
         display_baby = get_case_display_baby(case)
         baby_name = display_baby.name if display_baby else '懷孕紀錄'
 
@@ -587,6 +590,7 @@ def baby_switcher(request):
             if not babies:
                 item = {
                     'is_baby': False,
+                    'is_own': is_own,
                     'name': baby_name,
                     'desc': gestation_text,
                     'icon': 'pregnant_woman',
@@ -603,6 +607,7 @@ def baby_switcher(request):
                     if baby.birthdaytime:
                         item = {
                             'is_baby': True,
+                            'is_own': is_own,
                             'name': baby.name,
                             'desc': baby_age_text(baby.birthdaytime, current_date),
                             'icon': 'face',
@@ -612,6 +617,7 @@ def baby_switcher(request):
                     else:
                         item = {
                             'is_baby': True,
+                            'is_own': is_own,
                             'name': baby.name,
                             'desc': gestation_text,
                             'icon': 'pregnant_woman',
@@ -625,6 +631,7 @@ def baby_switcher(request):
                 if baby.birthdaytime:
                     item = {
                         'is_baby': True,
+                        'is_own': is_own,
                         'name': baby.name,
                         'desc': baby_age_text(baby.birthdaytime, current_date),
                         'icon': 'face',
@@ -654,8 +661,13 @@ def baby_switcher(request):
     if not active_item and switcher_items:
         active_item = switcher_items[0]
 
+    switcher_items_own = [i for i in switcher_items if i.get('is_own')]
+    switcher_items_shared = [i for i in switcher_items if not i.get('is_own')]
+
     return {
         'switcher_items': switcher_items,
+        'switcher_items_own': switcher_items_own,
+        'switcher_items_shared': switcher_items_shared,
         'switcher_active_item': active_item,
         'active_case_id': active_case_id,
         'active_baby_id': active_baby_id,
@@ -718,6 +730,7 @@ def pregnancy_case(request):
         case = get_object_or_404(PregnancyCase, pregnancycase_id=delete_id)
         if case.user_id == user.user_id:
             case.delete()
+            messages.success(request, '已刪除胎數紀錄。')
         return redirect('pregnancy_case')
 
     cases_own = list(
