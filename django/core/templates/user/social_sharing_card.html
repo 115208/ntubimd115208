@@ -17,16 +17,15 @@
 {% endblock %}
 
 {% block content %}
-{# 上傳圖卡的 API 已經改回需要 CSRF 驗證，這裡放一份 token 讓 fetch 帶上 #}
 <form id="csrf-token-holder" class="hidden">{% csrf_token %}</form>
 <div class="bg-background text-on-surface min-h-screen">
     <!-- Header -->
     <header class="bg-[#f7f6f3]/70 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center px-6 py-4 w-full border-b border-surface-container-high transition-all duration-500 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
         <div class="flex items-center gap-3">
-            <a href="{% url 'babyinformation' %}" class="p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200 rounded-full cursor-pointer">
-                <span class="material-symbols-outlined text-primary">arrow_back</span>
+            <a href="{% url 'babyinformation' %}" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
+                <h1 class="font-headline font-extrabold text-2xl text-primary tracking-tight">生成精美里程碑分享卡</h1>
             </a>
-            <h1 class="font-headline font-semibold tracking-tight text-lg text-primary">生成精美里程碑分享卡</h1>
         </div>
     </header>
 

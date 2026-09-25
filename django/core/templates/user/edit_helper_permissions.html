@@ -76,6 +76,7 @@
             <input type="hidden" id="perm_mom_records" name="perm_mom_records" value="{{ selected_member.permissions.mom_records|default:'view' }}">
             <input type="hidden" id="perm_growth" name="perm_growth" value="{{ selected_member.permissions.growth|default:'view' }}">
             <input type="hidden" id="perm_care_records" name="perm_care_records" value="{{ selected_member.permissions.care_records|default:'view' }}">
+            <input type="hidden" id="perm_growth_assistant" name="perm_growth_assistant" value="{{ selected_member.permissions.growth_assistant|default:'view' }}">
 
             <!-- Target Helper Info -->
             <button type="button" id="helper-selector-btn" class="w-full text-left bg-primary/5 hover:bg-primary/10 transition-colors rounded-3xl p-6 flex items-center gap-4 border border-primary/10 cursor-pointer group relative overflow-hidden">
@@ -153,6 +154,20 @@
                         <div class="flex bg-surface-container-low rounded-xl p-1 w-full relative" data-feature="care_records">
                             <button type="button" class="seg-btn flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer {% if current != 'edit' %}active{% endif %}" data-value="view">檢視</button>
                             <button type="button" class="seg-btn flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer {% if current == 'edit' %}active{% endif %}" data-value="edit">修改</button>
+                        </div>
+                    </div>
+                    {% endwith %}
+
+                    <!-- Feature 5: 成長評估助手 -->
+                    {% with current=selected_member.permissions.growth_assistant|default:"view" %}
+                    <div class="flex flex-col gap-3">
+                        <label class="text-sm font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[18px]">smart_toy</span>
+                            成長評估助手
+                        </label>
+                        <div class="flex bg-surface-container-low rounded-xl p-1 w-full relative" data-feature="growth_assistant">
+                            <button type="button" class="seg-btn flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer {% if current == 'off' %}active{% endif %}" data-value="off">關閉</button>
+                            <button type="button" class="seg-btn flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer {% if current != 'off' %}active{% endif %}" data-value="view">使用</button>
                         </div>
                     </div>
                     {% endwith %}

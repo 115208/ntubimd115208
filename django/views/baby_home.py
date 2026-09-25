@@ -162,11 +162,13 @@ def baby(request):
     active_baby = baby_utils.get_active_baby(request)
 
     can_edit_baby = True
+    can_use_assistant = True
     if active_baby and active_baby.pregnancycase and active_baby.pregnancycase.user_id != user.user_id:
         membership = FamilyMember.objects.filter(
             pregnancycase=active_baby.pregnancycase, user=user
         ).first()
         can_edit_baby = baby_utils.has_permission(membership, 'baby_records', 'edit')
+        can_use_assistant = baby_utils.has_permission(membership, 'growth_assistant', 'view')
 
 
     records = (
@@ -312,6 +314,7 @@ def baby(request):
         'has_day_data': bool(selected_day_record),
         'milestones_summary': _get_baby_milestones_summary(active_baby),
         'can_edit_baby': can_edit_baby,
+        'can_use_assistant': can_use_assistant,
         # 新增紀錄時若當天已有紀錄會改為更新既有紀錄，導回本頁後提示使用者
         'record_merged': request.GET.get('record_merged') == '1',
     }
