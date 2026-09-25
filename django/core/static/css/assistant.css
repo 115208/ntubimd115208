@@ -34,12 +34,11 @@ main.assistant-page {
         0 8px 28px rgba(101, 81, 138, 0.09),
         0 32px 64px rgba(46,  47,  45,  0.07);
     backdrop-filter: blur(4px);
-    margin-bottom:75px;
-
+    margin-bottom: 75px;
 }
 
 /* =====================================================
-   MESSAGES AREA  — 佔據所有可用空間
+   MESSAGES AREA  — 佔據所有可用空間，含圖表可捲動
    ===================================================== */
 .assistant-messages {
     flex: 1;
@@ -291,21 +290,20 @@ main.assistant-page {
    QUESTION LIST — SLIDE-DOWN
    ===================================================== */
 .assistant-ql-wrap {
-    display: grid;
-    grid-template-rows: 0fr;
+    overflow: hidden;
+    max-height: 0;
     opacity: 0;
     transition:
-        grid-template-rows 420ms cubic-bezier(0.22, 1, 0.36, 1),
-        opacity            320ms ease;
+        max-height 420ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity    320ms ease;
 }
 
 .assistant-ql-wrap.is-open {
-    grid-template-rows: 1fr;
+    max-height: 600px;
     opacity: 1;
 }
 
 .assistant-ql-inner {
-    overflow: hidden;
     padding-bottom: 0.5rem;
 }
 
@@ -498,5 +496,104 @@ main.assistant-page {
     .assistant-question-buttons button {
         font-size: 0.73rem;
         padding: 0.38rem 0.8rem;
+    }
+}
+
+/* =====================================================
+   GROWTH CHART CARD
+   ===================================================== */
+.assistant-chart-card {
+    align-self: flex-start;
+    flex-shrink: 0;         /* 禁止被壓縮，維持固定高度 */
+    width: min(100%, 620px);
+    height: 320px;
+    border-radius: 1.35rem;
+    border: 1px solid rgba(101, 81, 138, 0.14);
+    background: linear-gradient(150deg, #faf8ff 0%, #f4eeff 100%);
+    box-shadow:
+        0 2px 8px  rgba(101, 81, 138, 0.08),
+        0 8px 28px rgba(101, 81, 138, 0.10);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: msg-appear 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.assistant-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem 0.6rem;
+    flex-wrap: wrap;
+}
+
+.assistant-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: #4a3860;
+    letter-spacing: 0.01em;
+}
+
+.assistant-chart-title .material-symbols-outlined {
+    font-size: 1.15rem;
+    color: #7c5cbf;
+}
+
+.assistant-chart-tabs {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.chart-tab {
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(101, 81, 138, 0.2);
+    background: #fff;
+    font-size: 0.71rem;
+    font-weight: 600;
+    color: #6b5b80;
+    cursor: pointer;
+    transition:
+        background  160ms ease,
+        border-color 160ms ease,
+        color       160ms ease,
+        transform   180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chart-tab:hover {
+    border-color: #7c5cbf;
+    background: #f0e8ff;
+    color: #65518a;
+    transform: translateY(-1px);
+}
+
+.chart-tab.is-active {
+    background: #7c5cbf;
+    border-color: #7c5cbf;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(124, 92, 191, 0.28);
+}
+
+.assistant-chart-canvas-wrap {
+    flex: 1;                /* 填滿 card 固定高度中 header 以外的空間 */
+    min-height: 0;
+    padding: 0 1rem 0.85rem;
+    box-sizing: border-box;
+}
+
+.assistant-chart-canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 640px) {
+    .assistant-chart-card {
+        width: 100%;
+        height: 260px;
     }
 }

@@ -69,7 +69,7 @@
                     {% if current_messages %}
                     {% for message in current_messages %}
                     <div class="flex items-start gap-1 max-w-[90%] {% if message.is_user %}self-end flex-row-reverse max-w-[85%]{% endif %}">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden {% if message.is_user %}bg-surface-container-high{% else %}bg-white border border-outline-variant/20{% endif %}">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden {% if message.is_user %}bg-primary/10{% else %}bg-white border border-outline-variant/20{% endif %}">
                             {% if message.is_user %}
                                 {% if current_user.avatar %}
                                 <img src="{{ current_user.avatar }}" alt="{{ current_user.name }}" class="w-full h-full object-cover qa-message-icon text-on-surface-variant" />
@@ -80,7 +80,7 @@
                             <img src="/logo/LOGO 小圖.png" alt="LOGO" class="w-full h-full object-contain p-0.5" />
                             {% endif %}
                         </div>
-                        <div class="{% if message.is_user %}bg-surface-container-high text-on-surface rounded-tr-none{% else %}bg-primary-container text-on-primary-container rounded-tl-none{% endif %} px-6 py-4 rounded-[2rem] shadow-sm">
+                        <div class="{% if message.is_user %}qa-bubble-user rounded-tr-[0.4rem]{% else %}qa-bubble-bot rounded-tl-[0.4rem]{% endif %} px-6 py-4 rounded-[2rem] shadow-sm">
                             <p class="font-medium leading-relaxed whitespace-pre-wrap">{{ message.message }}</p>
                         </div>
                     </div>
@@ -267,7 +267,7 @@
             wrapper.className = `flex items-start gap-1 max-w-[90%] ${isUser ? 'self-end flex-row-reverse max-w-[85%]' : ''}`;
 
             const avatar = document.createElement('div');
-            avatar.className = 'w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-white border border-outline-variant/20';
+            avatar.className = `w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden ${isUser ? 'bg-primary/10' : 'bg-white border border-outline-variant/20'}`;
 
             if (isUser) {
                 if (currentUserAvatarSrc) {
@@ -291,7 +291,7 @@
             }
 
             const bubble = document.createElement('div');
-            bubble.className = `px-6 py-4 rounded-[2rem] shadow-sm ${isUser ? 'bg-surface-container-high text-on-surface rounded-tr-none' : 'bg-primary-container text-on-primary-container rounded-tl-none'}`;
+            bubble.className = `px-6 py-4 rounded-[2rem] shadow-sm ${isUser ? 'qa-bubble-user rounded-tr-[0.4rem]' : 'qa-bubble-bot rounded-tl-[0.4rem]'}`;
 
             const paragraph = document.createElement('p');
             paragraph.className = 'font-medium leading-relaxed whitespace-pre-wrap';
@@ -317,7 +317,7 @@
             avatar.appendChild(avatarImage);
 
             const bubble = document.createElement('div');
-            bubble.className = 'px-6 py-4 rounded-[2rem] rounded-tl-none shadow-sm bg-primary-container text-on-primary-container';
+            bubble.className = 'px-6 py-4 rounded-[2rem] rounded-tl-[0.4rem] shadow-sm qa-bubble-bot';
 
             const typing = document.createElement('div');
             typing.className = 'qa-typing-indicator';

@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}成長評估助理{% endblock %}
+{% block title %}成長評估助手{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/assistant.css' %}" />
 {% endblock %}
@@ -9,7 +9,7 @@
     <div class="flex items-center gap-3">
         <a href="/babyinformation/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
             <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
-            <span class="font-extrabold text-2xl text-primary tracking-tight">嬰幼兒成長評估助理</span>
+            <span class="font-extrabold text-2xl text-primary tracking-tight">嬰幼兒成長評估助手</span>
         </a>
     </div>
 </header>
@@ -18,6 +18,11 @@
 
         <!-- CSRF for AJAX -->
         <input type="hidden" id="csrf-token" value="{{ csrf_token }}" />
+
+        <!-- ── 醫療免責聲明（固定顯示） ── -->
+        <p class="assistant-disclaimer rounded-xl bg-primary/5 border border-primary/20 px-4 py-2 text-[11px] leading-relaxed text-on-surface-variant" role="note">
+            {{ medical_disclaimer|default:"本內容為一般衛教資訊，不能取代專業醫療診斷，如有不適請諮詢醫師。" }}
+        </p>
 
         <!-- ── Messages ── -->
         <div id="assistant-messages" class="assistant-messages" aria-live="polite">
@@ -38,6 +43,7 @@
                         <button
                             class="assistant-baby-card"
                             type="button"
+                            data-baby-id="{{ item.baby.baby_id }}"
                             data-baby-name="{{ item.baby.name }}"
                             role="listitem"
                         >
@@ -65,16 +71,16 @@
                                     目前成長
                                 </h3>
                                 <div class="assistant-question-buttons">
-                                    <button type="button" data-question="目前身高是否符合WHO標準？">
+                                    <button type="button" data-question="目前身高是否符合WHO標準？" data-metric="height">
                                         <span class="material-symbols-outlined">height</span>身高
                                     </button>
-                                    <button type="button" data-question="目前體重是否符合WHO標準？">
+                                    <button type="button" data-question="目前體重是否符合WHO標準？" data-metric="weight">
                                         <span class="material-symbols-outlined">monitor_weight</span>體重
                                     </button>
-                                    <button type="button" data-question="目前頭圍是否符合WHO標準？">
+                                    <button type="button" data-question="目前頭圍是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="目前成長狀況如何？">
+                                    <button type="button" data-question="目前成長狀況如何？" data-metric="all">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -86,16 +92,16 @@
                                     歷史成長
                                 </h3>
                                 <div class="assistant-question-buttons">
-                                    <button type="button" data-question="歷史身高變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史身高變化是否符合WHO標準？" data-metric="height">
                                         <span class="material-symbols-outlined">height</span>身高
                                     </button>
-                                    <button type="button" data-question="歷史體重變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史體重變化是否符合WHO標準？" data-metric="weight">
                                         <span class="material-symbols-outlined">monitor_weight</span>體重
                                     </button>
-                                    <button type="button" data-question="歷史頭圍變化是否符合WHO標準？">
+                                    <button type="button" data-question="歷史頭圍變化是否符合WHO標準？" data-metric="head">
                                         <span class="material-symbols-outlined">face</span>頭圍
                                     </button>
-                                    <button type="button" data-question="歷史成長狀況如何？">
+                                    <button type="button" data-question="歷史成長狀況如何？" data-metric="all">
                                         <span class="material-symbols-outlined">insights</span>綜合評估
                                     </button>
                                 </div>
@@ -114,6 +120,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
     (() => {
         /* ── DOM refs ── */
@@ -125,6 +132,7 @@
         const qlWrap         = document.getElementById('question-list-wrap');
         const allQBtns       = document.querySelectorAll('.assistant-question-buttons button');
         let   selectedBaby   = '';
+        let   selectedBabyId = '';
         let   isSubmitting   = false;
 
         /* ════════════════════════════════
@@ -153,6 +161,293 @@
         const setQBtnsDisabled = (val) => allQBtns.forEach(b => b.disabled = val);
 
         /* ════════════════════════════════
+           成長曲線圖
+        ════════════════════════════════ */
+        const METRIC_CONFIGS = {
+            height: {
+                label: '身高 (cm)',
+                title: '身高曲線',
+                icon: 'height',
+                iconColor: '#7c5cbf',
+                borderColor: '#7c5cbf',
+                backgroundColor: 'rgba(124,92,191,0.15)',
+            },
+            weight: {
+                label: '體重 (kg)',
+                title: '體重曲線',
+                icon: 'monitor_weight',
+                iconColor: '#3d9e6e',
+                borderColor: '#3d9e6e',
+                backgroundColor: 'rgba(61,158,110,0.12)',
+            },
+            head: {
+                label: '頭圍 (cm)',
+                title: '頭圍曲線',
+                icon: 'face',
+                iconColor: '#d4883f',
+                borderColor: '#d4883f',
+                backgroundColor: 'rgba(212,136,63,0.12)',
+            },
+        };
+
+        const buildXLabels = (chartData) => {
+            const hasDates = Array.isArray(chartData.dates) && chartData.dates.length === chartData.labels.length;
+            return chartData.labels.map((m, i) => {
+                if (hasDates && chartData.dates[i]) {
+                    const raw = String(chartData.dates[i]);
+                    const parts = raw.split(/[-/]/);
+                    const shortDate = parts.length >= 3 ? `${Number(parts[1])}/${Number(parts[2])}` : raw;
+                    return `${m}個月 (${shortDate})`;
+                }
+                return `${m}個月 (#${i + 1})`;
+            });
+        };
+
+        const renderGrowthChart = (chartData, initialMetric = 'all') => {
+            if (!chartData || !chartData.labels || chartData.labels.length === 0) return;
+
+            const isAll = (initialMetric === 'all');
+            const initialCfg = METRIC_CONFIGS[initialMetric];
+            const cardTitle = isAll ? `${chartData.baby_name} 綜合成長曲線` : `${chartData.baby_name} ${initialCfg?.title || '成長曲線'}`;
+            const cardIcon = isAll ? 'insights' : (initialCfg?.icon || 'show_chart');
+            const cardIconColor = isAll ? '#65518a' : (initialCfg?.iconColor || '#7c5cbf');
+
+            // ── 建立圖卡容器 ──
+            const card = document.createElement('div');
+            card.className = 'assistant-chart-card';
+            card.setAttribute('role', 'img');
+            card.setAttribute('aria-label', cardTitle);
+
+            // 標題列：若點選綜合評估則顯示全部指標切換分頁，否則只輸出該指標圖表（不顯示其他指標分頁）
+            const header = document.createElement('div');
+            header.className = 'assistant-chart-header';
+
+            let tabsHtml = '';
+            if (isAll) {
+                tabsHtml = `
+                <div class="assistant-chart-tabs" role="group" aria-label="指標切換">
+                    <button class="chart-tab is-active" data-metric="all">全部</button>
+                    <button class="chart-tab" data-metric="height">身高</button>
+                    <button class="chart-tab" data-metric="weight">體重</button>
+                    <button class="chart-tab" data-metric="head">頭圍</button>
+                </div>`;
+            }
+
+            header.innerHTML = `
+                <span class="assistant-chart-title">
+                    <span class="material-symbols-outlined" aria-hidden="true"
+                          style="color:${cardIconColor};font-variation-settings:'FILL' 1,'wght' 600;">${cardIcon}</span>
+                    <span>${cardTitle}</span>
+                </span>
+                ${tabsHtml}`;
+
+            const canvasWrap = document.createElement('div');
+            canvasWrap.className = 'assistant-chart-canvas-wrap';
+
+            const canvas = document.createElement('canvas');
+            canvas.setAttribute('aria-hidden', 'true');
+
+            canvasWrap.appendChild(canvas);
+            card.appendChild(header);
+            card.appendChild(canvasWrap);
+            messages.appendChild(card);
+
+            requestAnimationFrame(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+
+            const xLabels = buildXLabels(chartData);
+
+            const buildDatasetsForMetric = (metric) => {
+                if (metric === 'all') {
+                    return [
+                        {
+                            label: METRIC_CONFIGS.height.label,
+                            data: chartData.height || [],
+                            borderColor: METRIC_CONFIGS.height.borderColor,
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: METRIC_CONFIGS.height.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yLength',
+                        },
+                        {
+                            label: METRIC_CONFIGS.head.label,
+                            data: chartData.head || [],
+                            borderColor: METRIC_CONFIGS.head.borderColor,
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: METRIC_CONFIGS.head.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yLength',
+                        },
+                        {
+                            label: METRIC_CONFIGS.weight.label,
+                            data: chartData.weight || [],
+                            borderColor: METRIC_CONFIGS.weight.borderColor,
+                            backgroundColor: METRIC_CONFIGS.weight.backgroundColor,
+                            pointBackgroundColor: METRIC_CONFIGS.weight.borderColor,
+                            borderWidth: 2.5,
+                            pointRadius: 4.5,
+                            pointHoverRadius: 6.5,
+                            fill: false,
+                            tension: 0.35,
+                            spanGaps: true,
+                            yAxisID: 'yWeight',
+                        },
+                    ];
+                }
+
+                const cfg = METRIC_CONFIGS[metric];
+                const data = chartData[metric] || [];
+                return [{
+                    label: cfg.label,
+                    data: data,
+                    borderColor: cfg.borderColor,
+                    backgroundColor: cfg.backgroundColor,
+                    pointBackgroundColor: cfg.borderColor,
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.38,
+                    spanGaps: true,
+                    yAxisID: 'y',
+                }];
+            };
+
+            const buildScalesForMetric = (metric) => {
+                const baseScaleX = {
+                    title: {
+                        display: true,
+                        text: '月齡與紀錄日期',
+                        color: '#9a8fa2',
+                        font: { size: 11 },
+                    },
+                    ticks: {
+                        color: '#b8afc4',
+                        font: { size: 10 },
+                        maxRotation: 40,
+                        minRotation: 0,
+                    },
+                    grid: { color: 'rgba(101,81,138,0.07)' },
+                };
+
+                if (metric === 'all') {
+                    return {
+                        x: baseScaleX,
+                        yLength: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '身長 / 頭圍 (cm)', color: '#7c5cbf', font: { size: 11 } },
+                            ticks: { color: '#7c5cbf', font: { size: 10 } },
+                            grid: { color: 'rgba(101,81,138,0.07)' },
+                        },
+                        yWeight: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '體重 (kg)', color: '#3d9e6e', font: { size: 11 } },
+                            ticks: { color: '#3d9e6e', font: { size: 10 } },
+                            grid: { drawOnChartArea: false },
+                        },
+                    };
+                }
+
+                const cfg = METRIC_CONFIGS[metric];
+                return {
+                    x: baseScaleX,
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: cfg.label, color: '#9a8fa2', font: { size: 11 } },
+                        ticks: { color: '#b8afc4', font: { size: 11 } },
+                        grid: { color: 'rgba(101,81,138,0.07)' },
+                    },
+                };
+            };
+
+            let currentChart = null;
+
+            requestAnimationFrame(() => {
+                currentChart = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: xLabels,
+                        datasets: buildDatasetsForMetric(initialMetric),
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 520, easing: 'easeOutQuart' },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: buildScalesForMetric(initialMetric),
+                        plugins: {
+                            legend: {
+                                display: (initialMetric === 'all'),
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    usePointStyle: true,
+                                    font: { size: 10 },
+                                    color: '#65518a',
+                                    padding: 8,
+                                },
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(52,41,64,0.92)',
+                                titleColor: '#e8d8ff',
+                                bodyColor: '#fff',
+                                padding: 10,
+                                cornerRadius: 10,
+                                callbacks: {
+                                    title: (items) => {
+                                        if (!items.length) return '';
+                                        const idx = items[0].dataIndex;
+                                        const m = chartData.labels[idx];
+                                        const d = (chartData.dates && chartData.dates[idx]) ? chartData.dates[idx] : '';
+                                        return d ? `${d}（月齡 ${m} 個月）` : `月齡 ${m} 個月`;
+                                    },
+                                    label: (context) => {
+                                        const val = context.parsed.y;
+                                        if (val === null || val === undefined || Number.isNaN(val)) return '';
+                                        return ` ${context.dataset.label}: ${val}`;
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+            });
+
+            // ── 切換指標（僅綜合評估時有 tabs） ──
+            const switchMetric = (metric) => {
+                if (!currentChart) return;
+                currentChart.data.datasets = buildDatasetsForMetric(metric);
+                currentChart.options.scales = buildScalesForMetric(metric);
+                currentChart.options.plugins.legend.display = (metric === 'all');
+                currentChart.update();
+
+                card.querySelectorAll('.chart-tab').forEach(btn => {
+                    btn.classList.toggle('is-active', btn.dataset.metric === metric);
+                });
+            };
+
+            card.querySelectorAll('.chart-tab').forEach(btn => {
+                btn.addEventListener('click', () => switchMetric(btn.dataset.metric));
+            });
+        };
+
+        /* ════════════════════════════════
            Question-list slide animation
         ════════════════════════════════ */
         const staggerButtons = () => {
@@ -176,6 +471,27 @@
             }
         };
 
+        const closeQuestionList = () => {
+            if (!qlWrap || !qlWrap.classList.contains('is-open')) return;
+            qlWrap.querySelectorAll('.btn-pop').forEach(b => b.classList.remove('btn-pop'));
+
+            const h = qlWrap.scrollHeight;
+
+            /* 先移除 is-open，讓 CSS base class 接管（max-height:0; opacity:0） */
+            qlWrap.classList.remove('is-open');
+
+            /* 用 Web Animations API 執行收合，不依賴 CSS transition 觸發時機 */
+            const anim = qlWrap.animate(
+                [
+                    { maxHeight: h + 'px', opacity: '1' },
+                    { maxHeight: '0px',    opacity: '0' }
+                ],
+                { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+            );
+            /* 動畫結束後 cancel 移除 fill 效果，讓 CSS base class（max-height:0; opacity:0）接手 */
+            anim.onfinish = () => anim.cancel();
+        };
+
         /* ════════════════════════════════
            Baby card selection
         ════════════════════════════════ */
@@ -185,6 +501,7 @@
                 babyCards.forEach(c => c.classList.remove('is-selected'));
                 card.classList.add('is-selected');
                 selectedBaby = card.dataset.babyName;
+                selectedBabyId = card.dataset.babyId || '';
 
                 if (questionHint) {
                     questionHint.classList.remove('hint-slide');
@@ -204,10 +521,12 @@
         ════════════════════════════════ */
         allQBtns.forEach((btn) => {
             btn.addEventListener('click', async () => {
-                if (isSubmitting || !selectedBaby) return;
+                if (isSubmitting || !selectedBabyId) return;
 
-                const question = `${selectedBaby}${btn.dataset.question}`;
-                appendMessage(question, 'user');
+                // 送給後端的只有「問題本文」與 baby_id，寶寶名稱由後端驗證歸屬後自行組合；
+                // 這裡串上名字只是為了畫面顯示。
+                const question = btn.dataset.question || '';
+                appendMessage(`${selectedBaby}${question}`, 'user');
 
                 isSubmitting = true;
                 setQBtnsDisabled(true);
@@ -216,6 +535,7 @@
                 try {
                     const body = new FormData();
                     body.append('question', question);
+                    body.append('baby_id', selectedBabyId);
                     body.append('csrfmiddlewaretoken', csrfToken);
 
                     const res  = await fetch(window.location.href, {
@@ -229,14 +549,22 @@
                         credentials: 'same-origin',
                     });
                     const data = await res.json();
-                    if (!res.ok || !data.ok) throw new Error(data.error || '助理暫時無法回覆。');
+                    if (!res.ok || !data.ok) throw new Error(data.error || '助手暫時無法回覆。');
                     appendMessage(data.answer, 'bot');
+
+                    // ── 圖表僅在點選「歷史成長」選項且有成長資料時出現 ──
+                    const isHistory = Boolean(btn.closest('.assistant-question-group--history'));
+                    if (isHistory && data.chart_data) {
+                        const metric = btn.dataset.metric || 'all';
+                        renderGrowthChart(data.chart_data, metric);
+                    }
                 } catch (err) {
                     appendMessage(err.message, 'error');
                 } finally {
                     hideTyping();
                     isSubmitting = false;
                     setQBtnsDisabled(false);
+                    closeQuestionList();
                 }
             });
         });

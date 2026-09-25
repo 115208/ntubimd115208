@@ -1,4 +1,4 @@
-﻿.qa-message-icon {
+.qa-message-icon {
     font-variation-settings: 'FILL' 1;
 }
 
@@ -69,8 +69,8 @@ body {
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
-    background: currentColor;
-    opacity: 0.55;
+    background: #65518a;
+    opacity: 0.65;
     animation: qaTypingBounce 1s infinite ease-in-out;
 }
 
@@ -96,6 +96,29 @@ body {
     }
 }
 
+/* =====================================================
+   統一訊息框樣式（與 assist 一致）
+   ===================================================== */
+.qa-bubble-user {
+    color: #ffffff;
+    background: linear-gradient(145deg, #8b6fc8 0%, #65518a 100%);
+    border-top-right-radius: 0.4rem !important;
+    box-shadow:
+        0 2px 8px rgba(101, 81, 138, 0.25),
+        0 8px 24px rgba(101, 81, 138, 0.15);
+}
+
+.qa-bubble-bot {
+    color: #342940;
+    background: linear-gradient(145deg, #f3eeff 0%, #ece5f8 100%);
+    border: 1px solid rgba(101, 81, 138, 0.1);
+    border-top-left-radius: 0.4rem !important;
+    box-shadow:
+        0 1px 3px rgba(101, 81, 138, 0.08),
+        0 4px 16px rgba(101, 81, 138, 0.07);
+}
+
 #history-sidebar {
     z-index: 500;
 }
+
