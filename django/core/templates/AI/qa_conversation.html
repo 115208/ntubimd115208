@@ -35,13 +35,14 @@
                         <span class="material-symbols-outlined text-[18px] shrink-0 {% if item.is_active %}text-primary{% else %}text-on-surface-variant group-hover:text-primary{% endif %}">history</span>
                         <span class="truncate">{{ item.title|default:item.question }}</span>
                     </a>
-                    <form method="post" action="{% url 'qa_delete_conversation' %}" class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ml-2" onsubmit="return confirm('確定要刪除這筆對話紀錄嗎？');">
-                        {% csrf_token %}
-                        <input type="hidden" name="conversation_id" value="{{ item.id }}" />
-                        <button type="submit" class="p-1 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-md transition-colors flex items-center justify-center cursor-pointer" aria-label="刪除對話">
-                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
-                    </form>
+                    <button type="button"
+                        class="qa-delete-btn shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ml-2 p-1 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-md transition-colors flex items-center justify-center cursor-pointer"
+                        data-conversation-id="{{ item.id }}"
+                        data-delete-url="{% url 'qa_delete_conversation' %}"
+                        data-csrf="{{ csrf_token }}"
+                        aria-label="刪除對話">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
                 </div>
                 {% endfor %}
             </div>
@@ -270,6 +271,77 @@
         } catch (e) {
             // ignore
         }
+
+        // ── 刪除對話（AJAX，不跳轉頁面） ──
+        const deleteButtons = document.querySelectorAll('.qa-delete-btn');
+        deleteButtons.forEach((btn) => {
+            btn.addEventListener('click', async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!confirm('確定要刪除這筆問答紀錄嗎？')) {
+                    return;
+                }
+
+                const conversationId = btn.dataset.conversationId;
+                const deleteUrl = btn.dataset.deleteUrl;
+                const csrfToken = btn.dataset.csrf;
+
+                btn.disabled = true;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('conversation_id', conversationId);
+
+                    const response = await fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                        },
+                        body: formData,
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || data.ok === false) {
+                        alert(data.error || '刪除失敗，請稍後再試。');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 從側邊欄移除此項目
+                    const listItem = btn.closest('.relative.group');
+                    if (listItem) {
+                        listItem.remove();
+                    }
+
+                    // 若刪除的是目前正在看的對話，則清空聊天區
+                    if (data.is_active) {
+                        resetConversationView('/qa/');
+                    }
+
+                    // 若側邊欄已無任何對話項目，補上空狀態提示
+                    const remaining = document.querySelectorAll('#history-sidebar .relative.group');
+                    if (remaining.length === 0) {
+                        const listSection = document.querySelector('#history-sidebar .space-y-2');
+                        if (listSection) {
+                            listSection.innerHTML = '';
+                            const empty = document.createElement('div');
+                            empty.className = 'px-4 py-3 rounded-2xl bg-surface-container-low text-sm text-on-surface-variant';
+                            empty.textContent = '目前還沒有任何對話紀錄。';
+                            listSection.replaceWith(empty);
+                        }
+                    }
+                } catch (error) {
+                    alert('刪除失敗，請稍後再試。');
+                    btn.disabled = false;
+                }
+            });
+        });
+
 
         const buildMessageNode = (text, isUser) => {
             const wrapper = document.createElement('div');

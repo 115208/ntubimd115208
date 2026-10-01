@@ -683,10 +683,14 @@ def qa_delete_conversation(request):
         return redirect('login')
 
     if request.method != "POST":
+        if _is_ajax(request):
+            return JsonResponse({"ok": False, "error": "僅接受 POST 請求。"}, status=405)
         return redirect(reverse("qa_conversation"))
 
     conversation = _get_conversation_by_id(request.POST.get("conversation_id"), current_user)
     if not conversation:
+        if _is_ajax(request):
+            return JsonResponse({"ok": False, "error": "找不到要刪除的對話，或它不屬於你。"}, status=404)
         django_messages.error(request, "找不到要刪除的對話，或它不屬於你。")
         return redirect(reverse("qa_conversation"))
 
@@ -696,13 +700,24 @@ def qa_delete_conversation(request):
             conversation.delete()
     except Exception:
         logger.exception("Failed to delete QA conversation %s", conversation_id)
+        if _is_ajax(request):
+            return JsonResponse({"ok": False, "error": "刪除對話失敗，請稍後再試。"}, status=500)
         django_messages.error(request, "刪除對話失敗，請稍後再試。")
         return redirect(reverse("qa_conversation"))
 
-    if str(request.session.get(ACTIVE_CONVERSATION_SESSION_KEY)) == str(conversation_id):
+    is_active = str(request.session.get(ACTIVE_CONVERSATION_SESSION_KEY)) == str(conversation_id)
+    if is_active:
         _set_current_conversation_id(request, None)
         request.session["qa_skip_auto_load"] = True
         request.session.modified = True
 
+    if _is_ajax(request):
+        return JsonResponse({
+            "ok": True,
+            "deleted_conversation_id": str(conversation_id),
+            "is_active": is_active,
+        })
+
     django_messages.success(request, "已刪除對話。")
     return redirect(reverse("qa_conversation"))
+
