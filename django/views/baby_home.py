@@ -305,7 +305,19 @@ def baby(request):
     context = {
         'is_overdue': is_overdue,
         'baby': active_baby,
-        'baby_is_born': bool(active_baby and active_baby.birthdaytime),
+        'baby_is_born': bool(
+            active_baby
+            and active_baby.birthdaytime
+            and (
+                active_baby.birthdaytime.date() <= timezone.localdate()
+                if hasattr(active_baby.birthdaytime, 'date')
+                else True
+            )
+            and not (
+                active_baby.pregnancycase
+                and get_pregnancy_status(active_baby.pregnancycase) in ('pregnant', 'overdue')
+            )
+        ),
         'records': records,
         'baby_summary': summary,
         'baby_form': baby_form,

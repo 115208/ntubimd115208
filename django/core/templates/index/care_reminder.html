@@ -3,89 +3,134 @@
 {% block title %}{% if carerecord_id %}編輯待辦清單{% else %}新增待辦清單{% endif %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index/add_care_reminder.css' %}">
-<style>
-    html, body {
-        overflow: hidden !important;
-        height: 100%;
-    }
-
-    ::-webkit-scrollbar {
-        display: none;
-    }
-
-    * {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-</style>
 {% endblock %}
 {% block content %}
-<div class="bg-surface text-on-surface h-screen py-3 overflow-hidden">
-    <header class="max-w-2xl lg:max-w-3xl mx-auto px-4 md:px-6 mb-2">
-        <div class="flex flex-col items-start gap-1">
+<div class="bg-surface text-on-surface min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#f7f6f3]/70 backdrop-blur-md flex justify-between items-center px-6 py-4 w-full transition-all duration-500 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
+        <div class="flex items-center gap-3">
             <a href="javascript:history.back()" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回待辦清單">
-                <span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
                 <span class="text-lg font-bold text-primary">{% if carerecord_id %}編輯待辦清單{% else %}新增待辦清單{% endif %}</span>
             </a>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="mx-auto max-w-2xl lg:max-w-3xl w-full px-4 md:px-6 pb-6 md:pb-8">
-        <form method="post" class="space-y-4">
+    <main class="pt-4 px-4 mx-auto max-w-md md:max-w-none w-full md:px-8 lg:px-16 xl:px-32 2xl:px-64 pb-32">
+        <form method="post" class="space-y-6">
             {% csrf_token %}
             {% if carerecord_id %}
                 <input type="hidden" name="carerecord_id" value="{{ carerecord_id }}" />
                 <input type="hidden" name="selected_date" value="{{ selected_date_iso }}" />
             {% endif %}
 
-            <section class="bg-surface-container-lowest rounded-2xl p-4 md:p-5 shadow-sm border border-surface-container-high space-y-4">
-                <div class="flex items-center gap-2 pb-2 border-b border-surface-container-low">
-                    <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
-                        <span class="material-symbols-outlined text-primary text-[20px]">{% if carerecord_id %}edit_notifications{% else %}notifications_active{% endif %}</span>
+            <section class="bg-surface-container-lowest rounded-3xl p-6 md:p-8 shadow-sm border border-surface-container-high space-y-6">
+                <div class="flex items-center gap-3 pb-3 border-b border-surface-container-low">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-[22px]">{% if carerecord_id %}edit_notifications{% else %}notifications_active{% endif %}</span>
                     </div>
-                    <h2 class="font-headline font-bold text-base text-primary">待辦內容設定</h2>
+                    <div>
+                        <h2 class="font-headline font-bold text-lg text-primary">待辦內容設定</h2>
+                        <p class="text-xs text-on-surface-variant font-medium">設定提醒時間與詳細說明事項</p>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <!-- 待辦日期 -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦日期</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">calendar_month</span>
-                            <input name="record_date" type="date" required value="{{ form_data.record_date|default:selected_date_iso }}" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-3 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium" />
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">calendar_month</span>
+                            <input name="record_date" type="date" required value="{{ form_data.record_date|default:selected_date_iso }}" class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium" />
+                        </div>
+                    </div>
+
+                    <!-- 待辦時間 -->
+                    <div class="space-y-2 relative" id="time-picker-wrapper">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1 cursor-pointer" for="record_time_display">待辦時間 (時:分)</label>
+                        <div class="relative cursor-pointer" id="time-input-container">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px] pointer-events-none transition-colors" id="time-picker-icon">schedule</span>
+                            <input type="text" id="record_time_display" readonly placeholder="請選擇時間..." class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-10 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium cursor-pointer" />
+                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[20px] pointer-events-none transition-all duration-200" id="time-picker-arrow">expand_more</span>
+                            <input name="record_time" id="record_time" type="hidden" required value="{{ form_data.record_time|default:"" }}" />
+                        </div>
+
+                        <!-- iPhone 鬧鐘風格滾輪時間選擇彈窗 (無限循環滾動) -->
+                        <div id="time-picker-dropdown" class="hidden absolute left-0 top-full mt-2 w-full max-w-[340px] bg-white rounded-3xl shadow-2xl border border-surface-container-high p-4 z-50 select-none">
+                            <!-- 頂部資訊與切換 -->
+                            <div class="flex items-center justify-between pb-3 mb-1 border-b border-surface-container-high">
+                                <button type="button" id="time-picker-now-btn" class="text-xs font-bold text-primary/80 hover:text-primary hover:bg-primary/10 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">update</span>現在
+                                </button>
+                                <div class="flex items-center gap-1.5 px-3 py-1 bg-primary/5 border border-primary-container rounded-full">
+                                    <span class="material-symbols-outlined text-primary text-[16px]">alarm</span>
+                                    <span id="time-picker-preview" class="text-sm font-bold text-primary tracking-wide">下午 12:00</span>
+                                </div>
+                                <button type="button" id="time-picker-confirm-btn" class="text-xs font-bold text-white bg-primary hover:bg-primary/90 px-3.5 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer">
+                                    完成
+                                </button>
+                            </div>
+
+                            <!-- 欄位標籤 -->
+                            <div class="grid grid-cols-3 text-center text-xs font-bold text-on-surface-variant/70 py-2 border-b border-surface-container-high">
+                                <div>時段</div>
+                                <div>時</div>
+                                <div>分</div>
+                            </div>
+
+                            <!-- iOS 滾輪主容器 (高 200px = 5 行，中間選取行高 40px) -->
+                            <div class="relative h-[200px] my-2 overflow-hidden" id="wheels-wrapper">
+                                <!-- 中央選取反白列 (色系完全呼應待辦類別的 primary-container 淡紫框格) -->
+                                <div class="absolute left-1 right-1 top-[80px] h-[40px] bg-primary/5 rounded-xl border-2 border-primary-container pointer-events-none z-10 shadow-sm"></div>
+
+                                <!-- 上下 3D 漸層遮罩 (高度 36px，清晰露出上下相鄰數字) -->
+                                <div class="absolute left-0 right-0 top-0 h-[36px] bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none z-20"></div>
+                                <div class="absolute left-0 right-0 bottom-0 h-[36px] bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-20"></div>
+
+                                <!-- 三個獨立滾輪欄位 (完美對齊欄位標籤) -->
+                                <div class="grid grid-cols-3 h-full relative z-0">
+                                    <!-- 時段滾輪 (上午 / 下午) -->
+                                    <div id="wheel-period" class="ios-wheel-container h-full overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing">
+                                        <div class="h-[80px] shrink-0 pointer-events-none"></div>
+                                        <div class="ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-bold text-on-surface/60 hover:text-primary cursor-pointer transition-colors" data-val="AM">上午</div>
+                                        <div class="ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-bold text-on-surface/60 hover:text-primary cursor-pointer transition-colors" data-val="PM">下午</div>
+                                        <div class="h-[80px] shrink-0 pointer-events-none"></div>
+                                    </div>
+
+                                    <!-- 時滾輪 (無限循環 1 ~ 12) -->
+                                    <div id="wheel-hour" class="ios-wheel-container h-full overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing">
+                                        <!-- JS 動態生成無限循環項目 -->
+                                    </div>
+
+                                    <!-- 分滾輪 (無限循環 00 ~ 59) -->
+                                    <div id="wheel-minute" class="ios-wheel-container h-full overflow-y-auto no-scrollbar cursor-grab active:cursor-grabbing">
+                                        <!-- JS 動態生成無限循環項目 -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- 待辦類別 -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦類別</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">category</span>
-                            <select name="carestatus_id" required class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-9 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium appearance-none bg-none">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">category</span>
+                            <select name="carestatus_id" required class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-10 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
                                 <option value="" disabled {% if not form_data.carestatus_id %}selected{% endif %}>請選擇類別...</option>
                                 {% for cs in carestatus_list %}
                                     <option value="{{ cs.carestatus_id }}" {% if form_data.carestatus_id|stringformat:"s" == cs.carestatus_id|stringformat:"s" %}selected{% endif %}>{{ cs.carestatus }}</option>
                                 {% endfor %}
                             </select>
-                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
-                        </div>
-                    </div>
-
-                    <!-- 待辦時間 -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦時間 (時:分)</label>
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">schedule</span>
-                            <input name="record_time" type="time" required value="{{ form_data.record_time|default:"" }}" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-3 py-2.5 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium" />
                         </div>
                     </div>
 
                     <!-- 詳細內容 -->
-                    <div class="space-y-1">
+                    <div class="space-y-2 md:col-span-3">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">待辦內容說明 (100字以內)</label>
                         <div class="relative">
-                            <textarea name="content" maxlength="100" placeholder="例如：記得帶寶寶手冊和健保卡" rows="2" class="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-tertiary/30 transition-all text-sm outline-none font-medium resize-none placeholder:text-on-surface-variant/40">{{ form_data.content|default:"" }}</textarea>
+                            <textarea name="content" maxlength="100" placeholder="例如：記得帶寶寶手冊和健保卡" rows="3" class="w-full bg-surface-container-low border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium resize-none placeholder:text-on-surface-variant/40">{{ form_data.content|default:"" }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -96,11 +141,457 @@
             {% endif %}
 
             <!-- Submit Button -->
-            <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(125,77,95,0.2)] hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
+            <button type="submit" class="w-full py-3.5 bg-primary text-white rounded-xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(125,77,95,0.2)] hover:scale-[1.005] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-xl">{% if carerecord_id %}save{% else %}add_alert{% endif %}</span>
                 {% if carerecord_id %}更新待辦清單{% else %}新增待辦清單{% endif %}
             </button>
         </form>
     </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const wrapper = document.getElementById('time-picker-wrapper');
+    const inputContainer = document.getElementById('time-input-container');
+    const displayInput = document.getElementById('record_time_display');
+    const hiddenInput = document.getElementById('record_time');
+    const dropdown = document.getElementById('time-picker-dropdown');
+    const preview = document.getElementById('time-picker-preview');
+    const arrow = document.getElementById('time-picker-arrow');
+    const icon = document.getElementById('time-picker-icon');
+    const nowBtn = document.getElementById('time-picker-now-btn');
+    const confirmBtn = document.getElementById('time-picker-confirm-btn');
+
+    const wheelPeriod = document.getElementById('wheel-period');
+    const wheelHour = document.getElementById('wheel-hour');
+    const wheelMinute = document.getElementById('wheel-minute');
+
+    if (!wrapper || !displayInput || !hiddenInput || !dropdown || !wheelPeriod || !wheelHour || !wheelMinute) return;
+
+    const ITEM_HEIGHT = 40;
+    let isTimeSelected = false;
+
+    let currentPeriod = 'PM';
+    let currentHour = 12;
+    let currentMinute = 0;
+
+    const hours = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+    function to24HourString(period, h12, m) {
+        let h = parseInt(h12, 10);
+        if (period === 'AM') {
+            if (h === 12) h = 0;
+        } else {
+            if (h < 12) h += 12;
+        }
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function from24HourString(timeStr) {
+        if (!timeStr || !timeStr.includes(':')) return null;
+        const [hPart, mPart] = timeStr.split(':');
+        const h = parseInt(hPart, 10);
+        const m = parseInt(mPart, 10);
+        if (isNaN(h) || isNaN(m)) return null;
+        const period = h >= 12 ? 'PM' : 'AM';
+        let hour12 = h % 12;
+        if (hour12 === 0) hour12 = 12;
+        return { period, hour12, minute: m };
+    }
+
+    function formatDisplay(period, h12, m) {
+        const periodText = period === 'AM' ? '上午' : '下午';
+        return `${periodText} ${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function updatePreviewAndInputs(skipInputSync = false) {
+        const displayStr = formatDisplay(currentPeriod, currentHour, currentMinute);
+        const isoTime = to24HourString(currentPeriod, currentHour, currentMinute);
+        preview.textContent = displayStr;
+        if (isTimeSelected && !skipInputSync) {
+            displayInput.value = displayStr;
+            hiddenInput.value = isoTime;
+        }
+    }
+
+    // 建立無限循環滾輪元件 (Infinite Looping Wheel Controller)
+    function createInfiniteWheel(container, values, numCycles, formatFn, onValueChange) {
+        const cycleSize = values.length;
+        const cycleHeight = cycleSize * ITEM_HEIGHT;
+
+        container.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
+        for (let c = 0; c < numCycles; c++) {
+            for (let i = 0; i < cycleSize; i++) {
+                const val = values[i];
+                const div = document.createElement('div');
+                div.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-medium text-on-surface/40 tabular-nums cursor-pointer select-none';
+                div.textContent = formatFn ? formatFn(val) : String(val);
+                div.dataset.val = val;
+                div.dataset.flatIndex = c * cycleSize + i;
+                div.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const flatIdx = parseInt(this.dataset.flatIndex, 10);
+                    scrollToFlatIndex(flatIdx, true);
+                });
+                fragment.appendChild(div);
+            }
+        }
+        container.appendChild(fragment);
+
+        let lastCenterItem = null;
+        let lastNearItems = [];
+
+        function updateVisuals() {
+            const centerFlat = Math.round(container.scrollTop / ITEM_HEIGHT) + 2;
+
+            if (lastCenterItem) {
+                lastCenterItem.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-medium text-on-surface/40 tabular-nums cursor-pointer select-none';
+            }
+            lastNearItems.forEach(el => {
+                if (el) el.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-medium text-on-surface/40 tabular-nums cursor-pointer select-none';
+            });
+            lastNearItems = [];
+
+            const centerItem = container.querySelector(`[data-flat-index="${centerFlat}"]`);
+            if (centerItem) {
+                centerItem.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-xl font-bold text-primary tabular-nums cursor-pointer select-none';
+                lastCenterItem = centerItem;
+            }
+
+            const prev1 = container.querySelector(`[data-flat-index="${centerFlat - 1}"]`);
+            const next1 = container.querySelector(`[data-flat-index="${centerFlat + 1}"]`);
+            if (prev1) {
+                prev1.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-semibold text-on-surface/75 tabular-nums cursor-pointer select-none';
+                lastNearItems.push(prev1);
+            }
+            if (next1) {
+                next1.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-semibold text-on-surface/75 tabular-nums cursor-pointer select-none';
+                lastNearItems.push(next1);
+            }
+        }
+
+        function scrollToFlatIndex(flatIndex, smooth = true) {
+            const targetScrollTop = (flatIndex - 2) * ITEM_HEIGHT;
+            container.scrollTo({
+                top: targetScrollTop,
+                behavior: smooth ? 'smooth' : 'instant'
+            });
+            setTimeout(updateVisuals, smooth ? 160 : 10);
+        }
+
+        function scrollToValue(val, smooth = true) {
+            const itemIdx = values.indexOf(val);
+            if (itemIdx === -1) return;
+            const currentFlat = Math.round(container.scrollTop / ITEM_HEIGHT) + 2;
+            const currentCycle = Math.floor(currentFlat / cycleSize);
+            let bestFlat = currentCycle * cycleSize + itemIdx;
+            let bestDist = Math.abs(bestFlat - currentFlat);
+            for (let offset = -1; offset <= 1; offset++) {
+                const candFlat = (currentCycle + offset) * cycleSize + itemIdx;
+                const dist = Math.abs(candFlat - currentFlat);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestFlat = candFlat;
+                }
+            }
+            scrollToFlatIndex(bestFlat, smooth);
+        }
+
+        // 邊界無縫切換（達成無窮循環滾動，永不觸底或撞頂）
+        function checkLoopBounds() {
+            const minBound = 2 * cycleHeight;
+            const maxBound = (numCycles - 3) * cycleHeight;
+            const shiftCycles = Math.floor(numCycles / 3) * cycleHeight;
+            if (container.scrollTop < minBound) {
+                container.scrollTop += shiftCycles;
+            } else if (container.scrollTop > maxBound) {
+                container.scrollTop -= shiftCycles;
+            }
+        }
+
+        let scrollTimeout = null;
+
+        container.addEventListener('scroll', function () {
+            checkLoopBounds();
+            updateVisuals();
+
+            const flatIdx = Math.round(container.scrollTop / ITEM_HEIGHT) + 2;
+            const valIdx = ((flatIdx % cycleSize) + cycleSize) % cycleSize;
+            const selectedVal = values[valIdx];
+            onValueChange(selectedVal);
+
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                checkLoopBounds();
+                updateVisuals();
+            }, 50);
+        }, { passive: true });
+
+        // 支援滑鼠拖曳與觸控滑動
+        enablePointerDrag(container, () => {
+            const nearestFlat = Math.round(container.scrollTop / ITEM_HEIGHT) + 2;
+            scrollToFlatIndex(nearestFlat, true);
+        });
+
+        return {
+            scrollToValue,
+            updateVisuals
+        };
+    }
+
+    // 時段滾輪 (上午 / 下午)
+    function setupPeriodWheel() {
+        const items = wheelPeriod.querySelectorAll('.ios-wheel-item');
+
+        function updatePeriodVisuals() {
+            const isPM = wheelPeriod.scrollTop >= ITEM_HEIGHT / 2;
+            const amEl = wheelPeriod.querySelector('[data-val="AM"]');
+            const pmEl = wheelPeriod.querySelector('[data-val="PM"]');
+            if (isPM) {
+                if (pmEl) pmEl.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-xl font-bold text-primary cursor-pointer select-none';
+                if (amEl) amEl.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-semibold text-on-surface/50 cursor-pointer select-none';
+            } else {
+                if (amEl) amEl.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-xl font-bold text-primary cursor-pointer select-none';
+                if (pmEl) pmEl.className = 'ios-wheel-item h-[40px] w-full flex items-center justify-center font-headline text-base font-semibold text-on-surface/50 cursor-pointer select-none';
+            }
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setPeriod(this.dataset.val, true);
+            });
+        });
+
+        function setPeriod(p, smooth = true) {
+            currentPeriod = p;
+            const targetTop = p === 'AM' ? 0 : ITEM_HEIGHT;
+            wheelPeriod.scrollTo({ top: targetTop, behavior: smooth ? 'smooth' : 'instant' });
+            isTimeSelected = true;
+            updatePreviewAndInputs();
+            updatePeriodVisuals();
+        }
+
+        wheelPeriod.addEventListener('scroll', function () {
+            updatePeriodVisuals();
+            const val = wheelPeriod.scrollTop < ITEM_HEIGHT / 2 ? 'AM' : 'PM';
+            if (val !== currentPeriod) {
+                currentPeriod = val;
+                isTimeSelected = true;
+                updatePreviewAndInputs();
+            }
+        }, { passive: true });
+
+        enablePointerDrag(wheelPeriod, () => {
+            const target = wheelPeriod.scrollTop < ITEM_HEIGHT / 2 ? 0 : ITEM_HEIGHT;
+            wheelPeriod.scrollTo({ top: target, behavior: 'smooth' });
+        });
+
+        return {
+            setPeriod,
+            updateVisuals: updatePeriodVisuals
+        };
+    }
+
+    // 支援桌面滑鼠拖曳與手機觸控滑動
+    function enablePointerDrag(container, onSnap) {
+        let isDown = false;
+        let startY = 0;
+        let startScrollTop = 0;
+        let moved = false;
+
+        container.addEventListener('pointerdown', (e) => {
+            isDown = true;
+            startY = e.clientY;
+            startScrollTop = container.scrollTop;
+            moved = false;
+            container.style.scrollSnapType = 'none';
+            try { container.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+
+        container.addEventListener('pointermove', (e) => {
+            if (!isDown) return;
+            const dy = e.clientY - startY;
+            if (Math.abs(dy) > 3) moved = true;
+            container.scrollTop = startScrollTop - dy;
+        });
+
+        const stop = (e) => {
+            if (!isDown) return;
+            isDown = false;
+            try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+            container.style.scrollSnapType = 'y mandatory';
+            if (moved && onSnap) {
+                onSnap();
+            }
+        };
+
+        container.addEventListener('pointerup', stop);
+        container.addEventListener('pointercancel', stop);
+    }
+
+    // 初始化各滾輪控制器
+    const periodController = setupPeriodWheel();
+
+    const hourController = createInfiniteWheel(
+        wheelHour,
+        hours,
+        15, // 15 次循環 = 180 項，無限循環滾動
+        (h) => String(h).padStart(2, '0'),
+        (h) => {
+            currentHour = h;
+            isTimeSelected = true;
+            updatePreviewAndInputs();
+        }
+    );
+
+    const minuteController = createInfiniteWheel(
+        wheelMinute,
+        minutes,
+        7, // 7 次循環 = 420 項，無限循環滾動
+        (m) => String(m).padStart(2, '0'),
+        (m) => {
+            currentMinute = m;
+            isTimeSelected = true;
+            updatePreviewAndInputs();
+        }
+    );
+
+    function syncAllWheels(smooth = false) {
+        periodController.setPeriod(currentPeriod, smooth);
+        hourController.scrollToValue(currentHour, smooth);
+        minuteController.scrollToValue(currentMinute, smooth);
+        setTimeout(() => {
+            periodController.updateVisuals();
+            hourController.updateVisuals();
+            minuteController.updateVisuals();
+        }, smooth ? 200 : 25);
+    }
+
+    function openPicker() {
+        dropdown.classList.remove('hidden');
+        if (arrow) {
+            arrow.classList.add('rotate-180', 'text-primary');
+            arrow.classList.remove('text-on-surface-variant/40');
+        }
+        if (icon) {
+            icon.classList.add('text-primary');
+            icon.classList.remove('text-on-surface-variant/50');
+        }
+        displayInput.classList.add('ring-2', 'ring-primary-container');
+        // 使用兩次 requestAnimationFrame 確保瀏覽器已完成 layout 與高度計算後再精準滾動
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                syncAllWheels(false);
+            });
+        });
+    }
+
+    function closePicker() {
+        dropdown.classList.add('hidden');
+        if (arrow) {
+            arrow.classList.remove('rotate-180', 'text-primary');
+            arrow.classList.add('text-on-surface-variant/40');
+        }
+        if (icon) {
+            icon.classList.remove('text-primary');
+            icon.classList.add('text-on-surface-variant/50');
+        }
+        displayInput.classList.remove('ring-2', 'ring-primary-container');
+    }
+
+    function togglePicker() {
+        if (dropdown.classList.contains('hidden')) {
+            openPicker();
+        } else {
+            closePicker();
+        }
+    }
+
+    if (inputContainer) {
+        inputContainer.addEventListener('click', function (e) {
+            e.stopPropagation();
+            togglePicker();
+        });
+    }
+
+    displayInput.addEventListener('focus', function () {
+        displayInput.classList.add('ring-2', 'ring-primary-container');
+    });
+
+    displayInput.addEventListener('blur', function () {
+        if (dropdown.classList.contains('hidden')) {
+            displayInput.classList.remove('ring-2', 'ring-primary-container');
+        }
+    });
+
+    nowBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const now = new Date();
+        const parsed = from24HourString(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+        if (parsed) {
+            currentPeriod = parsed.period;
+            currentHour = parsed.hour12;
+            currentMinute = parsed.minute;
+            isTimeSelected = true;
+            updatePreviewAndInputs();
+            syncAllWheels(true);
+        }
+    });
+
+    confirmBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        isTimeSelected = true;
+        updatePreviewAndInputs();
+        closePicker();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) {
+            closePicker();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closePicker();
+        }
+    });
+
+    // 初始時間載入
+    const initialTime = hiddenInput.value;
+    if (initialTime) {
+        const parsed = from24HourString(initialTime);
+        if (parsed) {
+            currentPeriod = parsed.period;
+            currentHour = parsed.hour12;
+            currentMinute = parsed.minute;
+            isTimeSelected = true;
+            updatePreviewAndInputs();
+        }
+    } else {
+        const now = new Date();
+        const parsed = from24HourString(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+        if (parsed) {
+            currentPeriod = parsed.period;
+            currentHour = parsed.hour12;
+            currentMinute = parsed.minute;
+            updatePreviewAndInputs(true);
+        }
+    }
+
+    const form = wrapper.closest('form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            if (!hiddenInput.value) {
+                isTimeSelected = true;
+                updatePreviewAndInputs();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

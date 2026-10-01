@@ -247,10 +247,17 @@
                 <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary" data-icon="timeline">timeline</span>
                     成長里程碑
-                    <a href="{% url 'social_sharing_card' %}" class="ml-2 inline-flex items-center gap-1 text-primary hover:opacity-80 transition-all duration-200 cursor-pointer active:scale-95">
-                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">photo_library</span>
-                        <span class="text-xs font-bold">快速分享卡</span>
+                    {% if baby_is_born %}
+                    <a href="{% url 'social_sharing_card' %}" class="ml-2 inline-flex items-center gap-1.5 text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1 rounded-full text-sm font-bold transition-all duration-200 cursor-pointer active:scale-95">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">photo_library</span>
+                        <span>分享卡</span>
                     </a>
+                    {% else %}
+                    <button type="button" onclick="showPregnantCardAlert()" class="ml-2 inline-flex items-center gap-1.5 text-[#81758a]/70 bg-[#ede5f5]/60 hover:bg-[#ede5f5] px-3 py-1 rounded-full text-sm font-bold cursor-not-allowed opacity-80 transition-all duration-200" title="此胎數還在懷孕中，尚無法使用分享卡">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">lock</span>
+                        <span>分享卡</span>
+                    </button>
+                    {% endif %}
                 </h3>
                 <button onclick="window.location.href='/babygrowthmap/'"
                     class="text-sm font-bold text-primary flex items-center gap-1 hover:bg-primary-container/20 px-3 py-1.5 rounded-full transition-colors font-headline cursor-pointer">
@@ -696,6 +703,18 @@
             toast.classList.remove('opacity-100', 'translate-y-0');
         }, 2800);
     }
+    // ── 懷孕中無法使用分享卡警示通知 ──
+    function showPregnantCardAlert() {
+        var toast = document.getElementById('pregnant-card-toast');
+        if (!toast) return;
+        toast.classList.remove('opacity-0', 'translate-y-4');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function() {
+            toast.classList.add('opacity-0', 'translate-y-4');
+            toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 3200);
+    }
 </script>
 
 <!-- 無編輯權限 Toast -->
@@ -703,6 +722,13 @@
      class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-on-surface text-surface text-sm font-medium px-5 py-3.5 rounded-2xl shadow-xl opacity-0 translate-y-4 transition-all duration-300 pointer-events-none whitespace-nowrap">
     <span class="material-symbols-outlined text-[18px] text-yellow-300">lock</span>
     您沒有編輯權限，無法新增紀錄
+</div>
+
+<!-- 懷孕中無法使用分享卡 Toast -->
+<div id="pregnant-card-toast"
+     class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-[#322f35] text-white text-sm font-medium px-5 py-3.5 rounded-2xl shadow-xl opacity-0 translate-y-4 transition-all duration-300 pointer-events-none whitespace-nowrap">
+    <span class="material-symbols-outlined text-[20px] text-amber-300" style="font-variation-settings: 'FILL' 1;">warning</span>
+    此胎數目前還在懷孕中，寶寶出生後方可使用分享卡！
 </div>
 
 {% endblock %}

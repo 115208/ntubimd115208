@@ -113,14 +113,13 @@
                 <div class="mt-5 space-y-2">
                     <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">生產方式</label>
                     <div class="relative">
-                        <select name="production_method" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-secondary-container transition-all text-sm outline-none font-medium appearance-none">
+                        <select name="production_method" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-secondary-container transition-all text-sm outline-none font-medium">
                             <option value="" disabled {% if not form_data.production_method %}selected{% endif %}>請選擇生產方式</option>
                             <option value="自然產"   {% if form_data.production_method == '自然產'   %}selected{% endif %}>自然產</option>
                             <option value="剖腹產"   {% if form_data.production_method == '剖腹產'   %}selected{% endif %}>剖腹產</option>
                             <option value="無痛分娩" {% if form_data.production_method == '無痛分娩' %}selected{% endif %}>無痛分娩自然產</option>
                             <option value="水中生產" {% if form_data.production_method == '水中生產' %}selected{% endif %}>水中生產</option>
                         </select>
-                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
                     </div>
                 </div>
             </section>

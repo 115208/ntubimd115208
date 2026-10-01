@@ -1,4 +1,4 @@
-﻿.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
         body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #f7f6f3; color: #2e2f2d; overflow-x: hidden; }
         h1, h2, h3, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
     
@@ -11,4 +11,40 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+
+        .no-scrollbar::-webkit-scrollbar {
+            width: 0px !important;
+            height: 0px !important;
+            display: none !important;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* iOS Style Wheel Time Picker */
+        .ios-wheel-container {
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .ios-wheel-container::-webkit-scrollbar {
+            width: 0px !important;
+            height: 0px !important;
+            display: none !important;
+        }
+        .ios-wheel-item {
+            scroll-snap-align: center;
+            scroll-snap-stop: normal;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+
 
