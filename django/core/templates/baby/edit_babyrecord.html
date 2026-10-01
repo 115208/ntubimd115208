@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}修改成長記錄{% endblock %}
+{% block title %}修改成長紀錄{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/baby/add_babyrecord.css' %}">
 {% endblock %}
@@ -35,14 +35,14 @@
             </div>
 
             <div>
-                <div id="date-card-wrapper" class="bg-surface-container-lowest rounded-3xl p-6 flex items-center gap-4 shadow-sm border cursor-pointer">
+                <div id="date-card-wrapper" data-date-picker-trigger class="bg-surface-container-lowest rounded-3xl p-6 flex items-center gap-4 shadow-sm border cursor-pointer">
                     <div class="w-12 h-12 bg-[#d6beff4d] rounded-lg flex flex-col items-center justify-center text-on-primary-container">
                         <span id="date-badge-month" class="text-[10px] font-bold">{{ selected_month_abbr }}</span>
                         <span id="date-badge-day" class="text-xl font-headline font-black">{{ selected_day }}</span>
                     </div>
                     <div class="flex-1">
                         <p class="text-sm font-bold mb-1">紀錄日期</p>
-                        <input id="check-date-input" name="date" class="text-xs text-on-surface-variant bg-transparent border-none p-0 w-full cursor-pointer" type="date" value="{{ form_data.date|default:'' }}" max="{{ today_iso }}" min="{{ baby.birthdaytime|date:'Y-m-d' }}" />
+                        <input id="check-date-input" name="date" class="text-xs text-on-surface-variant bg-transparent border-none p-0 w-full cursor-pointer" type="date" value="{{ form_data.date|default:'' }}" max="{{ today_iso }}" {% if baby.birthdaytime %}min="{{ baby.birthdaytime|date:'Y-m-d' }}"{% endif %} />
                     </div>
                 </div>
             </div>
@@ -79,6 +79,8 @@
                         {% if ms.growthrecord in selected_milestone_list %}bg-[#d6beff80] text-[#65518a]{% else %}bg-surface-container-low text-on-surface-variant{% endif %}">
                         {{ ms.growthrecord }}
                     </button>
+                    {% empty %}
+                    <p class="text-sm text-on-surface-variant">暫無里程碑可供選擇</p>
                     {% endfor %}
                 </div>
             </div>
@@ -91,16 +93,17 @@
             <div class="pt-8 pb-12">
                 <!-- 送出後由 JS 立即 disable，避免使用者連點造成重複送出 -->
                 <button type="submit" id="record-submit-btn"
-                        class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-lg disabled:opacity-60 disabled:cursor-not-allowed">
-                    確認儲存修改
+                        class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-xl">save</span>
+                    儲存變更
                 </button>
             </div>
         </form>
     </main>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const dateCardWrapper = document.getElementById('date-card-wrapper');
         const checkDateInput = document.getElementById('check-date-input');
         const dateBadgeMonth = document.getElementById('date-badge-month');
         const dateBadgeDay = document.getElementById('date-badge-day');
@@ -112,20 +115,6 @@
                 if (parts.length === 3 && dateBadgeMonth && dateBadgeDay) {
                     dateBadgeMonth.textContent = monthAbbr[Number(parts[1])];
                     dateBadgeDay.textContent = Number(parts[2]);
-                }
-            });
-        }
-
-        if (dateCardWrapper && checkDateInput) {
-            dateCardWrapper.addEventListener('click', (event) => {
-                if (event.target === checkDateInput) {
-                    return;
-                }
-                if (typeof checkDateInput.showPicker === 'function') {
-                    checkDateInput.showPicker();
-                } else {
-                    checkDateInput.focus();
-                    checkDateInput.click();
                 }
             });
         }
@@ -181,5 +170,4 @@
         });
     });
 </script>
-</div>
 {% endblock %}

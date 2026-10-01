@@ -299,8 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
         <!-- 性別 -->
         <div class="space-y-2">
             <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">性別</label>
-            <select name="gender_${num}" class="${inputBase} px-4 py-3" required>
-                <option value="" disabled${v.gender ? '' : ' selected'}>請選擇性別</option>
+            <select id="gender-${num}" name="gender_${num}" ${v.birthdaytime ? 'required' : ''} class="${inputBase} px-4 py-3">
+                <option value=""${v.gender ? '' : ' selected'}>未知（暫不填）</option>
                 <option value="1"${selIf(v.gender, '1')}>男</option>
                 <option value="2"${selIf(v.gender, '2')}>女</option>
             </select>
@@ -386,6 +386,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const vitals  = document.getElementById(`vitals-${num}`);
         if (!dtInput || !vitals) return;
         vitals.classList.toggle('hidden', !dtInput.value);
+        const genderInput = document.getElementById(`gender-${num}`);
+        if (genderInput) {
+            genderInput.required = Boolean(dtInput.value);
+            genderInput.setCustomValidity('');
+        }
     };
 
     function getCount() {

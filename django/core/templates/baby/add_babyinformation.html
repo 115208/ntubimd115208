@@ -37,7 +37,7 @@
 
                 <div class="space-y-5">
                     <div class="space-y-2">
-                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">嬰兒暱稱</label>
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">暱稱</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">face</span>
                             <input type="text" name="baby_name" required placeholder="例如：小寶、球球"
@@ -48,8 +48,8 @@
 
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">性別</label>
-                        <select name="gender" required class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
-                            <option value="" disabled {% if not form_data.gender %}selected{% endif %}>請選擇性別</option>
+                        <select id="gender-input" name="gender" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
+                            <option value="" {% if not form_data.gender %}selected{% endif %}>未知（暫不填）</option>
                             <option value="1" {% if form_data.gender == '1' %}selected{% endif %}>男</option>
                             <option value="2" {% if form_data.gender == '2' %}selected{% endif %}>女</option>
                         </select>
@@ -59,7 +59,7 @@
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">出生時間</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">event</span>
-                            <input type="datetime-local" name="birthdaytime"
+                            <input type="datetime-local" name="birthdaytime" id="birthdaytime-input"
                                     value="{{ form_data.birthdaytime|default:'' }}"
                                     max="{% now 'Y-m-d' %}T23:59"
                                     class="w-full bg-surface-container-low border-none rounded-xl pl-11 pr-3 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium" />
@@ -125,10 +125,26 @@
                 </div>
             </section>
 
-            <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:scale-[1.02] active:scale-95 transition-all mt-6 cursor-pointer flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-xl">check_circle</span>
-                儲存嬰幼兒資訊
+            <button type="submit" class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:brightness-105 active:scale-[0.98] transition-all mt-6 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-xl">save</span>
+                新增嬰幼兒資訊
             </button>
         </form>
     </main>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var birthdayInput = document.getElementById('birthdaytime-input');
+    var genderInput = document.getElementById('gender-input');
+    if (!birthdayInput || !genderInput) return;
+    var syncGenderRequirement = function () {
+        genderInput.required = Boolean(birthdayInput.value);
+        genderInput.setCustomValidity('');
+    };
+    birthdayInput.addEventListener('input', syncGenderRequirement);
+    birthdayInput.addEventListener('change', syncGenderRequirement);
+    syncGenderRequirement();
+});
+</script>
 {% endblock %}

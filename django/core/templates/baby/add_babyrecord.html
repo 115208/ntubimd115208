@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}新增成長記錄{% endblock %}
+{% block title %}新增成長紀錄{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/baby/add_babyrecord.css' %}">
 {% endblock %}
@@ -32,26 +32,26 @@
             {% endif %}
 
             <div id="photo-card-wrapper" class="relative bg-surface-container-lowest border-2 border-dashed border-primary-container rounded-[2rem] p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/5 transition-all aspect-[4/3] md:aspect-video shadow-sm">
-                <img id="photo-preview-image" src="{{ photo_url|default:'' }}" class="{% if photo_url %}absolute rounded-[2rem] inset-0 w-full h-full object-cover{% else %}hidden absolute rounded-[2rem] inset-0 w-full h-full object-cover{% endif %}" alt="預覽圖片" />
+                <img id="photo-preview-image" src="" class="hidden absolute rounded-[2rem] inset-0 w-full h-full object-cover" alt="預覽圖片" />
                 <div id="photo-card-overlay" class=""></div>
                 <div id="photo-card-content"  class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <span id="photo-placeholder-icon" class="material-symbols-outlined text-2xl">photo_camera</span>
                 </div>
-                <p id="photo-card-text" class="text-sm font-bold text-on-surface-variant">{% if form_photo_url %}更換成長照片{% else %}點擊上傳成長照片{% endif %}</p>
+                <p id="photo-card-text" class="text-sm font-bold text-on-surface-variant">點擊上傳成長照片</p>
                 <input id="photo-input" name="photo" type="file" accept="image/*" class="hidden"  />
             </div>
 
             <div class="h-8"></div>
 
             <div>
-                <div id="date-card-wrapper" class="bg-surface-container-lowest rounded-3xl p-6 flex items-center gap-4 shadow-sm border border-transparent cursor-pointer hover:bg-surface-container-low transition-colors">
+                <div id="date-card-wrapper" data-date-picker-trigger class="bg-surface-container-lowest rounded-3xl p-6 flex items-center gap-4 shadow-sm border border-transparent cursor-pointer hover:bg-surface-container-low transition-colors">
                     <div class="w-12 h-12 bg-[#d6beff4d] rounded-lg flex flex-col items-center justify-center text-on-primary-container">
                         <span id="date-badge-month" class="text-[10px] font-bold">{{ selected_month_abbr }}</span>
                         <span id="date-badge-day" class="text-xl font-headline font-black">{{ selected_day }}</span>
                     </div>
                     <div class="flex-1">
                         <p class="text-sm font-bold mb-1">紀錄日期</p>
-                        <input id="check-date-input" name="date" class="text-xs text-on-surface-variant bg-transparent border-none p-0 focus:ring-0 w-full cursor-pointer" type="date" value="{{ form_data.date|default:'' }}" max="{{ today_iso }}" min="{{ baby.birthdaytime|date:'Y-m-d' }}" />
+                        <input id="check-date-input" name="date" class="text-xs text-on-surface-variant bg-transparent border-none p-0 focus:ring-0 w-full cursor-pointer" type="date" value="{{ form_data.date|default:'' }}" max="{{ today_iso }}" {% if baby.birthdaytime %}min="{{ baby.birthdaytime|date:'Y-m-d' }}"{% endif %} />
                     </div>
                 </div>
             </div>
@@ -103,8 +103,9 @@
             <div class="pt-8 pb-12">
                 <!-- 送出後由 JS 立即 disable，避免使用者連點造成重複送出 -->
                 <button type="submit" id="record-submit-btn"
-                        class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-lg disabled:opacity-60 disabled:cursor-not-allowed">
-                    完成並儲存紀錄
+                        class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-xl">save</span>
+                    儲存紀錄
                 </button>
             </div>
         </form>
@@ -113,7 +114,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const dateCardWrapper = document.getElementById('date-card-wrapper');
         const checkDateInput  = document.getElementById('check-date-input');
         const dateBadgeMonth  = document.getElementById('date-badge-month');
         const dateBadgeDay    = document.getElementById('date-badge-day');
@@ -176,20 +176,6 @@
                 setTimeout(() => { submitBtn.disabled = true; }, 0);
             });
         }
-        if (dateCardWrapper && checkDateInput) {
-            dateCardWrapper.addEventListener('click', (event) => {
-                if (event.target === checkDateInput) {
-                    return;
-                }
-                if (typeof checkDateInput.showPicker === 'function') {
-                    checkDateInput.showPicker();
-                } else {
-                    checkDateInput.focus();
-                    checkDateInput.click();
-                }
-            });
-        }
-
         if (photoInput && photoPreviewImage && photoPlaceholderIcon && photoCardWrapper && photoCardText && photoCardOverlay && photoCardContent) {
             const setPhotoSelectedState = (hasFile) => {
                 if (hasFile) {

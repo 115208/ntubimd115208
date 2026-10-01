@@ -560,7 +560,7 @@ def pregnancyrecord_add(request):
                     int(pid) for pid in request.POST.getlist('physical_conditions') if pid.isdigit()
                 ],
                 'has_prenatalrecord': official_record_enabled,
-                'submit_button_text': '更新紀錄' if selected_day_record else '完成並儲存紀錄',
+                'submit_button_text': '儲存變更' if selected_day_record else '儲存紀錄',
                 'selected_day_record_id': (
                     selected_day_record.pregnancyrecord_id if selected_day_record else None
                 ),
@@ -719,7 +719,7 @@ def pregnancyrecord_add(request):
         'selected_day_feeling_ids': selected_day_feeling_ids,
         'selected_day_physical_condition_ids': selected_day_physical_condition_ids,
         'has_prenatalrecord': has_prenatalrecord,
-        'submit_button_text': '更新紀錄' if selected_day_record else '完成並儲存紀錄',
+        'submit_button_text': '儲存變更' if selected_day_record else '儲存紀錄',
         'selected_day_record_id': selected_day_record.pregnancyrecord_id if selected_day_record else None,
     }
     return render(request, 'pregnancy/pregnancyrecordadd.html', context)

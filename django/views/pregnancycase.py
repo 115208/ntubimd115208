@@ -150,16 +150,19 @@ def get_gestation_text(case, on_date=None):
 
 def get_pregnancy_status(case, on_date=None):
     """
-    回傳 'pregnant' | 'overdue' | 'born'。
+    回傳 'pregnant' | 'overdue' | 'born' | 'empty'。
     overdue = 仍有未出生嬰幼兒且已超預產期；born = 所有嬰幼兒皆已出生。
+    empty = 沒有嬰幼兒資料；不可將已刪除最後一筆嬰幼兒資料的個案誤當成懷孕中。
     """
     on_date = on_date or timezone.localdate()
     babies = _ordered_babies(case)
 
-    if babies:
-        # 所有嬰幼兒都有出生日期才算 born；否則繼續判斷是否超期
-        if all(b.birthdaytime is not None for b in babies):
-            return 'born'
+    if not babies:
+        return 'empty'
+
+    # 所有嬰幼兒都有出生日期才算 born；否則繼續判斷是否超期
+    if all(b.birthdaytime is not None for b in babies):
+        return 'born'
 
     # Bug 修正：overdue 以實際 expecteddate + 14 天為判斷基準，
     # 而非固定用 lmp+294（若醫生手動設定與 lmp+280 不同的 expecteddate，兩者結果不同）
@@ -865,8 +868,10 @@ def add_pregnancy_case(request):
 
             name = (request.POST.get(f'baby_name_{num}') or '').strip() or f'嬰幼兒 {num}'
             gender = (request.POST.get(f'gender_{num}') or '').strip()
-            if gender not in {'1', '2'}:
-                return _render_form(f'第 {num} 位嬰幼兒：請選擇性別')
+            if gender not in {'1', '2', ''}:
+                return _render_form(f'第 {num} 位嬰幼兒：性別值不正確')
+            if birthdaytime and not gender:
+                return _render_form(f'第 {num} 位嬰幼兒已填出生時間，請選擇性別')
             w  = _parse_float(request.POST.get(f'baby_weight_{num}') or request.POST.get('baby_weight'))
             h  = _parse_float(request.POST.get(f'baby_height_{num}') or request.POST.get('baby_height'))
             hc = _parse_float(request.POST.get(f'baby_head_{num}') or request.POST.get('baby_head'))
@@ -888,6 +893,30 @@ def add_pregnancy_case(request):
                 'chestcircumference': cc,
                 'production_method': request.POST.get(f'production_method_{num}') or request.POST.get('production_method'),
             })
+
+        # ── 禁止同時新增兩個進行中的懷孕紀錄 ──────────────────────────────
+        existing_cases = list(PregnancyCase.objects.filter(user=user))
+        has_ongoing = any(is_pregnancy_ongoing(c) for c in existing_cases)
+        if has_ongoing:
+            return _render_form('您目前已有進行中的懷孕紀錄，無法同時新增第二胎。請待目前懷孕結束後再新增。')
+
+        # 不允許另一筆懷孕紀錄在前一位嬰幼兒出生前就已受孕；同一
+        # PregnancyCase 內建立多胞胎不受此限制。
+        previous_birth_dates = [
+            _local_birth_date(baby.birthdaytime)
+            for existing_case in existing_cases
+            for baby in existing_case.babyinformation_set.all()
+            if baby.birthdaytime
+        ]
+        latest_previous_birth = max(previous_birth_dates, default=None)
+        estimated_conception = menstruation + timedelta(days=14) if menstruation else None
+        if (latest_previous_birth and estimated_conception
+                and estimated_conception <= latest_previous_birth):
+            return _render_form(
+                '新懷孕紀錄的推估受孕時間早於上一位嬰幼兒出生日期。'
+                '若是雙胞胎或多胞胎，請將嬰幼兒新增在同一筆懷孕紀錄中；'
+                '若是下一胎，請確認最後一次月經日期。'
+            )
 
         # ── 驗證全數通過，才真正建立 PregnancyCase 與嬰幼兒資料 ──────────
         case = PregnancyCase.objects.create(
@@ -914,6 +943,10 @@ def add_pregnancy_case(request):
     user = get_current_user_profile(request)
     if not user:
         return redirect('login')
+    existing_cases = list(PregnancyCase.objects.filter(user=user))
+    if any(is_pregnancy_ongoing(c) for c in existing_cases):
+        messages.error(request, '您目前已有進行中的懷孕紀錄，無法同時新增第二胎。')
+        return redirect('pregnancy_case')
     code = _generate_unique_code()
     return render(request, 'pregnancycase/add_pregnancy_case.html', {'generated_code': code})
 
@@ -1008,8 +1041,8 @@ def edit_pregnancy_case(request):
         for i, baby in enumerate(babies, start=1):
             new_name = (request.POST.get(f'baby_name_{i}') or '').strip() or baby.name
             new_gender = (request.POST.get(f'gender_{i}') or '').strip()
-            if new_gender not in {'1', '2'}:
-                return _render_error(f'「{baby.name}」：請選擇性別', menstruation_str, expecteddate_str)
+            if new_gender not in {'1', '2', ''}:
+                return _render_error(f'「{baby.name}」：性別值不正確', menstruation_str, expecteddate_str)
 
             birthdaytime_str = (request.POST.get(f'birthdaytime_{i}') or '').strip()
             if birthdaytime_str:
@@ -1028,6 +1061,8 @@ def edit_pregnancy_case(request):
             birth_error = validate_birth_datetime(new_menstruation, new_birthdaytime)
             if birth_error:
                 return _render_error(f'「{baby.name}」：{birth_error}', menstruation_str, expecteddate_str)
+            if new_birthdaytime and not new_gender:
+                return _render_error(f'「{baby.name}」已填出生時間，請選擇性別', menstruation_str, expecteddate_str)
 
             baby_updates.append((baby, new_name, new_gender, new_birthdaytime))
 
@@ -1049,8 +1084,10 @@ def edit_pregnancy_case(request):
                 if birth_error:
                     return _render_error(birth_error, menstruation_str, expecteddate_str)
                 gender = (request.POST.get('gender_1') or '').strip()
-                if gender not in {'1', '2'}:
-                    return _render_error('請選擇性別', menstruation_str, expecteddate_str)
+                if gender not in {'1', '2', ''}:
+                    return _render_error('性別值不正確', menstruation_str, expecteddate_str)
+                if new_birthdaytime and not gender:
+                    return _render_error('已填出生時間，請選擇性別', menstruation_str, expecteddate_str)
                 new_baby_payload = {
                     'name': new_name,
                     'gender': gender,

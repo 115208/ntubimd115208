@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let month = 1; month <= 12; month++) {
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border';
+            button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
  
             if (tempYear === currentSelectedYear && month === tempMonth) {
                 button.className += ' bg-primary text-white shadow-md border-primary';
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const year = startYear + offset;
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border';
+            button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
  
             if (year === currentSelectedYear) {
                 button.className += ' bg-primary text-white shadow-md border-primary';

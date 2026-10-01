@@ -1,20 +1,16 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}成長地圖{% endblock %}
-{% block extra_css %}
-<style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
-</style>
-{% endblock %}
+{% block title %}成長里程碑{% endblock %}
+
 {% block content %}
 <div class="bg-surface text-on-surface min-h-screen">
 
     <!-- Header Section -->
-    <header id="edit-profile-header" class="sticky top-0 z-50 bg-[#f7f6f3]/70 backdrop-blur-md flex justify-between items-center px-6 py-4 w-full transition-all duration-500 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
+    <header class="sticky top-0 z-50 bg-[#f7f6f3]/70 backdrop-blur-md flex justify-between items-center px-6 py-4 w-full transition-all duration-500 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
         <div class="flex items-center gap-3">
-            <a href="/babyinformation/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
+            <a href="{{ back_url|default:'/babyinformation/' }}" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回">
                 <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
-                <span class="tfont-headline font-extrabold text-2xl text-primary tracking-tight">成長地圖</span>
+                <span class="text-lg font-bold text-primary">成長里程碑</span>
             </a>
         </div>
     </header>

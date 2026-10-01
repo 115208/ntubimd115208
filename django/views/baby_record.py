@@ -49,7 +49,7 @@ from views.session_utils import get_current_user_profile
 
 
 # ── 權限與角色輔助函式 ──────────────────────────────────────────────
-def _check_baby_permission(user, case, required='viewer'):
+def _check_baby_permission(user, case, required='view'):
     """個案擁有者永遠通過；其餘一律必須有 FamilyMember 列且權限足夠。
     case 為 None（資料不完整的孤兒寶寶）一律拒絕，避免無主資料被任何人存取。"""
     if not case:
@@ -58,10 +58,10 @@ def _check_baby_permission(user, case, required='viewer'):
         return True
     membership = FamilyMember.objects.filter(pregnancycase=case, user=user).first()
     if membership is None:
-        # 非擁有者又不是協助者 → 完全沒有關係，直接拒絕
         return False
-    required_level = 'edit' if required == 'caregiver' else 'view'
-    return baby_utils.has_permission(membership, 'baby_records', required_level)
+    if required not in ('view', 'edit'):
+        raise ValueError(f"_check_baby_permission: unknown required level '{required}', must be 'view' or 'edit'")
+    return baby_utils.has_permission(membership, 'baby_records', required)
 
 
 def _get_accessible_babies(user):
@@ -154,13 +154,13 @@ def add_baby_record(request):
             'selected_day':        today.day,
         }
         if request.method == 'POST':
-            context['error'] = '目前沒有選擇任何寶寶，無法儲存紀錄。請先於上方切換器選擇寶寶，或建立嬰幼兒資料。'
+            context['error'] = '目前沒有選擇任何寶寶，無法儲存紀錄。請先於上方切換器選擇寶寶，或建立嬰幼兒資訊。'
         return render(request, 'baby/add_babyrecord.html', context)
 
     case = active_baby.pregnancycase
 
     # 權限：只有 caregiver 以上才能新增
-    if not _check_baby_permission(user, case, required='caregiver'):
+    if not _check_baby_permission(user, case, required='edit'):
         return redirect('babyinformation')
 
     initial_date = request.GET.get('date', '')
@@ -238,21 +238,31 @@ def add_baby_record(request):
             if record_text and record_text != old_text:
                 existing.record = f'{old_text}\n{record_text}' if old_text else record_text
             existing.update_time = timezone.now()
-            existing.save()
+            try:
+                existing.save()
+            except Exception:
+                # DB 儲存失敗：刪除已上傳的新圖避免孤兒圖片，保留舊圖
+                delete_image(photo_url)
+                return _error('儲存失敗，請稍後再試', record_date_post)
             delete_image(old_photo_url)
             baby_record = existing
             merged = True
         else:
-            baby_record = BabyRecord.objects.create(
-                baby=active_baby,
-                date=record_date_post,
-                record=record_text,
-                weight=w,
-                height=h,
-                headcircumference=hc,
-                chestcircumference=cc,
-                photo=photo_url,
-            )
+            try:
+                baby_record = BabyRecord.objects.create(
+                    baby=active_baby,
+                    date=record_date_post,
+                    record=record_text,
+                    weight=w,
+                    height=h,
+                    headcircumference=hc,
+                    chestcircumference=cc,
+                    photo=photo_url,
+                )
+            except Exception:
+                # DB 儲存失敗：刪除已上傳的圖片避免孤兒圖片
+                delete_image(photo_url)
+                return _error('儲存失敗，請稍後再試', record_date_post)
             merged = False
 
         # 解析 pipe-separated 里程碑字串，逐一建立 BabyStatus 關聯
@@ -312,7 +322,7 @@ def edit_baby_record(request, babyrecord_id):
     case   = baby.pregnancycase if baby else None
 
     # 需要 caregiver 權限才能編輯
-    if not _check_baby_permission(user, case, required='caregiver'):
+    if not _check_baby_permission(user, case, required='edit'):
         return redirect('babyinformation')
 
     record.milestones, record.note_text = baby_utils.split_note_and_milestones(record)
@@ -445,7 +455,7 @@ def delete_baby_record(request, babyrecord_id):
     record = get_object_or_404(BabyRecord, babyrecord_id=babyrecord_id)
     case   = record.baby.pregnancycase if record.baby else None
 
-    if not _check_baby_permission(user, case, required='caregiver'):
+    if not _check_baby_permission(user, case, required='edit'):
         return redirect('babyinformation')
     photo_url = record.photo
     record.delete()

@@ -44,18 +44,20 @@
         return formatLocalDate(due);
     }
 
-    function bindDueDateAutoCalc(menstruationInput, expecteddateInput) {
+    function bindDueDateAutoCalc(menstruationInput, expecteddateInput, options) {
         if (!menstruationInput || !expecteddateInput) {
             return;
         }
+        const forceSync = options && options.forceSync;
 
         function syncExpectedDate() {
             const lmp = menstruationInput.value;
             if (!lmp) {
                 return;
             }
-            // 只在預產期還沒有值時自動帶入，不覆寫使用者（或醫生）已填的預產期
-            if (expecteddateInput.value) {
+            // 預設：只在預產期還沒有值時自動帶入，不覆寫使用者（或醫生）已填的預產期。
+            // forceSync=true（編輯頁）：每次改 LMP 都重算，讓編輯結果即時反映。
+            if (!forceSync && expecteddateInput.value) {
                 return;
             }
             const calculated = dueDateFromLMP(lmp);
@@ -68,8 +70,8 @@
         menstruationInput.addEventListener('change', syncExpectedDate);
     }
 
-    function bindPregnancyDatePair(form, menstruationInput, expecteddateInput) {
-        bindDueDateAutoCalc(menstruationInput, expecteddateInput);
+    function bindPregnancyDatePair(form, menstruationInput, expecteddateInput, options) {
+        bindDueDateAutoCalc(menstruationInput, expecteddateInput, options);
         if (!form || !menstruationInput || !expecteddateInput) {
             return;
         }

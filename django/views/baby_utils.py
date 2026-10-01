@@ -110,14 +110,16 @@ def get_relevant_timecourses(age_in_months):
     else: return [36]
 
 def save_uploaded_image(image_file):
-    """上傳圖片至儲存區，回傳相對 URL。
-
-    安全性：副檔名一律由實際檔頭決定、檔名由系統產生，
-    絕不沿用使用者提供的 image_file.name —— 否則上傳 .html / .svg
-    存到站內同源路徑後會造成儲存型 XSS。
-    檔案不是可接受的圖片時丟出 InvalidImageError（訊息可直接顯示給使用者），
-    呼叫端必須捕捉並回到表單顯示錯誤。
+    """【已棄用 / DEPRECATED】此函式使用本地 FileSystemStorage 儲存圖片，
+    僅適用於本地開發環境。生產環境請改用 views.supabase_storage.upload_image()。
+    目前已確認無任何地方呼叫此函式，保留以備向下相容，請勿在新程式碼中使用。
     """
+    import warnings
+    warnings.warn(
+        "save_uploaded_image() is deprecated; use supabase_storage.upload_image() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if not image_file: return None
     extension = validate_image_upload(image_file)
     storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)

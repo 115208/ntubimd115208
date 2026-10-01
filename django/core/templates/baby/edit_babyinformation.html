@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}編輯嬰幼兒資料{% endblock %}
+{% block title %}修改嬰幼兒資訊{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/baby/add_baby_profile.css' %}">
 {% endblock %}
@@ -37,9 +37,9 @@
                 </div>
 
                 <div class="space-y-4">
-                    <!-- 嬰兒暱稱（始終可編輯） -->
+                    <!-- 暱稱（始終可編輯） -->
                     <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">嬰兒暱稱</label>
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">暱稱</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">face</span>
                             <input type="text" name="baby_name" value="{{ form_data.baby_name|default:baby.name }}" required placeholder="例如：小寶、球球"
@@ -49,9 +49,9 @@
 
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">性別</label>
-                        <select name="gender" required class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all text-sm outline-none font-medium">
+                        <select name="gender" id="gender-input" {% if birthdaytime_value %}required{% endif %} class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all text-sm outline-none font-medium">
                             {% for value, label in gender_choices %}
-                            <option value="{{ value }}" {% if form_data.gender %}{% if form_data.gender == value %}selected{% endif %}{% elif baby.gender == value %}selected{% endif %}>{{ label }}</option>
+                            <option value="{{ value }}" {% if gender_was_submitted %}{% if form_data.gender == value %}selected{% endif %}{% elif baby.gender == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -78,7 +78,7 @@
                         <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">最後一次月經 (LMP)</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-[20px]">calendar_month</span>
-                            <input type="date" name="lmp_date" value="{{ lmp_date_value }}" readonly
+                            <input type="text" name="lmp_date" value="{{ lmp_date_value }}" readonly
                                    class="w-full bg-surface-container-low/40 border-none rounded-xl pl-11 pr-3 py-3.5 text-on-surface-variant/60 text-sm outline-none font-medium cursor-not-allowed" />
                         </div>
                     </div>
@@ -223,7 +223,7 @@
                  JS 只在「有未鎖定的出生體徵要二次確認」時才 preventDefault 改跳 Modal，
                  沒有需要確認的欄位就直接交給瀏覽器原生送出（含 required 驗證）。 -->
             <button type="submit" id="save-btn"
-                    class="w-full py-4 bg-primary text-white rounded-2xl font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2">
+                    class="w-full py-4 bg-[#65518a] text-white rounded-full font-headline font-bold text-base shadow-[0_10px_20px_rgba(101,81,138,0.2)] hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 <span class="material-symbols-outlined text-xl">save</span>
                 儲存變更
             </button>
@@ -249,7 +249,8 @@
                     </button>
                     <button type="button" id="confirm-save-btn"
                             class="flex-1 py-3 rounded-2xl bg-primary text-white font-bold text-sm hover:bg-primary/90 active:scale-95 transition-all">
-                        確認儲存
+                        <span class="material-symbols-outlined align-middle text-base">save</span>
+                        確認儲存變更
                     </button>
                 </div>
             </div>
@@ -261,8 +262,21 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var birthdayInput   = document.getElementById('birthdaytime-input');
+    var genderInput     = document.getElementById('gender-input');
     var birthWeeksInput = document.querySelector('input[name="birth_weeks"]');
     var lmpValue = '{{ lmp_date_value }}';
+
+    function syncGenderRequirement() {
+        if (genderInput) {
+            genderInput.required = Boolean(birthdayInput && birthdayInput.value);
+            genderInput.setCustomValidity('');
+        }
+    }
+    if (birthdayInput && !birthdayInput.readOnly) {
+        birthdayInput.addEventListener('input', syncGenderRequirement);
+        birthdayInput.addEventListener('change', syncGenderRequirement);
+    }
+    syncGenderRequirement();
 
     function clampToNow() {
         if (!birthdayInput || !birthdayInput.value) return;

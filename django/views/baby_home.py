@@ -163,7 +163,11 @@ def baby(request):
 
     can_edit_baby = True
     can_use_assistant = True
-    if active_baby and active_baby.pregnancycase and active_baby.pregnancycase.user_id != user.user_id:
+    if not active_baby or not active_baby.pregnancycase:
+        # 孤兒寶寶（pregnancycase 為 None）或無 active baby → 不可編輯
+        can_edit_baby = False
+        can_use_assistant = False
+    elif active_baby.pregnancycase.user_id != user.user_id:
         membership = FamilyMember.objects.filter(
             pregnancycase=active_baby.pregnancycase, user=user
         ).first()

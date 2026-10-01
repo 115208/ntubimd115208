@@ -4,6 +4,7 @@ from .PregnancyCase import PregnancyCase
 #小孩資訊
 class BabyInformation(models.Model):
     GENDER_CHOICES = (
+        ('', '未知'),
         ('1', '男'),
         ('2', '女'),
     )
@@ -11,7 +12,7 @@ class BabyInformation(models.Model):
     baby_id = models.AutoField(primary_key=True)
     pregnancycase = models.ForeignKey(PregnancyCase, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
-    gender = models.CharField(max_length=2, choices=GENDER_CHOICES, default='1')
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES, blank=True, default='')
     birthdaytime = models.DateTimeField(null=True, blank=True)
     baby_height = models.FloatField(null=True, blank=True)
     baby_weight = models.FloatField(null=True, blank=True)

@@ -79,7 +79,7 @@
             {% endif %}
             <!-- Today's Checklist -->
             <div class="px-6 lg:px-0 mb-8">
-                <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm flex flex-col space-y-4" data-selected-date="{{ selected_date_iso }}" data-today-date="{{ today_iso }}">
+                <div id="care-todo-panel" class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm flex flex-col space-y-4" data-selected-date="{{ selected_date_iso }}" data-today-date="{{ today_iso }}">
                     <div class="flex justify-between items-center gap-4 mb-1">
                         <div class="flex flex-col gap-1">
                             <h3 class="font-bold text-primary text-lg">待辦清單</h3>
@@ -408,12 +408,9 @@
         const datePickerBackBtn = document.getElementById('care-date-picker-back-btn');
         const datePickerNextMonthBtn = document.getElementById('care-date-picker-next-month');
         const customDatePickerBtn = document.getElementById('care-date-picker-btn');
-        const rangePrevBtn = document.getElementById('care-range-prev-btn');
-        const rangeTodayBtn = document.getElementById('care-today-btn');
-        const rangeNextBtn = document.getElementById('care-range-next-btn');
-        const selectedDateSource = document.querySelector('[data-selected-date]');
+        let selectedDateSource = document.getElementById('care-todo-panel');
 
-        if (!monthPickerModal || !customDatePickerBtn || !monthPickerContent || !monthPickerGrid || !monthPickerYearDisplay || !prevYearBtn || !nextYearBtn || !monthPickerBackdrop || !rangePrevBtn || !rangeTodayBtn || !rangeNextBtn || !selectedDateSource || !datePickerModal || !datePickerBackdrop || !datePickerContent || !datePickerMonthDisplay || !datePickerGrid || !datePickerBackBtn || !datePickerNextMonthBtn) {
+        if (!monthPickerModal || !customDatePickerBtn || !monthPickerContent || !monthPickerGrid || !monthPickerYearDisplay || !prevYearBtn || !nextYearBtn || !monthPickerBackdrop || !selectedDateSource || !datePickerModal || !datePickerBackdrop || !datePickerContent || !datePickerMonthDisplay || !datePickerGrid || !datePickerBackBtn || !datePickerNextMonthBtn) {
             return;
         }
 
@@ -823,10 +820,10 @@
             return params;
         }
 
-        const selectedDateText = selectedDateSource.dataset.selectedDate || '';
-        const todayText = selectedDateSource.dataset.todayDate || '';
-        const selectedDate = selectedDateText ? new Date(`${selectedDateText}T00:00:00`) : new Date();
-        const todayDate = todayText ? new Date(`${todayText}T00:00:00`) : new Date();
+        let selectedDateText = selectedDateSource.dataset.selectedDate || '';
+        let todayText = selectedDateSource.dataset.todayDate || '';
+        let selectedDate = selectedDateText ? new Date(`${selectedDateText}T00:00:00`) : new Date();
+        let todayDate = todayText ? new Date(`${todayText}T00:00:00`) : new Date();
         let currentSelectedYear = selectedDate.getFullYear();
         let currentSelectedMonth = selectedDate.getMonth() + 1;
         let currentSelectedDay = selectedDate.getDate();
@@ -849,8 +846,89 @@
             }
             const target = `${safeYear}-${String(safeMonth).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
             const params = appendActiveSelection(new URLSearchParams({ date: target }));
-            window.location.href = `?${params.toString()}`;
+            navigateTodoDate(`?${params.toString()}`);
         }
+
+        let todoDateRequest = null;
+        async function navigateTodoDate(url, { updateHistory = true } = {}) {
+            const targetUrl = new URL(url, window.location.href);
+            if (todoDateRequest) todoDateRequest.abort();
+            const controller = new AbortController();
+            todoDateRequest = controller;
+            const scrollY = window.scrollY;
+            selectedDateSource.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(targetUrl.href, {
+                    signal: controller.signal,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) throw new Error(`日期載入失敗：${response.status}`);
+                const html = await response.text();
+                const parsed = new DOMParser().parseFromString(html, 'text/html');
+                const updatedPanel = parsed.getElementById('care-todo-panel');
+                if (!updatedPanel) throw new Error('找不到更新後的待辦清單');
+
+                selectedDateSource.replaceWith(updatedPanel);
+                selectedDateSource.removeAttribute('aria-busy');
+                selectedDateSource = updatedPanel;
+                selectedDateText = updatedPanel.dataset.selectedDate || '';
+                todayText = updatedPanel.dataset.todayDate || '';
+                selectedDate = selectedDateText ? new Date(`${selectedDateText}T00:00:00`) : new Date();
+                todayDate = todayText ? new Date(`${todayText}T00:00:00`) : new Date();
+                currentSelectedYear = selectedDate.getFullYear();
+                currentSelectedMonth = selectedDate.getMonth() + 1;
+                currentSelectedDay = selectedDate.getDate();
+                tempYear = currentSelectedYear;
+                tempMonth = currentSelectedMonth;
+                tempDay = currentSelectedDay;
+
+                if (updateHistory) {
+                    window.history.pushState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+                }
+                const selectedItem = updatedPanel.querySelector(`#care-day-strip a[href*="date=${selectedDateText}"]`);
+                const updatedDayStrip = updatedPanel.querySelector('#care-day-strip');
+                if (selectedItem && updatedDayStrip) {
+                    const stripOffset = selectedItem.offsetLeft - updatedDayStrip.offsetLeft;
+                    updatedDayStrip.scrollTo({ left: stripOffset, behavior: 'smooth' });
+                }
+                window.requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: 'auto' }));
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    selectedDateSource.removeAttribute('aria-busy');
+                    console.error(error);
+                }
+            } finally {
+                if (todoDateRequest === controller) todoDateRequest = null;
+            }
+        }
+
+        document.addEventListener('click', (event) => {
+            const panel = document.getElementById('care-todo-panel');
+            if (!panel || !panel.contains(event.target)) return;
+            const dayLink = event.target.closest('#care-day-strip a');
+            if (dayLink) {
+                event.preventDefault();
+                navigateTodoDate(dayLink.href);
+                return;
+            }
+            const button = event.target.closest('button');
+            if (!button) return;
+            if (button.id === 'care-date-picker-btn') {
+                renderMonthGrid();
+                openMonthPicker();
+            } else if (button.id === 'care-range-prev-btn' || button.id === 'care-range-next-btn') {
+                const target = new Date(selectedDate.getTime());
+                target.setDate(target.getDate() + (button.id === 'care-range-prev-btn' ? -1 : 1));
+                goToDate(target.getFullYear(), target.getMonth() + 1, target.getDate());
+            } else if (button.id === 'care-today-btn') {
+                goToDate(todayDate.getFullYear(), todayDate.getMonth() + 1, todayDate.getDate());
+            }
+        });
+
+        window.addEventListener('popstate', () => {
+            navigateTodoDate(window.location.href, { updateHistory: false });
+        });
 
         function openMonthPicker() {
             monthPickerModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -887,7 +965,7 @@
             for (let month = 1; month <= 12; month++) {
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = 'py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border';
+                button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
 
                 if (tempYear === currentSelectedYear && month === currentSelectedMonth) {
                     button.className += ' bg-primary text-white shadow-md border-primary';
@@ -941,11 +1019,6 @@
             }
         }
 
-        customDatePickerBtn.addEventListener('click', () => {
-            renderMonthGrid();
-            openMonthPicker();
-        });
-
         monthPickerBackdrop.addEventListener('click', closeMonthPicker);
         datePickerBackdrop.addEventListener('click', closeDatePicker);
 
@@ -986,31 +1059,9 @@
             renderDateGrid();
         });
 
-        rangePrevBtn.addEventListener('click', () => {
-            const target = new Date(selectedDate.getTime());
-            target.setDate(target.getDate() - 1);
-            const dateIso = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-            const params = appendActiveSelection(new URLSearchParams({ date: dateIso }));
-            window.location.href = `?${params.toString()}`;
-        });
-
-        rangeNextBtn.addEventListener('click', () => {
-            const target = new Date(selectedDate.getTime());
-            target.setDate(target.getDate() + 1);
-            const dateIso = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-            const params = appendActiveSelection(new URLSearchParams({ date: dateIso }));
-            window.location.href = `?${params.toString()}`;
-        });
-
-        rangeTodayBtn.addEventListener('click', () => {
-            const target = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
-            const params = appendActiveSelection(new URLSearchParams({ date: target }));
-            window.location.href = `?${params.toString()}`;
-        });
-
         const careDayStrip = document.getElementById('care-day-strip');
         if (careDayStrip) {
-            const selectedItem = careDayStrip.querySelector('a[href="?date=' + selectedDateText + '"]');
+            const selectedItem = careDayStrip.querySelector('a[href*="date=' + selectedDateText + '"]');
             if (selectedItem) {
                 selectedItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }

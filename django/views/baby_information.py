@@ -25,9 +25,9 @@ def add_baby_information(request):
 
     if request.method == 'POST':
         gender = (request.POST.get('gender') or '').strip()
-        if gender not in {'1', '2'}:
+        if gender not in {'1', '2', ''}:
             return render(request, 'baby/add_babyinformation.html', {
-                'error': '請選擇性別',
+                'error': '性別值不正確',
                 'case': case,
                 'form_data': request.POST
             })
@@ -48,6 +48,12 @@ def add_baby_information(request):
         if birth_error:
             return render(request, 'baby/add_babyinformation.html', {
                 'error': birth_error,
+                'case': case,
+                'form_data': request.POST
+            })
+        if b_time and not gender:
+            return render(request, 'baby/add_babyinformation.html', {
+                'error': '已填出生時間，請選擇性別',
                 'case': case,
                 'form_data': request.POST
             })
@@ -124,15 +130,18 @@ def edit_baby_information(request):
             baby_obj = BabyInformation.objects.select_related('pregnancycase').filter(
                 baby_id=int(baby_id_param)
             ).first()
-            if baby_obj and baby_obj.pregnancycase_id and (
-                baby_obj.pregnancycase.user_id == user.user_id
-                or FamilyMember.objects.filter(
-                    pregnancycase=baby_obj.pregnancycase, user=user
-                ).exists()
-            ):
-                request.session['active_baby_id'] = baby_obj.baby_id
-                request.session['active_case_id'] = baby_obj.pregnancycase_id
-                request.session.modified = True
+            if baby_obj and baby_obj.pregnancycase_id:
+                case = baby_obj.pregnancycase
+                allowed = case.user_id == user.user_id
+                if not allowed:
+                    membership = FamilyMember.objects.filter(
+                        pregnancycase=case, user=user
+                    ).first()
+                    allowed = baby_utils.has_permission(membership, 'baby_records', 'view')
+                if allowed:
+                    request.session['active_baby_id'] = baby_obj.baby_id
+                    request.session['active_case_id'] = baby_obj.pregnancycase_id
+                    request.session.modified = True
         except (ValueError, TypeError):
             pass
 
@@ -163,6 +172,7 @@ def edit_baby_information(request):
             context.update({
                 'error': msg,
                 'form_data': request.POST,
+                'gender_was_submitted': True,
                 'birthdaytime_value': request.POST.get('birthdaytime', '') or context['birthdaytime_value'],
                 # 鎖定狀態一律用「進入本次 POST 前」的值：
                 # 中途已寫進記憶體但尚未 save 的欄位不算已鎖定
@@ -180,11 +190,12 @@ def edit_baby_information(request):
             active_baby.name = name
 
         gender = (request.POST.get('gender') or '').strip()
-        if gender not in {'1', '2'}:
-            return _err('請選擇性別')
+        if gender not in {'1', '2', ''}:
+            return _err('性別值不正確')
         active_baby.gender = gender
 
         # 出生時間
+        birth_datetime_is_set = bool(active_baby.birthdaytime)
         if not dt_locked:
             raw_dt = (request.POST.get('birthdaytime') or '').strip()
             if raw_dt:
@@ -197,6 +208,9 @@ def edit_baby_information(request):
                 if birth_error:
                     return _err(birth_error)
                 active_baby.birthdaytime = new_dt
+                birth_datetime_is_set = True
+        if birth_datetime_is_set and not gender:
+            return _err('已出生的寶寶請填寫性別')
 
         # 出生體徵（未鎖定的欄位才解析）
         w  = None if wt_locked else baby_utils.parse_float(request.POST.get('birth_weight'))

@@ -144,7 +144,7 @@
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
                         <label class="block text-xs font-bold text-[#4A4052] mb-1">日期 *</label>
-                        <input type="date" id="moment-date" required class="w-full px-3.5 py-2 rounded-xl bg-[#FAF8FC] border border-[#E8E0EF] text-xs text-[#4A4052] focus:outline-none focus:border-[#A98BC7]">
+        <input type="date" id="moment-date" required class="w-full px-3.5 py-2 rounded-xl bg-[#FAF8FC] border border-[#E8E0EF] text-xs text-[#4A4052] focus:outline-none focus:border-[#A98BC7]">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-[#4A4052] mb-1">孕週 / 月齡</label>
@@ -169,7 +169,8 @@
 <script>
     function openAddMomentModal() {
         const modal = document.getElementById('add-moment-modal');
-        document.getElementById('moment-date').valueAsDate = new Date();
+        const today = new Date();
+        document.getElementById('moment-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modal.classList.add('opacity-100', 'pointer-events-auto');
     }

@@ -25,7 +25,7 @@
             <div class="mb-6">
                 <div class="grid grid-cols-2 gap-x-6 gap-y-2">
                     <div>
-                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">小名</p>
+                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">暱稱</p>
                         <p class="text-lg font-bold text-primary">{{ baby_summary.baby_name }}</p>
                     </div>
                     <div>
@@ -67,13 +67,13 @@
                 <a href="{% url 'edit_baby_information' %}"
                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold rounded-2xl transition-all active:scale-95 duration-200 shadow-sm border border-primary/10">
                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1,'wght' 600">edit</span>
-                    編輯嬰幼兒資料
+                    修改嬰幼兒資訊
                 </a>
             </div>
             {% endif %}
         </section>
         <!-- Component 2: Growth Calendar -->
-        <section class="bg-surface-container-lowest rounded-[2.5rem] overflow-hidden shadow-[0_24px_48px_rgba(46,47,45,0.08)]">
+        <section id="baby-growth-calendar" class="bg-surface-container-lowest rounded-[2.5rem] overflow-hidden shadow-[0_24px_48px_rgba(46,47,45,0.08)]">
             <!-- Interactive Calendar Header & Filters Section -->
             <div class="px-6 pt-6 pb-2 flex justify-start items-center gap-2">
                 <button id="month-prev-btn" type="button" class="w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&lt;</button>
@@ -509,9 +509,7 @@
         const prevYearBtn = document.getElementById('month-picker-prev-year');
         const nextYearBtn = document.getElementById('month-picker-next-year');
         const customDatePickerBtn = document.getElementById('custom-date-picker-btn');
-        const monthPrevBtn = document.getElementById('month-prev-btn');
-        const monthTodayBtn = document.getElementById('month-today-btn');
-        const monthNextBtn = document.getElementById('month-next-btn');
+        let calendarSection = document.getElementById('baby-growth-calendar');
 
         if (!monthPickerModal || !customDatePickerBtn || !monthPickerContent || !monthPickerGrid || !monthPickerYearDisplay || !prevYearBtn || !nextYearBtn || !monthPickerBackdrop) {
             return;
@@ -530,6 +528,50 @@
         let tempYear = currentSelectedYear;
         let tempMonth = currentSelectedMonth;
         let pickerMode = 'month';
+        let calendarRequest = null;
+
+        async function navigateCalendar(url, { updateHistory = true } = {}) {
+            const target = new URL(url, window.location.href);
+            const scrollTop = window.scrollY;
+            if (calendarRequest) calendarRequest.abort();
+            const controller = new AbortController();
+            calendarRequest = controller;
+            calendarSection?.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(target.href, {
+                    signal: controller.signal,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!response.ok) throw new Error(`Calendar update failed: ${response.status}`);
+                const html = await response.text();
+                const parsed = new DOMParser().parseFromString(html, 'text/html');
+                const updatedSection = parsed.querySelector('#baby-growth-calendar');
+                if (!updatedSection || !calendarSection) throw new Error('Updated calendar section was not found.');
+
+                calendarSection.replaceWith(updatedSection);
+                calendarSection = updatedSection;
+                if (updateHistory) {
+                    history.pushState({}, '', `${target.pathname}${target.search}${target.hash}`);
+                }
+                const monthText = updatedSection.querySelector('#custom-date-picker-text')?.textContent || '';
+                const match = monthText.match(/(\d{4})年\s*(\d+)月/);
+                if (match) {
+                    currentSelectedYear = Number(match[1]);
+                    currentSelectedMonth = Number(match[2]);
+                    tempYear = currentSelectedYear;
+                    tempMonth = currentSelectedMonth;
+                }
+                requestAnimationFrame(() => window.scrollTo(0, scrollTop));
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    calendarSection?.removeAttribute('aria-busy');
+                    console.error(error);
+                }
+            } finally {
+                if (calendarRequest === controller) calendarRequest = null;
+            }
+        }
 
         function renderMonthGrid() {
             monthPickerGrid.innerHTML = '';
@@ -537,7 +579,7 @@
             for (let month = 1; month <= 12; month++) {
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = 'py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border';
+                button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
 
                 if (tempYear === currentSelectedYear && month === tempMonth) {
                     button.className += ' bg-primary text-white shadow-md border-primary';
@@ -550,7 +592,8 @@
                 button.innerText = `${month}月`;
                 button.onclick = () => {
                     const target = `${tempYear}-${String(month).padStart(2,'0')}-01`;
-                    window.location.href = `?date=${target}`;
+                    closeMonthPickerModal();
+                    navigateCalendar(`?date=${target}`);
                 };
 
                 monthPickerGrid.appendChild(button);
@@ -565,7 +608,7 @@
                 const year = startYear + offset;
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = 'py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border';
+                button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
 
                 if (year === currentSelectedYear) {
                     button.className += ' bg-primary text-white shadow-md border-primary';
@@ -603,7 +646,7 @@
                 return;
             }
             const target = `${safeYear}-${String(safeMonth).padStart(2,'0')}-01`;
-            window.location.href = `?date=${target}`;
+            navigateCalendar(`?date=${target}`);
         }
 
         function shiftMonth(delta) {
@@ -647,23 +690,32 @@
             }, 300);
         }
 
-        customDatePickerBtn.addEventListener('click', openMonthPicker);
         monthPickerBackdrop.addEventListener('click', closeMonthPickerModal);
-        if (monthPrevBtn) {
-            monthPrevBtn.addEventListener('click', () => shiftMonth(-1));
-        }
-        if (monthNextBtn) {
-            monthNextBtn.addEventListener('click', () => shiftMonth(1));
-        }
-        if (monthTodayBtn) {
-            monthTodayBtn.addEventListener('click', () => {
-                const today = new Date();
-                const y = today.getFullYear();
-                const m = String(today.getMonth() + 1).padStart(2, '0');
-                const d = String(today.getDate()).padStart(2, '0');
-                window.location.href = `?date=${y}-${m}-${d}`;
-            });
-        }
+        document.querySelector('main')?.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const prev = target.closest('#month-prev-btn');
+            const next = target.closest('#month-next-btn');
+            const today = target.closest('#month-today-btn');
+            const picker = target.closest('#custom-date-picker-btn');
+            const dateLink = target.closest('#baby-growth-calendar a[href]');
+            if (prev) { shiftMonth(-1); return; }
+            if (next) { shiftMonth(1); return; }
+            if (today) {
+                const now = new Date();
+                navigateCalendar(`?date=${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`);
+                return;
+            }
+            if (picker) { openMonthPicker(); return; }
+            if (dateLink) {
+                const destination = new URL(dateLink.href, window.location.href);
+                if (destination.searchParams.has('date')) {
+                    event.preventDefault();
+                    navigateCalendar(destination.href);
+                }
+            }
+        });
+        document.addEventListener('popstate', () => navigateCalendar(window.location.href, { updateHistory: false }));
 
         prevYearBtn.addEventListener('click', () => {
             tempYear -= pickerMode === 'year' ? 12 : 1;
@@ -684,25 +736,6 @@
         });
     });
 
-    // ── 無編輯權限 toast 通知 ──
-    function showNoPermissionToast() {
-        var toast = document.getElementById('no-perm-toast');
-        if (!toast) return;
-        toast.classList.remove('opacity-0', 'translate-y-4');
-        toast.classList.add('opacity-100', 'translate-y-0');
-        clearTimeout(toast._timer);
-        toast._timer = setTimeout(function() {
-            toast.classList.add('opacity-0', 'translate-y-4');
-            toast.classList.remove('opacity-100', 'translate-y-0');
-        }, 2800);
-    }
 </script>
-
-<!-- 無編輯權限 Toast -->
-<div id="no-perm-toast"
-     class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-on-surface text-surface text-sm font-medium px-5 py-3.5 rounded-2xl shadow-xl opacity-0 translate-y-4 transition-all duration-300 pointer-events-none whitespace-nowrap">
-    <span class="material-symbols-outlined text-[18px] text-yellow-300">lock</span>
-    您沒有編輯權限，無法新增紀錄
-</div>
 
 {% endblock %}

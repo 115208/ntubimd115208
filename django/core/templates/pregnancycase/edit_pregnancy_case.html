@@ -61,10 +61,8 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">性別</label>
-                    <select name="gender_{{ forloop.counter }}" required class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
-                        {% if not baby.gender %}
-                        <option value="" selected disabled>請選擇性別</option>
-                        {% endif %}
+                    <select name="gender_{{ forloop.counter }}" {% if baby.birthdaytime %}required{% endif %} class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
+                        <option value="" {% if not baby.gender %}selected{% endif %}>未知（暫不填）</option>
                         <option value="1" {% if baby.gender == '1' %}selected{% endif %}>男</option>
                         <option value="2" {% if baby.gender == '2' %}selected{% endif %}>女</option>
                     </select>
@@ -91,8 +89,8 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pl-1">性別</label>
-                    <select name="gender_1" required class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
-                        <option value="" selected disabled>請選擇性別</option>
+                    <select name="gender_1" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm outline-none font-medium">
+                        <option value="" selected>未知（暫不填）</option>
                         <option value="1">男</option>
                         <option value="2">女</option>
                     </select>
@@ -157,11 +155,24 @@
 <script src="{% static 'js/pregnancy_due_date.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('input[name^="birthdaytime_"]').forEach(function (birthdayInput) {
+            var match = birthdayInput.name.match(/_(\d+)$/);
+            var genderInput = match && document.querySelector('[name="gender_' + match[1] + '"]');
+            if (!genderInput) return;
+            var syncGenderRequirement = function () {
+                genderInput.required = Boolean(birthdayInput.value);
+                genderInput.setCustomValidity('');
+            };
+            birthdayInput.addEventListener('input', syncGenderRequirement);
+            birthdayInput.addEventListener('change', syncGenderRequirement);
+            syncGenderRequirement();
+        });
         if (window.PregnancyDueDate) {
             PregnancyDueDate.bindPregnancyDatePair(
                 document.getElementById('pregnancy-case-form'),
                 document.getElementById('menstruation-input'),
-                document.getElementById('expecteddate-input')
+                document.getElementById('expecteddate-input'),
+                { forceSync: true }   // 編輯頁：改 LMP 後強制重算預產期
             );
         }
     });
