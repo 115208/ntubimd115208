@@ -44,16 +44,14 @@
 {% block content %}
 <div id="pageOuterBg" class="relative bg-background min-h-screen text-on-surface transition-colors duration-700 overflow-hidden">
 
-    <!-- 系統背景柔光暈渲染 (確保橫螢幕與直螢幕皆與系統完美相容) -->
-    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-purple-200/40 via-purple-100/30 to-indigo-200/40 blur-3xl opacity-70 pointer-events-none rounded-full"></div>
 
     <!-- Version 3 Top Navigation Tab Bar & Back to Home -->
     <div class="relative z-10 max-w-md md:max-w-5xl lg:max-w-6xl mx-auto px-4 pt-6 pb-2 space-y-3">
         <!-- 返回首頁按鈕與模式切換與時間篩選 -->
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <a href="/" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group">
-                <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
-                <span>返回首頁</span>
+            <a href="/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回首頁">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
+                <span class="text-lg font-bold text-primary">歷史回顧</span>
             </a>
 
             <!-- 時間篩選 + 模式切換按鈕群 -->

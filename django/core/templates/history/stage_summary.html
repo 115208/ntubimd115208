@@ -11,10 +11,10 @@
     <!-- 共同 Header -->
     <!-- ========================================== -->
     <div class="flex items-center justify-between mb-4">
-        <button onclick="window.location.href='/history-review/{% if active_selection_query %}?{{ active_selection_query }}{% endif %}'" class="flex items-center gap-1.5 text-xs font-bold text-[#8064A2] bg-[#EDE5F5] hover:bg-[#A98BC7]/20 px-3.5 py-1.5 rounded-full transition-all active:scale-95 cursor-pointer" type="button">
-            <span class="material-symbols-outlined text-base">arrow_back</span>
-            <span>返回</span>
-        </button>
+        <a href="/" class="inline-flex items-center gap-2 rounded-full p-2 hover:bg-surface-container-low transition-colors active:scale-95 duration-200" aria-label="返回首頁">
+            <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">arrow_back</span>
+            <span class="text-lg font-bold text-primary">歷史回顧</span>
+        </a>
         <span class="text-[11px] font-bold text-[#81758A] bg-white border border-[#E8E0EF] px-3 py-1 rounded-full shadow-2xs">
             ⭐ 重要時刻
         </span>
