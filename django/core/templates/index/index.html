@@ -427,18 +427,81 @@
             return Number.isInteger(numericValue) ? String(numericValue) : numericValue.toFixed(1);
         }
 
+        // 以虛線標示年份：每個年份的起點畫一條虛線並標上年份（第一個年份只標年份、不畫虛線）
+        function renderYearMarkers(records, leftX, chartWidth) {
+            const host = pregnancyChartSvg && pregnancyChartSvg.parentElement;
+            if (!host) return;
+
+            let layer = host.querySelector('#chart-year-markers');
+            if (!layer) {
+                layer = document.createElement('div');
+                layer.id = 'chart-year-markers';
+                layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+                host.appendChild(layer);
+            }
+            layer.innerHTML = '';
+            if (!records || !records.length) return;
+
+            const total = records.length;
+            const xOf = (index) => total === 1 ? 50 : leftX + ((index / (total - 1)) * chartWidth);
+
+            let prevYear = null;
+            let prevIndex = null;
+            records.forEach((item, index) => {
+                const d = getRecordDate(item);
+                if (!d) return;
+                const year = d.getFullYear();
+                if (year === prevYear) { prevIndex = index; return; }
+
+                const isFirst = prevYear === null;
+                // 虛線放在「上一年最後一筆」與「新年份第一筆」的中間
+                const lineX = isFirst ? leftX : (xOf(prevIndex) + xOf(index)) / 2;
+
+                if (!isFirst) {
+                    const line = document.createElement('div');
+                    line.style.cssText = `position:absolute;top:0;bottom:0;left:${lineX}%;border-left:1.5px dashed rgba(101,81,138,0.35);`;
+                    layer.appendChild(line);
+                }
+
+                const label = document.createElement('span');
+                label.textContent = `${year}`;
+                label.style.cssText = `position:absolute;top:0;left:${lineX}%;margin-left:${isFirst ? '0' : '4px'};font-size:10px;font-weight:800;line-height:1;color:rgba(101,81,138,0.75);`;
+                layer.appendChild(label);
+
+                prevYear = year;
+                prevIndex = index;
+            });
+        }
+
         function renderPregnancyChart(data = pregnancyChartVisibleData, mode = 'caregiver') {
             if (!pregnancyChartSvg || !pregnancyChartYAxisLabels || !pregnancyChartXAxisLabels || !pregnancyChartEmptyState) {
                 return;
             }
 
             const records = Array.isArray(data) ? data : [];
-            const validRecords = records.filter((item) => Number.isFinite(Number(item.weight)) || Number.isFinite(Number(item.height)));
+            // X 軸一律依紀錄日期由舊到新排列（資料來源順序不保證有照日期排），
+            // 讀不到日期的紀錄維持原本相對順序、排在最後。
+            const validRecords = records
+                .filter((item) => Number.isFinite(Number(item.weight)) || Number.isFinite(Number(item.height)))
+                .map((item, i) => {
+                    const d = getRecordDate(item);
+                    return { item, i, t: d ? d.getTime() : NaN };
+                })
+                .sort((a, b) => {
+                    const aBad = Number.isNaN(a.t);
+                    const bBad = Number.isNaN(b.t);
+                    if (aBad && bBad) return a.i - b.i;
+                    if (aBad) return 1;
+                    if (bBad) return -1;
+                    return (a.t - b.t) || (a.i - b.i);
+                })
+                .map((entry) => entry.item);
 
             if (!validRecords.length) {
                 pregnancyChartSvg.innerHTML = '';
                 pregnancyChartYAxisLabels.innerHTML = '';
                 pregnancyChartXAxisLabels.innerHTML = '';
+                renderYearMarkers([], 2, 96);
                 pregnancyChartEmptyState.classList.remove('hidden');
                 return;
             }
@@ -557,6 +620,8 @@
                 <g>${weightDots}</g>
                 ${heightSvg}
             `;
+
+            renderYearMarkers(validRecords, leftX, chartWidth);
 
             let tooltip = document.getElementById('chart-tooltip');
             if (!tooltip) {

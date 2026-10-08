@@ -387,12 +387,16 @@ def pregnancyrecord(request):
 
     has_day_data = bool(selected_day_records)
 
+    # 頁面顯示的是「所選嬰幼兒所屬胎數的建立者（養育者）」的紀錄，標題也要用他的名字，
+    # 而不是目前登入者（協助者登入時才不會看到自己的名字卻是別人的紀錄）。
+    record_owner = pregnancy_case.user if pregnancy_case and pregnancy_case.user_id else current_user
+
     context = {
         'selected_date': selected_date,
         'selected_date_iso': selected_date.isoformat(),
         'today_iso': today_date.isoformat(),
         'selected_month_label': f'{selected_date.year}年 {selected_date.month}月',
-        'user_name': current_user.name if current_user else '',
+        'user_name': (record_owner.name if record_owner else '') or (current_user.name if current_user else ''),
         'selected_day': selected_date.day,
         'calendar_weeks': calendar_weeks,
         'selected_day_weight': selected_day_weight,

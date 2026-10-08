@@ -14,19 +14,12 @@ from views.pregnancycase import (
     sync_active_selection_from_request,
 )
 from views.session_utils import get_current_user_profile
+from views.supabase_storage import delete_image, upload_image
 from views.upload_utils import InvalidImageError, validate_image_upload
-from django.conf import settings
-import os
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError
-
-
-# 圖片儲存目標目錄（相對於 BASE_DIR）
-AVATAR_SAVE_DIR = os.path.join(settings.BASE_DIR, 'core', 'static', 'media', 'user')
-AVATAR_URL_PREFIX = '/static/media/user/'
-
 
 def _format_number(value):
     if value is None:
@@ -320,24 +313,17 @@ def update_profile(request):
         current_user.name = name[:20]
     current_user.email = email_value
 
+    old_avatar = current_user.avatar
+    new_avatar = None
     if avatar_file:
         try:
             # 前端的 accept="image/*" 擋不住 curl，一律由後端依檔頭決定副檔名
-            extension = validate_image_upload(avatar_file)
-
-            os.makedirs(AVATAR_SAVE_DIR, exist_ok=True)
-
-            # 檔名固定用 user_id（不採用使用者提供的檔名），每次上傳覆蓋舊檔
-            filename = f'{current_user.user_id}{extension}'
-            save_path = os.path.join(AVATAR_SAVE_DIR, filename)
-
-            avatar_file.seek(0)
-            with open(save_path, 'wb') as f:
-                for chunk in avatar_file.chunks():
-                    f.write(chunk)
-
-            current_user.avatar = AVATAR_URL_PREFIX + filename
-
+            validate_image_upload(avatar_file)
+            new_avatar = upload_image(
+                avatar_file,
+                folder=f'avatars/{current_user.user_id}',
+            )
+            current_user.avatar = new_avatar
         except InvalidImageError as e:
             messages.error(request, f'上傳頭像失敗：{e}')
             return redirect('edit_userprofile')
@@ -347,10 +333,16 @@ def update_profile(request):
 
     try:
         current_user.save()
+        if new_avatar and old_avatar != new_avatar:
+            delete_image(old_avatar)
         messages.success(request, '個人資料已儲存')
     except IntegrityError:
+        if new_avatar:
+            delete_image(new_avatar)
         messages.error(request, '儲存失敗：資料與其他帳號重複，請確認電子郵件或頭像。')
     except Exception:
+        if new_avatar:
+            delete_image(new_avatar)
         messages.error(request, '儲存發生錯誤，請稍後再試。')
 
     return redirect('profile')

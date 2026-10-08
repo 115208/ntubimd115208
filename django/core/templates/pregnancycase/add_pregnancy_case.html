@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="space-y-1.5">
                 <label class="text-xs text-on-surface-variant pl-1">生產方式</label>
                 <div class="relative">
-                    <select name="production_method_${num}" class="${inputBase} px-4 py-3 appearance-none bg-none">
+                    <select name="production_method_${num}" class="${inputBase} px-4 py-3 appearance-none bg-none" style="appearance: none; -webkit-appearance: none; -moz-appearance: none;">
                         <option value="" disabled${v.production_method ? '' : ' selected'}>請選擇</option>
                         <option value="自然產"${selIf(v.production_method, '自然產')}>自然產</option>
                         <option value="剖腹產"${selIf(v.production_method, '剖腹產')}>剖腹產</option>

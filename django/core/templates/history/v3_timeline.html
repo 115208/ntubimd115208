@@ -10,6 +10,12 @@
         -webkit-appearance: none;
         -moz-appearance: none;
     }
+    /* 滑鼠移上去時外框文字會變白，原生下拉清單會繼承白色而看不見，這裡固定選項顏色 */
+    .history-time-filter select,
+    .history-time-filter select option {
+        color: #4A4052;
+        background-color: #ffffff;
+    }
 
     /* 影片背景柔光流動動畫 */
     @keyframes meshGlow {
@@ -42,6 +48,9 @@
         animation: floatParticle 5s ease-in-out infinite;
     }
 
+    /* 場景內容垂直置中；內容比舞台高時不再被切掉上緣，而是從頂端開始可捲動 */
+    #sceneStage > * { margin-top: auto; margin-bottom: auto; flex-shrink: 0; }
+
     .bento-card { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .bento-card:hover { transform: scale(1.02); }
 </style>
@@ -63,7 +72,7 @@
             <!-- 時間篩選 + 模式切換按鈕群 -->
             <div class="flex items-center gap-2">
                 <!-- 時間篩選下拉選單 (單一乾淨按鈕，透明覆蓋防重複箭頭) -->
-                <form method="GET" class="history-time-filter relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group cursor-pointer overflow-hidden">
+                <form method="GET" class="history-time-filter relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/90 border border-[#E8E0EF] text-[#65518a] text-xs font-bold shadow-2xs hover:bg-[#65518a] hover:text-white transition-all duration-300 group cursor-pointer">
                     <input type="hidden" name="mode" value="{{ mode|default:'video' }}">
                     {% if filter_type %}<input type="hidden" name="filter" value="{{ filter_type }}">{% endif %}
                     
@@ -153,7 +162,7 @@
                     <div id="touchRight" class="absolute right-0 top-16 bottom-16 w-2/3 z-10 cursor-pointer"></div>
 
                     <!-- 3. 影片動態場景舞台 (Scene Stage) -->
-                    <div id="sceneStage" class="relative flex-1 min-h-0 flex items-center justify-center p-2.5 sm:p-4 md:p-8 z-25 w-full overflow-y-auto"></div>
+                    <div id="sceneStage" class="relative flex-1 min-h-0 flex p-2.5 sm:p-4 md:p-8 z-25 w-full overflow-y-auto overflow-x-hidden"></div>
 
                     <!-- 4. 底部導覽切換列 -->
                     <div class="relative z-30 p-4 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-between text-white shrink-0">
@@ -644,7 +653,25 @@
                         </div>
                     `;
                 }
+
+                // 內容超出影片框時自動等比縮小（最小 55%，再大才改成捲動）
+                requestAnimationFrame(fitSceneToStage);
             }
+
+            function fitSceneToStage() {
+                const child = sceneStageEl && sceneStageEl.firstElementChild;
+                if (!child) return;
+                child.style.zoom = '';
+                const cs = getComputedStyle(sceneStageEl);
+                const availH = sceneStageEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 16; // 預留浮動動畫的位移
+                const availW = sceneStageEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+                const needH = child.offsetHeight;
+                const needW = child.scrollWidth;
+                if (!needH || !needW) return;
+                const scale = Math.min(1, availH / needH, availW / needW);
+                if (scale < 1) child.style.zoom = Math.max(0.55, scale).toFixed(3);
+            }
+            window.addEventListener('resize', fitSceneToStage);
 
             function animateCounter(id, targetNum) {
                 setTimeout(() => {
@@ -895,7 +922,7 @@
         </section>
 
         <!-- 歷史紀錄列表 Section (列表呈現 - 統一系統紫主題) -->
-        <section class="space-y-4 pt-2">
+        <section id="history-list-section" class="space-y-4 pt-2">
             <div class="flex items-center justify-between px-1">
                 <h3 class="text-lg font-bold flex items-center text-[#362459] font-['Plus_Jakarta_Sans']">
                     <span class="w-1.5 h-5 bg-[#65518a] rounded-full mr-2.5"></span>
@@ -906,22 +933,25 @@
                 </span>
             </div>
 
-            <!-- 分類標籤切換 -->
+            <!-- 分類標籤切換（點擊時用 JS 局部更新，不重整、不跳回頁首；筆數放在各分類旁邊） -->
             <div class="flex flex-wrap items-center gap-2 pb-1">
-                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=all" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'all' or not filter_type %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
-                    全部 ({{ events|length }})
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=all" data-history-filter="all" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'all' or not filter_type %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    全部{% if filter_counts %} ({{ filter_counts.all|default:0 }}){% elif filter_type == 'all' or not filter_type %} ({{ events|length }}){% endif %}
                 </a>
-                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=prenatal" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'prenatal' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
-                    🩺 產檢
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=prenatal" data-history-filter="prenatal" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'prenatal' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    🩺 產檢{% if filter_counts %} ({{ filter_counts.prenatal|default:0 }}){% elif filter_type == 'prenatal' %} ({{ events|length }}){% endif %}
                 </a>
-                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=feeling" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'feeling' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
-                    📝 心情
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=feeling" data-history-filter="feeling" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'feeling' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    📝 心情{% if filter_counts %} ({{ filter_counts.feeling|default:0 }}){% elif filter_type == 'feeling' %} ({{ events|length }}){% endif %}
                 </a>
-                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=baby" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'baby' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
-                    🍼 寶寶
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=physical" data-history-filter="physical" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'physical' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    🩹 身體狀況{% if filter_counts %} ({{ filter_counts.physical|default:0 }}){% elif filter_type == 'physical' %} ({{ events|length }}){% endif %}
                 </a>
-                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=task" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'task' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
-                    ✅ 待辦
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=baby" data-history-filter="baby" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'baby' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    🍼 寶寶{% if filter_counts %} ({{ filter_counts.baby|default:0 }}){% elif filter_type == 'baby' %} ({{ events|length }}){% endif %}
+                </a>
+                <a href="?mode=classic{% if time_range %}&time_range={{ time_range }}{% endif %}&filter=task" data-history-filter="task" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {% if filter_type == 'task' %}bg-[#65518a] text-white shadow-xs{% else %}bg-white text-[#4A4052] border border-[#E8E0EF] hover:bg-[#EDE5F5]{% endif %}">
+                    ✅ 待辦{% if filter_counts %} ({{ filter_counts.task|default:0 }}){% elif filter_type == 'task' %} ({{ events|length }}){% endif %}
                 </a>
             </div>
 
@@ -929,17 +959,17 @@
             <!-- 垂直時間軸列表 -->
             <div class="relative border-l-2 border-[#E8E0EF] ml-4 sm:ml-6 pl-5 sm:pl-7 space-y-5">
                 {% for event in events %}
-                <div class="relative bg-white rounded-3xl p-5 border border-[#E8E0EF] shadow-[0_4px_16px_rgba(101,81,138,0.05)] hover:shadow-md transition-all">
+                <div class="history-event-card relative bg-white rounded-3xl p-5 border border-[#E8E0EF] shadow-[0_4px_16px_rgba(101,81,138,0.05)] hover:shadow-md transition-all" data-event-date="{{ event.date_str }}" data-event-type="{{ event.type_label }}">
                     <!-- 時間軸節點圓點 -->
-                    <div class="absolute -left-[27px] sm:-left-[35px] top-6 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#65518a] border-4 border-white shadow-xs"></div>
+                    <div class="history-event-dot absolute -left-[27px] sm:-left-[35px] top-6 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#65518a] border-4 border-white shadow-xs"></div>
 
                     <!-- 頂部日期與類型標籤 -->
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="history-event-header flex items-center justify-between mb-2">
                         <span class="text-xs font-bold text-[#65518a] font-['Plus_Jakarta_Sans'] flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-[16px]">calendar_today</span>
                             {{ event.date_str }}
                         </span>
-                        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border {{ event.badge_color }}">
+                        <span class="history-event-badge text-[11px] font-bold px-2.5 py-0.5 rounded-full border {{ event.badge_color }}">
                             {{ event.type_label }}
                         </span>
                     </div>
@@ -1001,6 +1031,141 @@
         </section>
     </main>
     {% endif %}
+
+<script>
+(function () {
+    // 分類標籤切換：用 fetch 取回新列表後局部替換，不整頁重整、不跳回頁首
+    var SECTION_ID = 'history-list-section';
+    var MOOD_KEYWORD = '心情'; // 類型標籤含此字樣的紀錄，同一天會合併成同一個框
+    var loading = false;
+
+    // 同一天有多筆心情時，合併成同一個框：
+    //   標題「😊 心情紀錄：快樂」「🥰 心情紀錄：幸福」→「心情紀錄：快樂😊、幸福🥰」
+    //   紀錄內容、紀錄者相同時只顯示一次
+    function mergeSameDayMoods(root) {
+        var cards = root.querySelectorAll('.history-event-card');
+        var groups = {};
+        cards.forEach(function (card) {
+            var type = card.getAttribute('data-event-type') || '';
+            if (type.indexOf(MOOD_KEYWORD) === -1) return;
+            var date = card.getAttribute('data-event-date') || '';
+            (groups[date] = groups[date] || []).push(card);
+        });
+
+        var norm = function (t) { return (t || '').replace(/\s+/g, ' ').trim(); };
+        var keyOf = function (node) {
+            var img = node.querySelector && node.querySelector('img');
+            return img ? 'img:' + img.getAttribute('src') : 'txt:' + norm(node.textContent);
+        };
+        var isCreator = function (node) { return norm(node.textContent).indexOf('紀錄者') === 0; };
+        var isSkippable = function (node) {
+            return node.classList.contains('history-event-dot') ||
+                   node.classList.contains('history-event-header') ||
+                   node.tagName === 'H4';
+        };
+
+        // 解析「😊 心情紀錄：快樂」→ { emoji: '😊', label: '心情紀錄', name: '快樂' }
+        var parseTitle = function (text) {
+            var m = norm(text).match(/^(.*?)(心情紀錄)\s*[：:]\s*(.+)$/);
+            if (!m) return null;
+            return { emoji: m[1].trim(), label: m[2], name: m[3].trim() };
+        };
+
+        Object.keys(groups).forEach(function (date) {
+            var list = groups[date];
+            if (list.length < 2) return;
+            var main = list[0];
+
+            // 標題
+            var items = [];
+            var rawTitles = [];
+            list.forEach(function (card) {
+                var h = card.querySelector('h4');
+                var text = h ? norm(h.textContent) : '';
+                var parsed = parseTitle(text);
+                if (parsed) {
+                    var dup = items.some(function (i) { return i.name === parsed.name && i.emoji === parsed.emoji; });
+                    if (!dup) items.push(parsed);
+                } else if (text && rawTitles.indexOf(text) === -1) {
+                    rawTitles.push(text);
+                }
+            });
+            var mainTitle = main.querySelector('h4');
+            if (mainTitle) {
+                var parts = [];
+                if (items.length) {
+                    parts.push(items[0].label + '：' + items.map(function (i) { return i.name + i.emoji; }).join('、'));
+                }
+                mainTitle.textContent = parts.concat(rawTitles).join('、');
+            }
+
+            // 內容與紀錄者：相同的只留一份
+            var seen = {};
+            Array.prototype.forEach.call(main.children, function (child) {
+                if (!isSkippable(child)) seen[keyOf(child)] = true;
+            });
+
+            list.slice(1).forEach(function (card) {
+                Array.prototype.slice.call(card.children).forEach(function (child) {
+                    if (isSkippable(child)) return;
+                    var key = keyOf(child);
+                    if (seen[key]) return;
+                    seen[key] = true;
+                    if (isCreator(child)) {
+                        main.appendChild(child);
+                    } else {
+                        var mainCreator = Array.prototype.find.call(main.children, isCreator);
+                        main.insertBefore(child, mainCreator || null);
+                    }
+                });
+                card.remove();
+            });
+
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var tab = e.target.closest('a[data-history-filter]');
+        if (!tab) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // 保留開新分頁
+        e.preventDefault();
+        if (loading) return;
+
+        var url = tab.getAttribute('href');
+        var section = document.getElementById(SECTION_ID);
+        if (!section) { window.location.href = url; return; }
+
+        loading = true;
+        section.style.opacity = '0.6';
+        var scrollY = window.scrollY;
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var fresh = doc.getElementById(SECTION_ID);
+                if (!fresh) throw new Error('section not found');
+                section.innerHTML = fresh.innerHTML;
+                mergeSameDayMoods(section);
+                history.replaceState(null, '', url);
+                window.scrollTo(0, scrollY);
+            })
+            .catch(function () {
+                window.location.href = url; // 失敗時退回一般換頁
+            })
+            .finally(function () {
+                section.style.opacity = '';
+                loading = false;
+            });
+    });
+
+    var initial = document.getElementById(SECTION_ID);
+    if (initial) mergeSameDayMoods(initial);
+})();
+</script>
 
 </div>
 {% endblock %}

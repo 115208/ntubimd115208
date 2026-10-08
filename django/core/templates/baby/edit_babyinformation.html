@@ -239,7 +239,7 @@
                     {% else %}
                     <div class="relative">
                         <select name="production_method"
-                                class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all text-sm outline-none font-medium appearance-none">
+                                class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all text-sm outline-none font-medium">
                             {% with pm=form_data.production_method|default:baby.production_method %}
                             <option value="" disabled {% if not pm %}selected{% endif %}>請選擇生產方式</option>
                             <option value="自然產"   {% if pm == '自然產'   %}selected{% endif %}>自然產</option>
@@ -248,7 +248,6 @@
                             <option value="水中生產" {% if pm == '水中生產' %}selected{% endif %}>水中生產</option>
                             {% endwith %}
                         </select>
-                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none text-[20px]">expand_more</span>
                     </div>
                     {% endif %}
                 </div>

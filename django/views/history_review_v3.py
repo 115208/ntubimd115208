@@ -235,6 +235,7 @@ def v3_timeline(request):
     )
 
     events = []
+    represented_pregnancy_record_ids = set()
 
     # 1. 產檢紀錄（mom_records 未開放時完全不查詢）
     prenatals = (
@@ -250,6 +251,7 @@ def v3_timeline(request):
         dt = rec.check_date if rec else None
         if not dt:
             continue
+        represented_pregnancy_record_ids.add(rec.pregnancyrecord_id)
 
         weight_str = f"{rec.weight} kg" if rec and rec.weight else "-"
         bp_str = f"{p.sbp or '-'}/{p.dbp or '-'} mmHg"
@@ -284,6 +286,7 @@ def v3_timeline(request):
         dt = rec.check_date if rec else None
         if not dt:
             continue
+        represented_pregnancy_record_ids.add(rec.pregnancyrecord_id)
 
         f_name = f.feeling.feeling_name if (f.feeling and hasattr(f.feeling, 'feeling_name')) else '心情'
         emoji = FEELING_EMOJI_MAP.get(f_name, '📝')
@@ -304,7 +307,42 @@ def v3_timeline(request):
             'note': '',
         })
 
-    # 3. 待辦提醒（以個案為範圍，與首頁 views/index.py 一致）
+    # 3. 沒有產檢或心情關聯的養育者記錄
+    # 這類記錄仍需顯示在時光軸上，例如只有文字筆記或體重的日期。
+    pregnancy_records = (
+        PregnancyRecord.objects.filter(user_id=target_uid)
+        .exclude(pregnancyrecord_id__in=represented_pregnancy_record_ids)
+        if can_view_mom
+        else PregnancyRecord.objects.none()
+    )
+    for rec in pregnancy_records:
+        dt = rec.check_date
+        if not dt or (not rec.record and rec.weight in (None, '', '-')):
+            continue
+
+        content_parts = []
+        if rec.record:
+            content_parts.append(rec.record)
+        if rec.weight not in (None, '', '-'):
+            content_parts.append(f'體重: {rec.weight} kg')
+
+        events.append({
+            'id': f'pregnancy_{rec.pregnancyrecord_id}',
+            'date': dt,
+            'date_str': dt.strftime('%Y-%m-%d'),
+            'type': 'pregnancy',
+            'type_label': '孕期',
+            'badge_color': 'bg-[#EDE5F5] text-[#65518a] border-[#E8E0EF]',
+            'dot_color': 'bg-[#65518a]',
+            'title': '孕期紀錄',
+            'content': ' | '.join(content_parts),
+            'photo': None,
+            'creator': current_user.name,
+            'gestation_weeks': None,
+            'note': '',
+        })
+
+    # 4. 待辦提醒（以個案為範圍，與首頁 views/index.py 一致）
     cares = (
         CareRecord.objects.filter(pregnancycase=pregnancy_case)
         if pregnancy_case
@@ -330,7 +368,7 @@ def v3_timeline(request):
             'note': '',
         })
 
-    # 4. 寶寶紀錄（依切換器選到的寶寶過濾；baby_records 未開放時完全不查詢）
+    # 5. 寶寶紀錄（依切換器選到的寶寶過濾；baby_records 未開放時完全不查詢）
     baby_recs = (
         _baby_record_scope(current_user, pregnancy_case, active_baby).select_related('baby')
         if can_view_baby
@@ -373,7 +411,7 @@ def v3_timeline(request):
     if end_date:
         events = [e for e in events if e['date'] <= end_date]
 
-    # 5. 身體狀況分布統計 (百分比，同樣受時間區間篩選)
+    # 6. 身體狀況分布統計 (百分比，同樣受時間區間篩選)
     phys_qs = Userphysicalcondition.objects.filter(pregnancyrecord__user_id=target_uid)
     if start_date:
         phys_qs = phys_qs.filter(pregnancyrecord__check_date__gte=start_date)
