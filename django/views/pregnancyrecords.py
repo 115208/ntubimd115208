@@ -5,6 +5,8 @@ from core.models import PregnancyRecord, PregnancyCase
 def case_date_window(pregnancy_case):
     """回傳這個個案的紀錄日期區間 (start, end)；None 代表該側不設限。
 
+    最早的個案（或唯一的個案）起始日不設限，最後月經日以前的紀錄也會顯示。
+
     從 records_for_case 抽出來，讓清理舊資料的指令可以共用同一套區間判斷。
     """
     if not pregnancy_case or not pregnancy_case.user_id:
@@ -14,8 +16,10 @@ def case_date_window(pregnancy_case):
         PregnancyCase.objects.filter(user_id=pregnancy_case.user_id)
         .order_by('menstruation', 'pregnancycase_id')
     )
+    # 最後月經日以前的紀錄（例如備孕期就開始使用系統）也要顯示，
+    # 所以只有一個個案時，起始日不設限。
     if len(cases) <= 1:
-        return pregnancy_case.menstruation or None, None
+        return None, None
 
     try:
         idx = [c.pregnancycase_id for c in cases].index(pregnancy_case.pregnancycase_id)
@@ -23,7 +27,9 @@ def case_date_window(pregnancy_case):
         return None, None
 
     case = cases[idx]
-    start_date = case.menstruation
+    # 第一個個案：起始日不設限，備孕期的紀錄也算在內。
+    # 之後的個案：以自己的最後月經日為起點，避免和前一胎的紀錄混在一起。
+    start_date = None if idx == 0 else case.menstruation
 
     born_babies = (
         case.babyinformation_set

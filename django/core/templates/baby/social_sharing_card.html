@@ -112,7 +112,8 @@
 
                         {% if record_photos %}
                         <!-- Photo Album Grid -->
-                        <div class="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto pr-1 pb-1">
+                        <div class="max-h-[180px] overflow-y-auto pr-1 pb-1">
+                            <div class="grid grid-cols-3 gap-3">
                             {% for photo in record_photos %}
                             <button type="button" class="photo-thumbnail-btn relative aspect-square rounded-xl overflow-hidden border-2 border-surface-container-high hover:border-primary transition-all focus:outline-none group cursor-pointer"
                                     data-url="{{ photo.url }}" data-label="{{ photo.label }}" data-date="{{ photo.date }}" data-desc="{{ photo.description }}">
@@ -123,6 +124,7 @@
                                 <span class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[8px] py-0.5 text-center font-medium truncate">{{ photo.date }}</span>
                             </button>
                             {% endfor %}
+                            </div>
                         </div>
                         {% else %}
                         <!-- Empty album + preset samples -->
