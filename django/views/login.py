@@ -13,28 +13,37 @@ from django.urls import reverse
 from django.utils.crypto import constant_time_compare
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from allauth.account.signals import user_logged_in
 from allauth.socialaccount.models import SocialAccount, SocialApp
 from allauth.socialaccount.signals import social_account_added
-
+import os
 from core.models import UserProfile
 
 logger = logging.getLogger(__name__)
 
 
 def _safe_line_login_url():
-    """Return the LINE login route only when there is exactly one configured LINE SocialApp.
+    """Return the LINE login route when configured via DB SocialApp or SOCIALACCOUNT_PROVIDERS.
 
     The allauth template tag `provider_login_url 'line'` raises `MultipleObjectsReturned`
-    when duplicate `SocialApp` rows exist for the same provider. This guard keeps the page
-    from crashing while still allowing the normal route when configuration is valid.
+    when duplicate `SocialApp` rows exist for the same provider. This guard cleans up duplicate
+    entries and ensures the login route is available when configuration is valid.
     """
     try:
-        if SocialApp.objects.filter(provider='line').count() != 1:
-            return ''
+        apps = list(SocialApp.objects.filter(provider='line'))
+        if len(apps) > 1:
+            logger.warning('Found %d duplicate LINE SocialApp entries in DB; keeping the first and deleting duplicates.', len(apps))
+            for app in apps[1:]:
+                try:
+                    app.delete()
+                except Exception:
+                    logger.exception('Failed to delete duplicate SocialApp id=%s', app.id)
+        elif len(apps) == 0:
+            client_id = getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {}).get('line', {}).get('APP', {}).get('client_id', '')
+            if not client_id and not os.environ.get('LINE_CLIENT_ID'):
+                return ''
     except Exception:
         logger.exception('Unable to resolve LINE SocialApp while building login page')
         return ''
@@ -86,13 +95,13 @@ def _resolve_user_profile_for_social_binding(request, social_account, provider, 
             if user_profile:
                 return user_profile
 
-    google_email = extra_data.get('email', '') if provider == 'google' else ''
-    if google_email:
-        user_profile = _user_profile_by_email(google_email)
+    social_email = (extra_data.get('email', '') or '').strip()
+    if social_email:
+        user_profile = _user_profile_by_email(social_email)
         if user_profile:
             return user_profile
 
-    line_user_id = (extra_data.get('sub') or social_account.uid or '').strip()
+    line_user_id = (extra_data.get('sub') or extra_data.get('userId') or social_account.uid or '').strip()
     if line_user_id:
         user_profile = UserProfile.objects.filter(line_id=line_user_id).order_by('user_id').first()
         if user_profile:
@@ -191,11 +200,11 @@ def handle_allauth_login_success(request, user, **kwargs):
         provider = str(social_account.provider)
         provider_names.append(provider)
         extra_data = social_account.extra_data or {}
-        
+
         is_line = (provider == 'line' or provider == '2010267631' or extra_data.get('iss') == 'https://access.line.me')
         if is_line:
             # 優先使用 LINE 的資料（因為我們急需寫入 line_id）
-            line_user_id = extra_data.get('sub') or extra_data.get('userId') or social_account.uid
+            line_user_id = extra_data.get('sub') or extra_data.get('userId') or social_account.uid or line_user_id
             raw_name = extra_data.get('name', '') or extra_data.get('displayName', '') or raw_name
             picture = extra_data.get('picture', '') or extra_data.get('pictureUrl', '') or picture
             email = extra_data.get('email', '') or email
@@ -205,18 +214,33 @@ def handle_allauth_login_success(request, user, **kwargs):
             picture = extra_data.get('picture', '') or picture
             email = extra_data.get('email', '') or email
 
-    # 確保 email 一定有值（如果是 LINE 可能沒有提供，使用佔位）
+    # 若第三方回應沒有 email，優先嘗試使用 Django auth user 上保存的真實 email
     if not email:
-        email = f"{line_user_id or user.username}@line.platform"
+        auth_email = (getattr(user, 'email', '') or getattr(user, 'username', '')).strip()
+        if auth_email and '@' in auth_email and not auth_email.lower().endswith(UserProfile.LINE_PLACEHOLDER_EMAIL_SUFFIX):
+            email = auth_email
+        elif line_user_id:
+            email = f"{line_user_id}@line.platform"
+        else:
+            email = f"{user.username}@line.platform"
 
     display_name = (raw_name or email.split('@')[0])[:20]
-    
+
     is_line_login = any(p in provider_names for p in ['line', '2010267631']) or bool(line_user_id)
 
     try:
-        user_profile = _user_profile_by_email(email)
+        user_profile = None
+        # 1. 優先以 email 尋找已有帳號
+        if email:
+            user_profile = _user_profile_by_email(email)
+
+        # 2. 若用 email 未找到且為 LINE 登入，再以 line_id 尋找已有帳號
         if not user_profile and is_line_login and line_user_id:
             user_profile = UserProfile.objects.filter(line_id=line_user_id).order_by('user_id').first()
+
+        # 3. 若仍未找到，檢查 session 是否已有登入者 user_id
+        if not user_profile and request.session.get('user_id'):
+            user_profile = UserProfile.objects.filter(user_id=request.session.get('user_id')).first()
 
         if not user_profile:
             user_profile = _create_user_profile(
@@ -226,8 +250,7 @@ def handle_allauth_login_success(request, user, **kwargs):
                 avatar=picture or '',
             )
         else:
-            # 已存在的 UserProfile：不覆寫 name/avatar/email 等既有資料，
-            # 只要有取得 LINE ID 且目前 line_id 欄位是空的情況下就補寫入，
+            # 已存在的 UserProfile：若有取得 LINE ID 且目前 line_id 欄位是空的情況下就補寫入
             if line_user_id and not user_profile.line_id:
                 with transaction.atomic():
                     user_profile.line_id = line_user_id
@@ -240,6 +263,8 @@ def handle_allauth_login_success(request, user, **kwargs):
         request.session.pop('active_case_id', None)
         request.session.pop('active_baby_id', None)
         request.session.modified = True
+
+        _sync_django_auth_session(request, user_profile)
 
     except Exception as e:
         logger.error(f"社交登入同步至 UserProfile 失敗，原因: {str(e)}", exc_info=True)
@@ -336,7 +361,7 @@ def google_auth_login(request):
     # 沒有這一步，allauth 的「帳號綁定 (process=connect)」流程會找不到目前登入的使用者，
     # 導致點擊「綁定 Google/LINE」時出現「第三方帳號登入失敗」。
     _sync_django_auth_session(request, user_profile)
-    
+
     # 手動補齊 allauth 的 SocialAccount，讓之後所有的綁定狀態判斷一致
     sub = idinfo.get('sub')
     if sub and getattr(request, 'user', None) and request.user.is_authenticated:
