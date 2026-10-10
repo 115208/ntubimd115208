@@ -13,6 +13,31 @@
         border-color: #65518a;
         transform: scale(1.1);
     }
+
+    /* ===== 相簿縮圖：修正手機版圖片重疊 ===== */
+    .photo-thumbnail-btn {
+        isolation: isolate;                       /* 建立獨立堆疊層，避免 Safari 圓角 + transform 不裁切 */
+        -webkit-tap-highlight-color: transparent;
+    }
+    .photo-thumbnail-btn .thumb-img {
+        position: absolute;                       /* 圖片不再撐開按鈕高度 */
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .3s;
+    }
+    .photo-thumbnail-btn .thumb-check {
+        opacity: 0;
+        transition: opacity .2s;
+    }
+    /* 已選取（JS 會加 ring-4）時顯示勾勾，手機沒有 hover 也看得到 */
+    .photo-thumbnail-btn.ring-4 .thumb-check { opacity: 1; }
+    /* 只有「真的有滑鼠」的裝置才啟用 hover，避免手機點一下後 hover 卡住 */
+    @media (hover: hover) and (pointer: fine) {
+        .photo-thumbnail-btn:hover .thumb-check { opacity: 1; }
+        .photo-thumbnail-btn:hover .thumb-img { transform: scale(1.05); }
+    }
 </style>
 {% endblock %}
 
@@ -112,13 +137,13 @@
 
                         {% if record_photos %}
                         <!-- Photo Album Grid -->
-                        <div class="max-h-[180px] overflow-y-auto pr-1 pb-1">
+                        <div class="max-h-[200px] overflow-y-auto p-1">
                             <div class="grid grid-cols-3 gap-3">
                             {% for photo in record_photos %}
-                            <button type="button" class="photo-thumbnail-btn relative aspect-square rounded-xl overflow-hidden border-2 border-surface-container-high hover:border-primary transition-all focus:outline-none group cursor-pointer"
+                            <button type="button" class="photo-thumbnail-btn relative block w-full min-w-0 aspect-square rounded-xl overflow-hidden border-2 border-surface-container-high hover:border-primary transition-all focus:outline-none cursor-pointer"
                                     data-url="{{ photo.url }}" data-label="{{ photo.label }}" data-date="{{ photo.date }}" data-desc="{{ photo.description }}">
-                                <img src="{{ photo.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <img src="{{ photo.url }}" alt="" loading="lazy" class="thumb-img">
+                                <div class="thumb-check absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
                                     <span class="material-symbols-outlined text-white text-sm">check</span>
                                 </div>
                                 <span class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[8px] py-0.5 text-center font-medium truncate">{{ photo.date }}</span>

@@ -5,30 +5,282 @@
 <link rel="stylesheet" href="{% static 'css/pregnancy/pregnancyrecord.css' %}">
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'js/pregnancyrecord.js' %}"></script>
+<script>
+    // 日期篩選：與嬰幼兒紀錄頁相同的做法 —
+    // 點月份／日期後用 fetch 取回新頁面，只替換日曆區塊（#pregnancy-record-calendar），
+    // 事件綁在 <main> 上（事件代理），區塊被替換後按鈕仍然有效。
+    // script 直接寫在頁面內，不再依賴 static/js/pregnancyrecord.js 是否有被正確載入。
+    document.addEventListener('DOMContentLoaded', () => {
+        const monthPickerModal = document.getElementById('month-picker-modal');
+        const monthPickerBackdrop = document.getElementById('month-picker-backdrop');
+        const monthPickerContent = document.getElementById('month-picker-content');
+        const monthPickerYearDisplay = document.getElementById('month-picker-year-display');
+        const monthPickerGrid = document.getElementById('month-picker-grid');
+        const prevYearBtn = document.getElementById('month-picker-prev-year');
+        const nextYearBtn = document.getElementById('month-picker-next-year');
+        let calendarSection = document.getElementById('pregnancy-record-calendar');
+
+        if (!monthPickerModal || !monthPickerContent || !monthPickerGrid || !monthPickerYearDisplay || !prevYearBtn || !nextYearBtn || !monthPickerBackdrop || !calendarSection) {
+            return;
+        }
+
+        let currentSelectedYear = new Date().getFullYear();
+        let currentSelectedMonth = new Date().getMonth() + 1;
+        const initialText = (document.getElementById('custom-date-picker-text') || {}).textContent || '';
+        const initialMatch = initialText.match(/(\d{4})年\s*(\d+)月/);
+        if (initialMatch) {
+            currentSelectedYear = parseInt(initialMatch[1], 10);
+            currentSelectedMonth = parseInt(initialMatch[2], 10);
+        }
+
+        let tempYear = currentSelectedYear;
+        let tempMonth = currentSelectedMonth;
+        let pickerMode = 'month';
+        let calendarRequest = null;
+
+        // 切換日期時要帶上目前選到的胎數／寶寶（參數名稱不寫死，沿用日曆格子連結上的 active_selection_query）
+        function baseParams() {
+            const params = new URLSearchParams();
+            const cellLink = calendarSection.querySelector('a[href^="?date="]');
+            if (cellLink) {
+                new URLSearchParams(cellLink.getAttribute('href').replace(/^\?/, '')).forEach((value, key) => {
+                    if (key !== 'date') params.set(key, value);
+                });
+            }
+            new URLSearchParams(window.location.search).forEach((value, key) => {
+                if (key !== 'date' && !params.has(key)) params.set(key, value);
+            });
+            return params;
+        }
+
+        function dateUrl(dateIso) {
+            const params = baseParams();
+            params.set('date', dateIso);
+            return `?${params.toString()}`;
+        }
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        async function navigateCalendar(url, { updateHistory = true } = {}) {
+            const target = new URL(url, window.location.href);
+            const scrollTop = window.scrollY;
+            if (calendarRequest) calendarRequest.abort();
+            const controller = new AbortController();
+            calendarRequest = controller;
+            calendarSection.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(target.href, {
+                    signal: controller.signal,
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!response.ok) throw new Error(`Calendar update failed: ${response.status}`);
+                const html = await response.text();
+                const parsed = new DOMParser().parseFromString(html, 'text/html');
+                const updatedSection = parsed.querySelector('#pregnancy-record-calendar');
+                if (!updatedSection) throw new Error('Updated calendar section was not found.');
+
+                calendarSection.replaceWith(updatedSection);
+                calendarSection = updatedSection;
+                if (updateHistory) {
+                    history.pushState({}, '', `${target.pathname}${target.search}${target.hash}`);
+                }
+                const monthText = updatedSection.querySelector('#custom-date-picker-text')?.textContent || '';
+                const match = monthText.match(/(\d{4})年\s*(\d+)月/);
+                if (match) {
+                    currentSelectedYear = Number(match[1]);
+                    currentSelectedMonth = Number(match[2]);
+                    tempYear = currentSelectedYear;
+                    tempMonth = currentSelectedMonth;
+                }
+                requestAnimationFrame(() => window.scrollTo(0, scrollTop));
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error(error);
+                    // 失敗時退回一般換頁，至少能切換
+                    window.location.href = target.href;
+                }
+            } finally {
+                if (calendarRequest === controller) calendarRequest = null;
+            }
+        }
+
+        function renderMonthGrid() {
+            monthPickerGrid.innerHTML = '';
+            for (let month = 1; month <= 12; month++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
+
+                if (tempYear === currentSelectedYear && month === tempMonth) {
+                    button.className += ' bg-primary text-white shadow-md border-primary';
+                } else if (tempMonth === month) {
+                    button.className += ' bg-primary/10 text-primary border-primary/20';
+                } else {
+                    button.className += ' bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border-surface-container-high';
+                }
+
+                button.innerText = `${month}月`;
+                button.onclick = () => {
+                    closeMonthPickerModal();
+                    navigateCalendar(dateUrl(`${tempYear}-${pad(month)}-01`));
+                };
+                monthPickerGrid.appendChild(button);
+            }
+        }
+
+        function renderYearGrid() {
+            monthPickerGrid.innerHTML = '';
+            const startYear = tempYear - 5;
+            for (let offset = 0; offset < 12; offset++) {
+                const year = startYear + offset;
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'py-4 rounded-full text-base font-bold transition-all cursor-pointer border';
+
+                if (year === currentSelectedYear) {
+                    button.className += ' bg-primary text-white shadow-md border-primary';
+                } else if (year === tempYear) {
+                    button.className += ' bg-primary/10 text-primary border-primary/20';
+                } else {
+                    button.className += ' bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border-surface-container-high';
+                }
+
+                button.innerText = `${year}年`;
+                button.onclick = () => {
+                    tempYear = year;
+                    pickerMode = 'month';
+                    monthPickerYearDisplay.innerText = `${tempYear}年`;
+                    renderMonthGrid();
+                };
+                monthPickerGrid.appendChild(button);
+            }
+        }
+
+        function renderPickerGrid() {
+            if (pickerMode === 'year') {
+                renderYearGrid();
+            } else {
+                renderMonthGrid();
+            }
+        }
+
+        function goToMonth(year, month) {
+            const safeYear = Number(year);
+            const safeMonth = Number(month);
+            if (!safeYear || !safeMonth) return;
+            navigateCalendar(dateUrl(`${safeYear}-${pad(safeMonth)}-01`));
+        }
+
+        function shiftMonth(delta) {
+            let year = currentSelectedYear;
+            let month = currentSelectedMonth + delta;
+            if (month < 1) {
+                month = 12;
+                year -= 1;
+            } else if (month > 12) {
+                month = 1;
+                year += 1;
+            }
+            goToMonth(year, month);
+        }
+
+        function openMonthPicker() {
+            tempYear = currentSelectedYear;
+            tempMonth = currentSelectedMonth;
+            pickerMode = 'month';
+            monthPickerYearDisplay.innerText = `${tempYear}年`;
+            renderPickerGrid();
+
+            monthPickerModal.classList.remove('opacity-0', 'pointer-events-none');
+            monthPickerModal.classList.add('opacity-100', 'pointer-events-auto');
+            setTimeout(() => {
+                monthPickerContent.classList.remove('translate-y-full', 'sm:translate-y-4', 'sm:scale-95');
+                monthPickerContent.classList.add('translate-y-0', 'sm:translate-y-0', 'sm:scale-100');
+            }, 10);
+        }
+
+        function closeMonthPickerModal() {
+            monthPickerContent.classList.remove('translate-y-0', 'sm:translate-y-0', 'sm:scale-100');
+            monthPickerContent.classList.add('translate-y-full', 'sm:translate-y-4', 'sm:scale-95');
+            setTimeout(() => {
+                monthPickerModal.classList.remove('opacity-100', 'pointer-events-auto');
+                monthPickerModal.classList.add('opacity-0', 'pointer-events-none');
+            }, 300);
+        }
+
+        monthPickerBackdrop.addEventListener('click', closeMonthPickerModal);
+
+        document.querySelector('main')?.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const prev = target.closest('#month-prev-btn');
+            const next = target.closest('#month-next-btn');
+            const today = target.closest('#month-today-btn');
+            const picker = target.closest('#custom-date-picker-btn');
+            const dateLink = target.closest('#pregnancy-record-calendar a[href]');
+            if (prev) { shiftMonth(-1); return; }
+            if (next) { shiftMonth(1); return; }
+            if (today) {
+                const now = new Date();
+                navigateCalendar(dateUrl(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`));
+                return;
+            }
+            if (picker) { openMonthPicker(); return; }
+            if (dateLink) {
+                const destination = new URL(dateLink.href, window.location.href);
+                if (destination.searchParams.has('date')) {
+                    event.preventDefault();
+                    navigateCalendar(destination.href);
+                }
+            }
+        });
+
+        window.addEventListener('popstate', () => navigateCalendar(window.location.href, { updateHistory: false }));
+
+        prevYearBtn.addEventListener('click', () => {
+            tempYear -= pickerMode === 'year' ? 12 : 1;
+            monthPickerYearDisplay.innerText = `${tempYear}年`;
+            renderPickerGrid();
+        });
+
+        nextYearBtn.addEventListener('click', () => {
+            tempYear += pickerMode === 'year' ? 12 : 1;
+            monthPickerYearDisplay.innerText = `${tempYear}年`;
+            renderPickerGrid();
+        });
+
+        monthPickerYearDisplay.addEventListener('click', () => {
+            pickerMode = pickerMode === 'year' ? 'month' : 'year';
+            monthPickerYearDisplay.innerText = `${tempYear}年`;
+            renderPickerGrid();
+        });
+    });
+</script>
 {% endblock %}
 {% block content %}
     <main class="pt-10 px-4 mx-auto max-w-md md:max-w-none w-full transition-all duration-500 ease-in-out md:px-8 lg:px-16 xl:px-32 2xl:px-64 pb-20 mb-10 md:mb-12">
-        <h3 class="text-4xl font-extrabold text-primary tracking-tight flex items-center gap-2">
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight flex items-center gap-2 break-words min-w-0">
             {{ user_name }}紀錄
         </h3>
         <!-- Combined Card Container -->
-        <section
+        <section id="pregnancy-record-calendar"
             class="bg-surface-container-lowest rounded-[2.5rem] overflow-hidden shadow-[0_24px_48px_rgba(46,47,45,0.08)]" style="margin-top: 32px;">
             <!-- Interactive Calendar Section -->
             <!-- Interactive Calendar Header & Filters Section -->
-            <div class="px-6 pt-4 pb-1 flex justify-start items-center gap-2">
-                <button id="month-prev-btn" type="button" class="w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&lt;</button>
-                <div id="custom-date-picker-btn" class="relative inline-flex items-center cursor-pointer group hover:bg-primary/5 px-4 py-2 -ml-4 rounded-2xl transition-colors">
-                    <h2 id="custom-date-picker-text" class="text-primary font-extrabold text-xl tracking-tight flex items-center gap-1 relative z-0">
+            <div class="px-4 sm:px-6 pt-4 pb-1 flex justify-start items-center gap-1 sm:gap-2 min-w-0">
+                <button id="month-prev-btn" type="button" class="shrink-0 w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&lt;</button>
+                <div id="custom-date-picker-btn" class="relative inline-flex items-center min-w-0 cursor-pointer group hover:bg-primary/5 px-2 sm:px-4 py-2 -ml-2 sm:-ml-4 rounded-2xl transition-colors">
+                    <h2 id="custom-date-picker-text" class="text-primary font-extrabold text-lg sm:text-xl tracking-tight flex items-center gap-0.5 sm:gap-1 whitespace-nowrap relative z-0">
                         {{ selected_month_label }}
-                        <span class="material-symbols-outlined text-primary ml-1">keyboard_arrow_down</span>
+                        <span class="material-symbols-outlined text-primary sm:ml-1">keyboard_arrow_down</span>
                     </h2>
                 </div>
-                <button id="month-next-btn" type="button" class="w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&gt;</button>
-                <button id="month-today-btn" type="button" class="ml-2 px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-bold">今天</button>
+                <button id="month-next-btn" type="button" class="shrink-0 w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&gt;</button>
+                <button id="month-today-btn" type="button" class="shrink-0 ml-1 sm:ml-2 px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 text-sm sm:text-base font-bold whitespace-nowrap">今天</button>
             </div>
-            <div class="px-6 pb-4 lg:grid lg:grid-cols-2 lg:gap-8 items-start">
+            <div class="px-4 sm:px-6 pb-4 lg:grid lg:grid-cols-2 lg:gap-8 items-start">
                 <div>
                 <div class="grid grid-cols-7 mb-2">
                     <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">日</div>

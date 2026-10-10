@@ -13,13 +13,25 @@ document.addEventListener('DOMContentLoaded', () => {
  
     // 切換月份／日期時必須帶上目前選到的胎數或寶寶，
     // 否則跳轉後 active selection 會被 fallback 蓋掉，畫面跳回別的個案。
+    // 參數名稱不寫死：優先沿用伺服器產生的日曆格子連結（內含 active_selection_query），
+    // 再補上網址列上其他的參數，唯獨 date 一律由這裡決定。
+    function baseParams() {
+        const params = new URLSearchParams();
+        const cellLink = document.querySelector('a[href^="?date="]');
+        if (cellLink) {
+            new URLSearchParams(cellLink.getAttribute('href').replace(/^\?/, '')).forEach((value, key) => {
+                if (key !== 'date') params.set(key, value);
+            });
+        }
+        new URLSearchParams(window.location.search).forEach((value, key) => {
+            if (key !== 'date' && !params.has(key)) params.set(key, value);
+        });
+        return params;
+    }
+
     function buildDateUrl(dateIso) {
-        const current = new URLSearchParams(window.location.search);
-        const params = new URLSearchParams({ date: dateIso });
-        const caseId = current.get('case_id');
-        const babyId = current.get('baby_id');
-        if (caseId) params.set('case_id', caseId);
-        if (babyId) params.set('baby_id', babyId);
+        const params = baseParams();
+        params.set('date', dateIso);
         return `?${params.toString()}`;
     }
 
@@ -178,13 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (monthTodayBtn) {
         monthTodayBtn.addEventListener('click', () => {
-            const current = new URLSearchParams(window.location.search);
-            const params = new URLSearchParams();
-            const caseId = current.get('case_id');
-            const babyId = current.get('baby_id');
-            if (caseId) params.set('case_id', caseId);
-            if (babyId) params.set('baby_id', babyId);
-            const qs = params.toString();
+            const qs = baseParams().toString();
             window.location.href = qs ? `?${qs}` : window.location.pathname;
         });
     }
@@ -217,4 +223,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
- 

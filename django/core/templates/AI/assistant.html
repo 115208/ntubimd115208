@@ -2,7 +2,608 @@
 {% load static %}
 {% block title %}成長評估助手{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/assistant.css' %}" />
+<style>
+/* =====================================================
+   CoLoGrowth · Assistant Page
+   ===================================================== */
+
+/* ---------- Page Shell ---------- */
+main.assistant-page {
+    margin-bottom: 0;
+}
+
+.assistant-page {
+    /* nav ≈ 68px + assistant sub-header = 56px (h-14) */
+    height: calc(100vh - 68px - 56px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* ---------- Main Card ---------- */
+.assistant-panel {
+    width: min(100%, 980px);
+    flex: 1;
+    min-height: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2rem) 1rem;
+    border: 1px solid rgba(101, 81, 138, 0.12);
+    border-radius: 2rem;
+    background: rgba(255, 255, 255, 0.96);
+    overflow: hidden;
+    box-shadow:
+        0 2px 4px  rgba(101, 81, 138, 0.05),
+        0 8px 28px rgba(101, 81, 138, 0.09),
+        0 32px 64px rgba(46,  47,  45,  0.07);
+    backdrop-filter: blur(4px);
+    margin-bottom: 75px;
+}
+
+/* =====================================================
+   MESSAGES AREA  — 佔據所有可用空間，含圖表可捲動
+   ===================================================== */
+.assistant-messages {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    overflow-y: auto;
+    padding: 0.5rem 0.25rem 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(101, 81, 138, 0.16) transparent;
+}
+
+.assistant-messages::-webkit-scrollbar { width: 4px; }
+.assistant-messages::-webkit-scrollbar-track  { background: transparent; }
+.assistant-messages::-webkit-scrollbar-thumb  {
+    background: rgba(101, 81, 138, 0.18);
+    border-radius: 99px;
+}
+
+/* Empty-state hint inside message area */
+.assistant-messages:empty::before {
+    content: '選擇寶寶後點擊下方問題，開始詢問 AI 助手';
+    display: block;
+    margin: auto;
+    text-align: center;
+    color: #b8afc4;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    padding: 2rem 1.5rem;
+}
+
+/* ---------- Bubble Base ---------- */
+.assistant-message {
+    max-width: min(80%, 680px);
+    padding: 0.95rem 1.3rem;
+    border-radius: 1.5rem;
+    font-size: 0.93rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    animation: msg-appear 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes msg-appear {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.assistant-message-bot {
+    align-self: flex-start;
+    color: #342940;
+    background: linear-gradient(145deg, #f3eeff 0%, #ece5f8 100%);
+    border: 1px solid rgba(101, 81, 138, 0.1);
+    border-top-left-radius: 0.4rem;
+    box-shadow:
+        0 1px 3px rgba(101, 81, 138, 0.08),
+        0 4px 16px rgba(101, 81, 138, 0.07);
+}
+
+.assistant-message-user {
+    align-self: flex-end;
+    color: #fff;
+    background: linear-gradient(145deg, #8b6fc8 0%, #65518a 100%);
+    border-top-right-radius: 0.4rem;
+    box-shadow:
+        0 2px 8px rgba(101, 81, 138, 0.25),
+        0 8px 24px rgba(101, 81, 138, 0.15);
+}
+
+.assistant-message-error {
+    align-self: flex-start;
+    color: #8c2f2a;
+    background: linear-gradient(145deg, #fff5f4 0%, #ffeeed 100%);
+    border: 1px solid rgba(140, 47, 42, 0.15);
+    border-top-left-radius: 0.4rem;
+    box-shadow: 0 2px 10px rgba(140, 47, 42, 0.07);
+}
+
+/* =====================================================
+   STATUS / TYPING
+   ===================================================== */
+.assistant-status {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0.15rem 0.25rem 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border: 1px solid rgba(101, 81, 138, 0.1);
+    border-radius: 1.4rem;
+    border-top-left-radius: 0.35rem;
+    background: linear-gradient(145deg, #f3eeff 0%, #ece5f8 100%);
+    color: #8a7e92;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    box-shadow: 0 2px 8px rgba(101, 81, 138, 0.07);
+    animation: msg-appear 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.assistant-status:empty { display: none; }
+
+.assistant-status-dots { display: flex; gap: 4px; }
+
+.assistant-status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #65518a;
+    animation: dot-bounce 1.1s ease-in-out infinite;
+}
+.assistant-status-dot:nth-child(2) { animation-delay: 0.15s; }
+.assistant-status-dot:nth-child(3) { animation-delay: 0.30s; }
+
+@keyframes dot-bounce {
+    0%, 80%, 100% { transform: translateY(0);    opacity: 0.35; }
+    40%           { transform: translateY(-5px); opacity: 1;    }
+}
+
+/* =====================================================
+   PRESET PANEL  — 底部固定區
+   ===================================================== */
+.assistant-presets {
+    flex-shrink: 0;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 1.5px solid rgba(101, 81, 138, 0.1);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+}
+
+.assistant-presets-hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: #9a8fa2;
+    line-height: 1.55;
+}
+
+/* ---------- Baby Cards (大版) ---------- */
+.assistant-baby-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.assistant-baby-card {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 1rem 0.7rem 0.75rem;
+    min-width: 10rem;
+    border: 2px solid rgba(101, 81, 138, 0.14);
+    border-radius: 1.1rem;
+    background: #fafafa;
+    color: #453b4b;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    transition:
+        border-color 200ms ease,
+        background   200ms ease,
+        box-shadow   200ms ease,
+        transform    220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 1px 4px rgba(101, 81, 138, 0.07);
+}
+
+.assistant-baby-card:hover {
+    border-color: rgba(101, 81, 138, 0.38);
+    background: #f4eeff;
+    box-shadow:
+        0 4px 14px rgba(101, 81, 138, 0.14),
+        0 1px 4px  rgba(101, 81, 138, 0.08);
+    transform: translateY(-2px);
+}
+
+.assistant-baby-card.is-selected {
+    border-color: #65518a;
+    background: linear-gradient(145deg, #f0e8ff 0%, #e8dff7 100%);
+    box-shadow:
+        0 0 0 3px rgba(101, 81, 138, 0.14),
+        0 6px 20px rgba(101, 81, 138, 0.16);
+    transform: translateY(-2px);
+}
+
+/* Avatar 圓圈 */
+.assistant-baby-avatar {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #e8dff7 0%, #d6c9f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #65518a;
+    font-size: 1.3rem;
+    transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), background 200ms ease;
+}
+
+.assistant-baby-card.is-selected .assistant-baby-avatar {
+    background: linear-gradient(145deg, #c4b0e8 0%, #a98ed4 100%);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.assistant-baby-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.assistant-baby-card strong {
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #3b2f4a;
+}
+
+.assistant-baby-card small {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #9a8fa2;
+}
+
+.assistant-baby-card.is-selected small { color: #7460a0; }
+
+.assistant-baby-check {
+    margin-left: auto;
+    font-size: 1.15rem;
+    color: #d4c8dd;
+    flex-shrink: 0;
+    transition:
+        color     200ms ease,
+        transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assistant-baby-card.is-selected .assistant-baby-check {
+    color: #65518a;
+    font-variation-settings: 'FILL' 1;
+    transform: scale(1.15);
+}
+
+/* =====================================================
+   QUESTION LIST — SLIDE-DOWN
+   ===================================================== */
+.assistant-ql-wrap {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition:
+        max-height 420ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity    320ms ease;
+}
+
+.assistant-ql-wrap.is-open {
+    max-height: 600px;
+    opacity: 1;
+}
+
+.assistant-ql-inner {
+    padding-bottom: 0.5rem;
+}
+
+.assistant-question-list {
+    padding-top: 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1rem;
+    align-items: start;
+    gap: 0.75rem;
+}
+
+/* ---------- Group cards ---------- */
+.assistant-question-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.85rem 1rem;
+    border-radius: 1.1rem;
+}
+
+.assistant-question-group h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.assistant-question-group h3 .material-symbols-outlined {
+    font-size: 1rem;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+}
+
+/* ── 目前成長 — purple theme ── */
+.assistant-question-group--now {
+    background: linear-gradient(150deg, rgba(101, 81, 138, 0.07) 0%, rgba(180, 155, 220, 0.04) 100%);
+    border: 1.5px solid rgba(101, 81, 138, 0.14);
+    border-top: 3px solid #65518a;
+    box-shadow: 0 2px 10px rgba(101, 81, 138, 0.07);
+}
+
+.assistant-question-group--now h3 { color: #65518a; }
+
+/* ── 歷史成長 — amber theme ── */
+.assistant-question-group--history {
+    background: linear-gradient(150deg, rgba(143, 107, 79, 0.07) 0%, rgba(200, 165, 120, 0.04) 100%);
+    border: 1.5px solid rgba(143, 107, 79, 0.16);
+    border-top: 3px solid #8f6b4f;
+    box-shadow: 0 2px 10px rgba(143, 107, 79, 0.08);
+}
+
+.assistant-question-group--history h3 { color: #8f6b4f; }
+
+/* ---------- Question buttons (大版) ---------- */
+.assistant-question-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.assistant-question-buttons button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.8rem;
+    border: 1.5px solid rgba(101, 81, 138, 0.18);
+    border-radius: 999px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #453b4b;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(101, 81, 138, 0.08);
+    transition:
+        border-color     180ms ease,
+        background-color 180ms ease,
+        color            180ms ease,
+        box-shadow       180ms ease,
+        transform        200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity          180ms ease;
+}
+
+.assistant-question-buttons button .material-symbols-outlined {
+    font-size: 1rem;
+    font-variation-settings: 'FILL' 1;
+    opacity: 0.75;
+}
+
+.assistant-question-buttons button:hover:not(:disabled) {
+    border-color: #65518a;
+    background: #f0e8ff;
+    color: #65518a;
+    box-shadow: 0 4px 14px rgba(101, 81, 138, 0.18);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.assistant-question-buttons button:hover:not(:disabled) .material-symbols-outlined {
+    opacity: 1;
+}
+
+.assistant-question-buttons button:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+}
+
+.assistant-question-buttons button:disabled {
+    opacity: 0.45;
+    cursor: wait;
+}
+
+/* History group buttons — amber hover */
+.assistant-question-group--history .assistant-question-buttons button {
+    border-color: rgba(143, 107, 79, 0.2);
+    color: #5c4231;
+}
+
+.assistant-question-group--history .assistant-question-buttons button:hover:not(:disabled) {
+    border-color: #8f6b4f;
+    background: #fff8f2;
+    color: #7a5232;
+    box-shadow: 0 4px 14px rgba(143, 107, 79, 0.18);
+}
+
+/* Pop-in animation */
+.btn-pop {
+    animation: btn-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes btn-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.85); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ---------- Empty State ---------- */
+.assistant-empty-state {
+    margin: 1rem 0 0;
+    padding: 1.4rem 1.6rem;
+    border: 1.5px dashed rgba(101, 81, 138, 0.2);
+    border-radius: 1.1rem;
+    background: rgba(101, 81, 138, 0.03);
+    color: #9a8fa2;
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 640px) {
+    .assistant-page {
+        height: calc(100vh - 64px - 56px);
+        padding: 0.5rem;
+    }
+
+    .assistant-panel {
+        padding: 1rem 0.9rem 0.75rem;
+        border-radius: 1.35rem;
+    }
+
+    .assistant-messages {
+        font-size: 0.9rem;
+    }
+
+    .assistant-message {
+        max-width: 90%;
+        font-size: 0.88rem;
+    }
+
+    .assistant-question-list {
+        grid-template-columns: 1fr;
+    }
+
+    .assistant-baby-card {
+        min-width: 8.5rem;
+        padding: 0.6rem 0.8rem 0.6rem 0.65rem;
+    }
+
+    .assistant-baby-avatar {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .assistant-question-buttons button {
+        font-size: 0.73rem;
+        padding: 0.38rem 0.8rem;
+    }
+}
+
+/* =====================================================
+   GROWTH CHART CARD
+   ===================================================== */
+.assistant-chart-card {
+    align-self: flex-start;
+    flex-shrink: 0;         /* 禁止被壓縮，維持固定高度 */
+    width: min(100%, 620px);
+    height: 320px;
+    border-radius: 1.35rem;
+    border: 1px solid rgba(101, 81, 138, 0.14);
+    background: linear-gradient(150deg, #faf8ff 0%, #f4eeff 100%);
+    box-shadow:
+        0 2px 8px  rgba(101, 81, 138, 0.08),
+        0 8px 28px rgba(101, 81, 138, 0.10);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: msg-appear 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.assistant-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem 0.6rem;
+    flex-wrap: wrap;
+}
+
+.assistant-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: #4a3860;
+    letter-spacing: 0.01em;
+}
+
+.assistant-chart-title .material-symbols-outlined {
+    font-size: 1.15rem;
+    color: #7c5cbf;
+}
+
+.assistant-chart-tabs {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.chart-tab {
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(101, 81, 138, 0.2);
+    background: #fff;
+    font-size: 0.71rem;
+    font-weight: 600;
+    color: #6b5b80;
+    cursor: pointer;
+    transition:
+        background  160ms ease,
+        border-color 160ms ease,
+        color       160ms ease,
+        transform   180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chart-tab:hover {
+    border-color: #7c5cbf;
+    background: #f0e8ff;
+    color: #65518a;
+    transform: translateY(-1px);
+}
+
+.chart-tab.is-active {
+    background: #7c5cbf;
+    border-color: #7c5cbf;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(124, 92, 191, 0.28);
+}
+
+.assistant-chart-canvas-wrap {
+    flex: 1;                /* 填滿 card 固定高度中 header 以外的空間 */
+    min-height: 0;
+    padding: 0 1rem 0.85rem;
+    box-sizing: border-box;
+}
+
+.assistant-chart-canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 640px) {
+    .assistant-chart-card {
+        width: 100%;
+        height: 260px;
+    }
+}
+
+</style>
 {% endblock %}
 {% block content %}
 <header class="bg-surface/70 backdrop-blur-md px-4 w-full transition-all duration-500 md:px-8 lg:px-14 xl:px-32 2xl:px-64 h-14 pt-2">
