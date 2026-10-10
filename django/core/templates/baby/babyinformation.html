@@ -75,44 +75,44 @@
         <!-- Component 2: Growth Calendar -->
         <section id="baby-growth-calendar" class="bg-surface-container-lowest rounded-[2.5rem] overflow-hidden shadow-[0_24px_48px_rgba(46,47,45,0.08)]">
             <!-- Interactive Calendar Header & Filters Section -->
-            <div class="px-6 pt-6 pb-2 flex justify-start items-center gap-2">
-                <button id="month-prev-btn" type="button" class="w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&lt;</button>
-                <div id="custom-date-picker-btn" class="relative inline-flex items-center cursor-pointer group hover:bg-primary/5 px-4 py-2 -ml-4 rounded-2xl transition-colors">
-                    <h2 id="custom-date-picker-text" class="text-primary font-extrabold text-2xl tracking-tight flex items-center gap-1 relative z-0">
+            <div class="px-4 sm:px-6 pt-4 pb-1 flex justify-start items-center gap-1 sm:gap-2 min-w-0">
+                <button id="month-prev-btn" type="button" class="shrink-0 w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&lt;</button>
+                <div id="custom-date-picker-btn" class="relative inline-flex items-center min-w-0 cursor-pointer group hover:bg-primary/5 px-2 sm:px-4 py-2 -ml-2 sm:-ml-4 rounded-2xl transition-colors">
+                    <h2 id="custom-date-picker-text" class="text-primary font-extrabold text-lg sm:text-xl tracking-tight flex items-center gap-0.5 sm:gap-1 whitespace-nowrap relative z-0">
                         {{ selected_month_label }}
-                        <span class="material-symbols-outlined text-primary ml-1">keyboard_arrow_down</span>
+                        <span class="material-symbols-outlined text-primary sm:ml-1">keyboard_arrow_down</span>
                     </h2>
                 </div>
-                <button id="month-next-btn" type="button" class="w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&gt;</button>
-                <button id="month-today-btn" type="button" class="ml-2 px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-bold">今天</button>
+                <button id="month-next-btn" type="button" class="shrink-0 w-8 h-8 rounded-full hover:bg-primary/10 text-primary font-bold">&gt;</button>
+                <button id="month-today-btn" type="button" class="shrink-0 ml-1 sm:ml-2 px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 text-sm sm:text-base font-bold whitespace-nowrap">今天</button>
             </div>
 
-            <div class="p-6 pb-8 lg:grid lg:grid-cols-2 lg:gap-12 items-start">
+            <div class="px-4 sm:px-6 pb-4 lg:grid lg:grid-cols-2 lg:gap-8 items-start">
                 <div>
                     <div class="grid grid-cols-7 mb-2">
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">日</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">一</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">二</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">三</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">四</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">五</div>
-                        <div class="text-center text-xs font-bold text-outline py-2 uppercase">六</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">日</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">一</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">二</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">三</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">四</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">五</div>
+                        <div class="text-center text-[10px] font-bold text-outline py-1 uppercase">六</div>
                     </div>
-                    <div class="grid grid-cols-7 gap-1">
+                    <div class="grid grid-cols-7 gap-0.5">
                         {% for week in calendar_weeks %}
                             {% for cell in week %}
                                 {% if cell.empty %}
-                                    <div class="aspect-square"></div>
+                                    <div class="aspect-[1/0.9]"></div>
                                 {% elif cell.is_future or not baby_is_born %}
-                                    <div class="aspect-square flex flex-col items-center justify-start p-2 rounded-xl text-on-surface/30 cursor-not-allowed">
-                                        <span class="text-sm">{{ cell.day }}</span>
+                                    <div class="aspect-[1/0.9] flex flex-col items-center justify-start p-1.5 rounded-lg bg-white text-on-surface/30 cursor-not-allowed transition-colors">
+                                        <span class="text-[11px] leading-none">{{ cell.day }}</span>
                                     </div>
                                 {% else %}
                                     <a href="?date={{ cell.date_iso }}"
-                                    class="aspect-square flex flex-col items-center justify-start p-2 rounded-xl
+                                    class="aspect-[1/0.9] flex flex-col items-center justify-start p-1.5 rounded-lg
                                             hover:bg-surface-container-low cursor-pointer transition-colors
                                             {% if cell.is_selected %}bg-primary-container text-on-primary-container{% endif %}">
-                                        <span class="text-sm">{{ cell.day }}</span>
+                                        <span class="text-[11px] leading-none {% if cell.is_selected %}font-bold text-on-primary-container{% else %}text-on-surface{% endif %}">{{ cell.day }}</span>
                                         {% if cell.has_record %}
                                         <div class="mt-auto">
                                             <div class="w-1.5 h-1.5 rounded-full {% if cell.is_selected %}bg-on-primary-container{% else %}bg-primary{% endif %}"></div>
@@ -572,8 +572,9 @@
                 requestAnimationFrame(() => window.scrollTo(0, scrollTop));
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    calendarSection?.removeAttribute('aria-busy');
                     console.error(error);
+                    // 失敗時退回一般換頁，至少能切換
+                    window.location.href = target.href;
                 }
             } finally {
                 if (calendarRequest === controller) calendarRequest = null;
@@ -722,7 +723,7 @@
                 }
             }
         });
-        document.addEventListener('popstate', () => navigateCalendar(window.location.href, { updateHistory: false }));
+        window.addEventListener('popstate', () => navigateCalendar(window.location.href, { updateHistory: false }));
 
         prevYearBtn.addEventListener('click', () => {
             tempYear -= pickerMode === 'year' ? 12 : 1;

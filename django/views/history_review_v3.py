@@ -401,15 +401,21 @@ def v3_timeline(request):
     # 可選年份
     available_years = sorted(list({e['date'].year for e in events if e.get('date')}), reverse=True)
 
-    # 類型篩選 (filter_type: 'prenatal', 'feeling', 'task', 'baby', 'all')
-    if filter_type and filter_type != 'all':
-        events = [e for e in events if e['type'] == filter_type]
-
     # 時間範圍篩選 (time_range)
     if start_date:
         events = [e for e in events if e['date'] >= start_date]
     if end_date:
         events = [e for e in events if e['date'] <= end_date]
+
+    # 各分類標籤旁的數量：以「有紀錄的天數」計算（同一天多筆只算 1），受時間範圍影響
+    # 「全部」例外：顯示該養育者的所有紀錄筆數（不是各分類加總，也不是天數）
+    filter_counts = {'all': len(events)}
+    for _t in ('prenatal', 'feeling', 'physical', 'baby', 'task'):
+        filter_counts[_t] = len({e['date_str'] for e in events if e['type'] == _t})
+
+    # 類型篩選 (filter_type: 'prenatal', 'feeling', 'task', 'baby', 'all')
+    if filter_type and filter_type != 'all':
+        events = [e for e in events if e['type'] == filter_type]
 
     # 6. 身體狀況分布統計 (百分比，同樣受時間區間篩選)
     phys_qs = Userphysicalcondition.objects.filter(pregnancyrecord__user_id=target_uid)
@@ -500,6 +506,7 @@ def v3_timeline(request):
     context = {
         'events': events,
         'filter_type': filter_type,
+        'filter_counts': filter_counts,
         'time_range': time_range,
         'available_years': available_years,
         'stats': stats,
