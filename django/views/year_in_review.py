@@ -104,7 +104,7 @@ def _collect_year_data(current_user, pregnancy_case, active_baby, year,
     cares = (
         CareRecord.objects.filter(pregnancycase=pregnancy_case)
         if pregnancy_case
-        else CareRecord.objects.filter(user=current_user)
+        else CareRecord.objects.filter(pregnancycase__user=current_user)
     )
     data['cares'] = list(cares.filter(recordtime__date__range=(start, end)))
     return data

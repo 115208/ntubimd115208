@@ -8,7 +8,7 @@ class PregnancyCase(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     menstruation = models.DateField()
     expecteddate = models.DateField()
-    code = models.CharField(max_length=255, unique=True)
+    code = models.CharField(max_length=6, unique=True)
     create_time = models.DateTimeField(default=timezone.now)
 
     class Meta:

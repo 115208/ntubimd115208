@@ -173,21 +173,19 @@ def index(request):
     can_view_care = True
     can_edit_care = True
     is_case_owner = bool(pregnancy_case and pregnancy_case.user_id == current_user.user_id)
-    #哪位user新增的待辦清單
-    care_queryset = CareRecord.objects.select_related('carestatus', 'user').order_by('recordtime', 'carerecord_id')
+    care_queryset = CareRecord.objects.select_related(
+        'carestatus', 'pregnancycase'
+    ).order_by('recordtime', 'carerecord_id')
     if pregnancy_case:
         if not is_case_owner:
             membership = FamilyMember.objects.filter(pregnancycase=pregnancy_case, user=current_user).first()
             can_view_care = baby_utils.has_permission(membership, 'care_records', 'view', default='view')
             can_edit_care = baby_utils.has_permission(membership, 'care_records', 'edit', default='view')
-        # 相容 pregnancycase 為 NULL 的舊待辦：一併列出自己建立的那些，
-        # 與 care_record.py 的查詢條件保持一致，才不會「看得到卻改不了」。
         care_queryset = care_queryset.filter(
-            Q(pregnancycase=pregnancy_case) | Q(pregnancycase__isnull=True, user=current_user)
+            pregnancycase=pregnancy_case
         ) if can_view_care else care_queryset.none()
     else:
-        # 還沒有任何 active case 時退回舊行為，避免整段壞掉
-        care_queryset = care_queryset.filter(user=current_user)
+        care_queryset = care_queryset.filter(pregnancycase__user=current_user)
 
     # 先抓取日期視窗前後一天，再以台北當地日期篩選，兼容舊資料的
     # naive datetime 及不同資料庫時區設定，避免同一天的待辦被拆散。
@@ -264,6 +262,7 @@ def index(request):
         'care_total_count': selected_day_total,
         'care_progress_percent': int((selected_day_done / selected_day_total) * 100) if selected_day_total else 0,
         'pregnancy_case': pregnancy_case,
+        'join_code': pregnancy_case.code if pregnancy_case else '',
         'pregnancy_chart_data': pregnancy_chart_data,
         'pregnancy_chart_has_data': bool(pregnancy_chart_data),
         'baby_chart_data': baby_chart_data,

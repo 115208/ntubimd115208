@@ -5,7 +5,7 @@ from django.utils import timezone
 from zoneinfo import ZoneInfo
 
 from core.models import CareStatus, CareRecord, FamilyMember
-from django.db.models import Q
+
 from views.pregnancycase import url_with_active_selection, resolve_active_pregnancy_case
 from views.session_utils import get_current_user_profile
 from views import baby_utils
@@ -30,11 +30,7 @@ def _check_care_permission(user, case, required='view'):
 
 
 def _care_record_for(case, current_user, care_id):
-    """在目前胎數內尋找待辦；同時相容 pregnancycase 為 NULL 的舊資料。
-
-    舊資料在 index 會被列出（以 user 過濾），若這裡只用 pregnancycase=case 找，
-    使用者會看得到卻永遠編輯／刪除／勾選不了。
-    """
+    """在目前胎數內尋找待辦。"""
     if not care_id:
         return None
     try:
@@ -42,7 +38,7 @@ def _care_record_for(case, current_user, care_id):
     except (TypeError, ValueError):
         return None
     return CareRecord.objects.filter(
-        Q(pregnancycase=case) | Q(pregnancycase__isnull=True, user=current_user),
+        pregnancycase=case,
         carerecord_id=care_id,
     ).first()
 
@@ -98,7 +94,6 @@ def add_care_reminder(request):
             # 原本手算 Max+1 在多人同時新增時會撞鍵。
             CareRecord.objects.create(
                 pregnancycase=case,
-                user=current_user,
                 carestatus=carestatus,
                 recordtime=record_dt,
                 content=form_data['content'][:CONTENT_MAX_LENGTH],
