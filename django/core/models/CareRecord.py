@@ -2,12 +2,10 @@ import datetime
 from zoneinfo import ZoneInfo
 from django.db import models
 from .CareStatus import CareStatus
-from .UserProfile import UserProfile
 from .PregnancyCase import PregnancyCase
 
 class CareRecord(models.Model):
     carerecord_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     carestatus = models.ForeignKey(CareStatus, on_delete=models.CASCADE)
     recordtime = models.DateTimeField()
     content = models.CharField(max_length=100, null=True, blank=True)

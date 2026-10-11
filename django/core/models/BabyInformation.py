@@ -18,7 +18,7 @@ class BabyInformation(models.Model):
     baby_weight = models.FloatField(null=True, blank=True)
     babyheadcircumference = models.FloatField(null=True, blank=True)
     chestcircumference = models.FloatField(null=True, blank=True)
-    production_method = models.CharField(max_length=10, null=True, blank=True)
+    production_method = models.CharField(max_length=6, null=True, blank=True)
 
     class Meta:
         db_table = 'babyinformation'

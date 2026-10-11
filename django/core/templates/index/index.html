@@ -355,12 +355,12 @@
         <!-- Floating Join Code Button：加入碼只顯示給個案擁有者，協助者不需要也不該看到 -->
         {% if is_case_owner %}
         <div class="join"
-             onclick="if ('{{ pregnancy_case.code }}') { navigator.clipboard.writeText('{{ pregnancy_case.code }}').then(() => { const t = document.getElementById('join-copy-toast'); if (t) { t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000); } }); }"
+             onclick="if ('{{ join_code }}') { navigator.clipboard.writeText('{{ join_code }}').then(() => { const t = document.getElementById('join-copy-toast'); if (t) { t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000); } }); }"
              title="點擊可複製加入碼"
              role="button"
              tabindex="0">
             <span class="material-symbols-outlined text-sm">vpn_key</span>
-            <span class="font-bold text-[10px] tracking-wide">加入碼: {{ pregnancy_case.code|default:'尚未建立' }}</span>
+            <span class="font-bold text-[10px] tracking-wide">加入碼: {{ join_code|default:'尚未建立' }}</span>
         </div>
         <!-- 複製加入碼成功提示 Toast -->
         <div id="join-copy-toast" class="fixed bottom-24 right-4 z-50 bg-[#362459] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300">

@@ -346,7 +346,7 @@ def v3_timeline(request):
     cares = (
         CareRecord.objects.filter(pregnancycase=pregnancy_case)
         if pregnancy_case
-        else CareRecord.objects.filter(user=current_user)
+        else CareRecord.objects.filter(pregnancycase__user=current_user)
     )
     for c in cares:
         dt = c.recordtime.date() if c.recordtime else None

@@ -167,7 +167,7 @@ def _calc_stats(current_user, pregnancy_case, active_baby, today,
             babyrecord__baby__pregnancycase__user=current_user
         ).count()
         total_tasks = CareRecord.objects.filter(
-            user=current_user, state=True
+            pregnancycase__user=current_user, state=True
         ).count()
 
     # ── 依檢視權限歸零 ──
@@ -373,7 +373,9 @@ def pregnancy_journey_view(request):
     elif pregnancy_case:
         care_records = CareRecord.objects.filter(pregnancycase=pregnancy_case, state=True).order_by('-recordtime')[:15]
     else:
-        care_records = CareRecord.objects.filter(user=current_user, state=True).order_by('-recordtime')[:15]
+        care_records = CareRecord.objects.filter(
+            pregnancycase__user=current_user, state=True
+        ).order_by('-recordtime')[:15]
     for cr in care_records:
         r_date = cr.recordtime.date() if hasattr(cr.recordtime, 'date') else today
         w_str = WEEKDAY_MAP.get(r_date.weekday(), '週日')
