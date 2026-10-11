@@ -53,15 +53,17 @@ def case_date_window(pregnancy_case):
     return start_date, end_date
 
 
-def records_for_case(pregnancy_case):
+def records_for_case(pregnancy_case, viewer=None):
+    """回傳個案擁有者的全部養育者紀錄。
+
+    個案擁有者可查看全部紀錄；協助者則只能查看分享個案最後月經日
+    （含當日）之後的紀錄，避免看到該胎次開始前的私人紀錄。
+    日期區間工具仍保留給需要清理歷史資料的流程使用。
+    """
     if not pregnancy_case or not pregnancy_case.user_id:
         return PregnancyRecord.objects.none()
 
-    start_date, end_date = case_date_window(pregnancy_case)
-
-    qs = PregnancyRecord.objects.filter(user_id=pregnancy_case.user_id)
-    if start_date:
-        qs = qs.filter(check_date__gte=start_date)
-    if end_date:
-        qs = qs.filter(check_date__lte=end_date)
-    return qs
+    queryset = PregnancyRecord.objects.filter(user_id=pregnancy_case.user_id)
+    if viewer and pregnancy_case.user_id != viewer.user_id:
+        queryset = queryset.filter(check_date__gte=pregnancy_case.menstruation)
+    return queryset

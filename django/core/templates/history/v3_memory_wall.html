@@ -53,6 +53,7 @@
         </section>
 
         <!-- Featured Section: 那年今天 -->
+        {% if anniversary_photos %}
         <section class="mb-10">
             <div class="flex items-center justify-between mb-4 px-1">
                 <h3 class="font-['Plus_Jakarta_Sans'] text-lg font-bold text-[#362459] tracking-tight flex items-center">
@@ -61,18 +62,21 @@
                 </h3>
                 <span class="text-xs font-bold text-[#5b5c5a]/70 tracking-widest uppercase">Memory Reel</span>
             </div>
-            <div class="relative group cursor-pointer overflow-hidden rounded-3xl bg-surface-container-lowest shadow-xs border border-surface-container-high transition-all duration-500 hover:scale-[1.01]">
+            {% for photo in anniversary_photos %}
+            <div class="relative group cursor-pointer overflow-hidden rounded-3xl bg-surface-container-lowest shadow-xs border border-surface-container-high transition-all duration-500 hover:scale-[1.01] {% if not forloop.last %}mb-5{% endif %}">
                 <div class="aspect-[4/5] md:aspect-[16/9] w-full overflow-hidden">
-                    <div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('/media/prenatal_records/ultrasound_demo.jpg')">
+                    <div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('{{ photo.url }}')">
                     </div>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 p-6 md:p-8 text-white">
-                    <p class="text-xs sm:text-sm font-semibold opacity-90 mb-1.5 font-['Plus_Jakarta_Sans'] tracking-wide text-[#d6beff]">孕期超音波回顧</p>
-                    <h3 class="text-xl sm:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-tight">「第一次透過超音波看見寶寶清秀的臉龐與小手 ❤️」</h3>
+                    <p class="text-xs sm:text-sm font-semibold opacity-90 mb-1.5 font-['Plus_Jakarta_Sans'] tracking-wide text-[#d6beff]">{{ photo.date_str }} · {{ photo.gestation_type }}</p>
+                    <h3 class="text-xl sm:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-tight">{{ photo.title }}</h3>
                 </div>
             </div>
+            {% endfor %}
         </section>
+        {% endif %}
 
         <!-- Photo Gallery (動態讀取資料庫孕前/孕後照片) -->
         {% if grouped_photos %}
@@ -92,7 +96,7 @@
                             <div class="aspect-square bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style="background-image: url('{{ p.url }}')"></div>
                             <div class="p-4">
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <span class="px-2.5 py-0.5 bg-[#EDE5F5] text-[#65518a] text-[10px] font-bold rounded-full border border-[#E8E0EF]">{{ p.gestation_type }}</span>
+                                    <span class="px-1 py-0.5 bg-[#EDE5F5] text-[#65518a] text-[10px] font-bold rounded-full border border-[#E8E0EF]">{{ p.gestation_type }}</span>
                                     <span class="text-[11px] text-[#5b5c5a] font-medium">{{ p.date_str }}</span>
                                 </div>
                                 <h4 class="font-bold text-[#362459] text-sm">{{ p.title }}</h4>

@@ -31,6 +31,7 @@ from views.pregnancycase import (
 )
 from views.session_utils import get_current_user_profile
 from views import baby_utils
+from views.pregnancyrecords import records_for_case
 
 # ── 檢視權限閘門 ───────────────────────────────────────────────────
 # 歷史回顧過去完全沒有權限檢查：養育者把協助者的 mom_records 設為 off 後，
@@ -76,6 +77,12 @@ def resolve_view_permissions(current_user, pregnancy_case):
     if not can_view_baby:
         notices.append('養育者未開放嬰幼兒紀錄的檢視權限，本頁已隱藏寶寶相關內容。')
     return can_view_mom, can_view_baby, notices
+
+
+def _visible_pregnancy_records(current_user, pregnancy_case):
+    if pregnancy_case:
+        return records_for_case(pregnancy_case, viewer=current_user)
+    return PregnancyRecord.objects.filter(user_id=current_user.user_id)
 
 
 FEELING_EMOJI_MAP = {
@@ -249,7 +256,7 @@ def pregnancy_journey_view(request):
     # 權限：mom_records 未開放時完全不查詢，時光軸只留下寶寶相關項目
     target_uid = pregnancy_case.user_id if pregnancy_case else current_user.user_id
     preg_records_qs = (
-        PregnancyRecord.objects.filter(user_id=target_uid).order_by('-check_date')
+        _visible_pregnancy_records(current_user, pregnancy_case).order_by('-check_date')
         if can_view_mom
         else PregnancyRecord.objects.none()
     )
@@ -371,11 +378,13 @@ def pregnancy_journey_view(request):
     if not can_view_care:
         care_records = CareRecord.objects.none()
     elif pregnancy_case:
-        care_records = CareRecord.objects.filter(pregnancycase=pregnancy_case, state=True).order_by('-recordtime')[:15]
+        care_records = CareRecord.objects.filter(
+            pregnancycase=pregnancy_case, state=True
+        ).order_by('-recordtime')
     else:
         care_records = CareRecord.objects.filter(
             pregnancycase__user=current_user, state=True
-        ).order_by('-recordtime')[:15]
+        ).order_by('-recordtime')
     for cr in care_records:
         r_date = cr.recordtime.date() if hasattr(cr.recordtime, 'date') else today
         w_str = WEEKDAY_MAP.get(r_date.weekday(), '週日')
@@ -453,8 +462,9 @@ def memory_wall_view(request):
     flashback = None
     on_this_day_preg = None
     if can_view_mom:
-        on_this_day_preg = PregnancyRecord.objects.filter(
-            user_id=target_uid,
+        on_this_day_preg = _visible_pregnancy_records(
+            current_user, pregnancy_case
+        ).filter(
             check_date__month=today.month,
             check_date__day=today.day
         ).exclude(check_date=today).first()

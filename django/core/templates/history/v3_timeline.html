@@ -53,6 +53,11 @@
 
     .bento-card { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .bento-card:hover { transform: scale(1.02); }
+
+    /* 統計卡片固定兩欄，覆蓋手機版共用樣式的單欄設定。 */
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
 </style>
 {% endblock %}
 
@@ -780,7 +785,7 @@
         </section>
 
         <!-- Stats Grid (Bento Style - 橫螢幕 3欄適應 layout 統一系統紫顏色) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        <section class="stats-grid grid grid-cols-2 gap-5">
             <!-- Stat 1: 陪伴天數 -->
             <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
@@ -831,7 +836,7 @@
                 </div>
             </div>
             <!-- Stat 5: Growth AI 解答次數 -->
-            <div class="bento-card bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs col-span-2 md:col-span-1">
+            <div class="bento-card col-span-2 bg-[#EDE5F5]/60 p-5 rounded-3xl flex flex-col justify-between h-40 border border-[#E8E0EF] shadow-2xs">
                 <div class="flex justify-between items-start">
                     <div class="bg-white/90 p-2 rounded-2xl shadow-xs">
                         <span class="material-symbols-outlined text-[#65518a]">psychology</span>
