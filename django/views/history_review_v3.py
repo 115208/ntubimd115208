@@ -30,6 +30,7 @@ from views.pregnancycase import (
     sync_active_selection_from_request,
 )
 from views.session_utils import get_current_user_profile
+from views.pregnancyrecords import records_for_case
 # 權限閘門與第一版共用同一份實作，避免兩版規則漂移
 from views.history_review import resolve_view_permissions
 
@@ -62,6 +63,20 @@ def _mom_scope_uid(current_user, pregnancy_case):
     """媽媽相關資料（孕期紀錄／產檢／心情）一律以個案擁有者為基準，
     與第一版歷史回顧、/pregnancyrecord/ 的口徑一致。"""
     return pregnancy_case.user_id if pregnancy_case else current_user.user_id
+
+
+def _visible_pregnancy_records(current_user, pregnancy_case):
+    if pregnancy_case:
+        return records_for_case(pregnancy_case, viewer=current_user)
+    return PregnancyRecord.objects.filter(user_id=current_user.user_id)
+
+
+def _visible_mom_queryset(queryset, current_user, pregnancy_case, date_lookup):
+    if pregnancy_case and pregnancy_case.user_id != current_user.user_id:
+        queryset = queryset.filter(
+            **{f'{date_lookup}__gte': pregnancy_case.menstruation}
+        )
+    return queryset
 
 
 def _baby_record_scope(current_user, pregnancy_case, active_baby):
@@ -111,11 +126,9 @@ def _calc_stats(current_user, pregnancy_case, active_baby, today,
     if preg_case:
         start_origin = get_lmp_date(preg_case)
     if not start_origin:
-        first_preg = (
-            PregnancyRecord.objects.filter(user_id=target_uid)
-            .order_by('check_date')
-            .first()
-        )
+        first_preg = _visible_pregnancy_records(current_user, preg_case).order_by(
+            'check_date'
+        ).first()
         if first_preg and first_preg.check_date:
             start_origin = first_preg.check_date
         elif active_baby and active_baby.birthdaytime:
@@ -141,7 +154,7 @@ def _calc_stats(current_user, pregnancy_case, active_baby, today,
         p_qs = Prenatalrecord.objects.filter(
             pregnancyrecord__user_id=target_uid, photo__isnull=False
         ).exclude(photo='')
-        m_rec_qs = PregnancyRecord.objects.filter(user_id=target_uid)
+        m_rec_qs = _visible_pregnancy_records(current_user, pregnancy_case)
         m_feel_qs = Userfeeling.objects.filter(pregnancyrecord__user_id=target_uid)
 
         if start_date:
@@ -239,8 +252,13 @@ def v3_timeline(request):
 
     # 1. 產檢紀錄（mom_records 未開放時完全不查詢）
     prenatals = (
-        Prenatalrecord.objects.filter(
-            pregnancyrecord__user_id=target_uid
+        _visible_mom_queryset(
+            Prenatalrecord.objects.filter(
+                pregnancyrecord__user_id=target_uid
+            ),
+            current_user,
+            pregnancy_case,
+            'pregnancyrecord__check_date',
         ).select_related('pregnancyrecord')
         if can_view_mom
         else Prenatalrecord.objects.none()
@@ -310,7 +328,7 @@ def v3_timeline(request):
     # 3. 沒有產檢或心情關聯的養育者記錄
     # 這類記錄仍需顯示在時光軸上，例如只有文字筆記或體重的日期。
     pregnancy_records = (
-        PregnancyRecord.objects.filter(user_id=target_uid)
+        _visible_pregnancy_records(current_user, pregnancy_case)
         .exclude(pregnancyrecord_id__in=represented_pregnancy_record_ids)
         if can_view_mom
         else PregnancyRecord.objects.none()
@@ -622,6 +640,15 @@ def v3_memory_wall(request):
     # 排序：用真正的日期欄位，不要用格式化後的字串（未知日期排到最後）
     photos.sort(key=lambda x: (x['date'] is not None, x['date'] or datetime.date.min), reverse=True)
 
+    today = timezone.localdate()
+    anniversary_photos = [
+        photo for photo in photos
+        if photo['date']
+        and photo['date'].month == today.month
+        and photo['date'].day == today.day
+        and photo['date'].year != today.year
+    ]
+
     grouped_photos = {}
     if group_mode == 'gestation':
         for item in photos:
@@ -634,6 +661,7 @@ def v3_memory_wall(request):
 
     context = {
         'grouped_photos': grouped_photos,
+        'anniversary_photos': anniversary_photos,
         'group_mode': group_mode,
         'total_photo_count': len(photos),
         'active_v3_tab': 'memory_wall',
@@ -676,7 +704,8 @@ def v3_baby_growth(request):
     # 1. 第一筆孕期紀錄
     if can_view_mom:
         first_preg = (
-            PregnancyRecord.objects.filter(user_id=target_uid, check_date__isnull=False)
+            _visible_pregnancy_records(current_user, pregnancy_case)
+            .filter(check_date__isnull=False)
             .order_by('check_date')
             .first()
         )

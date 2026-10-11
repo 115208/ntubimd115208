@@ -29,7 +29,7 @@ WEIGHT_RANGE = (20.0, 200.0)
 
 def _records_for_scope(pregnancy_case, current_user):
     if pregnancy_case:
-        return records_for_case(pregnancy_case)
+        return records_for_case(pregnancy_case, viewer=current_user)
 
     if current_user and current_user.user_id:
         return PregnancyRecord.objects.filter(user_id=current_user.user_id)
