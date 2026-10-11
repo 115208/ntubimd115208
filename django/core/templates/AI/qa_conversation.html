@@ -1,8 +1,131 @@
 {% extends 'base/base.html' %}
-{% load static %}
 {% block title %}Growth AI{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/qa_conversation.css' %}" />
+<style>
+    .qa-message-icon {
+        font-variation-settings: 'FILL' 1;
+    }
+
+    body {
+        overflow-x: hidden;
+        background-color: #f7f6f3;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .header {
+        position: fixed;
+        top: 65;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        padding: 0.2rem;
+    }
+
+    .qa-main {
+        padding-bottom: calc(10rem + env(safe-area-inset-bottom));
+    }
+
+    .qa-input-shell {
+        position: fixed;
+        left: 0;
+        right: 0;
+        width: 100%;
+        bottom: calc(5rem + env(safe-area-inset-bottom));
+        z-index: 50;
+
+    }
+
+    @media (min-width: 768px) {
+        .qa-main {
+            padding-bottom: calc(10rem + env(safe-area-inset-bottom));
+        }
+
+        .qa-input-shell {
+            bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
+
+    }
+
+    @media (max-width: 1100px) {
+        .qa-page-title {
+            display: none;
+        }
+    }
+
+    .qa-typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 1.5rem;
+    }
+
+    .qa-typing-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 9999px;
+        background: #65518a;
+        opacity: 0.65;
+        animation: qaTypingBounce 1s infinite ease-in-out;
+    }
+
+    .qa-typing-dot:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .qa-typing-dot:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    @keyframes qaTypingBounce {
+        0%,
+        80%,
+        100% {
+            transform: translateY(0);
+            opacity: 0.45;
+        }
+
+        40% {
+            transform: translateY(-4px);
+            opacity: 1;
+        }
+    }
+
+    /* =====================================================
+       統一訊息框樣式（與 assist 一致）
+       ===================================================== */
+    .qa-bubble-user {
+        color: #ffffff;
+        background: linear-gradient(145deg, #8b6fc8 0%, #65518a 100%);
+        border-top-right-radius: 0.4rem !important;
+        box-shadow:
+            0 2px 8px rgba(101, 81, 138, 0.25),
+            0 8px 24px rgba(101, 81, 138, 0.15);
+    }
+
+    .qa-bubble-bot {
+        color: #342940;
+        background: linear-gradient(145deg, #f3eeff 0%, #ece5f8 100%);
+        border: 1px solid rgba(101, 81, 138, 0.1);
+        border-top-left-radius: 0.4rem !important;
+        box-shadow:
+            0 1px 3px rgba(101, 81, 138, 0.08),
+            0 4px 16px rgba(101, 81, 138, 0.07);
+    }
+
+    #history-sidebar {
+        z-index: 500;
+    }
+</style>
 {% endblock %}
 {% block content %}
 <div class="bg-background font-body text-on-surface min-h-screen flex flex-col lg:flex-row">

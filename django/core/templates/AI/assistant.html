@@ -46,8 +46,8 @@ main.assistant-page {
    MESSAGES AREA  — 佔據所有可用空間，含圖表可捲動
    ===================================================== */
 .assistant-messages {
-    flex: 1;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
@@ -167,7 +167,8 @@ main.assistant-page {
    PRESET PANEL  — 底部固定區
    ===================================================== */
 .assistant-presets {
-    flex-shrink: 0;
+    max-height: calc(100% - 150px);
+    overflow-y: auto;
     padding-top: 1rem;
     margin-top: 0.5rem;
     border-top: 1.5px solid rgba(101, 81, 138, 0.1);
@@ -304,8 +305,9 @@ main.assistant-page {
 }
 
 .assistant-ql-wrap.is-open {
-    max-height: 600px;
+    max-height: min(600px, calc(100vh - 300px));
     opacity: 1;
+    overflow-y: auto;
 }
 
 .assistant-ql-inner {
@@ -476,6 +478,7 @@ main.assistant-page {
 
     .assistant-messages {
         font-size: 0.9rem;
+        min-height: 150px;
     }
 
     .assistant-message {
@@ -485,6 +488,10 @@ main.assistant-page {
 
     .assistant-question-list {
         grid-template-columns: 1fr;
+    }
+
+    .assistant-ql-wrap.is-open {
+        max-height: min(420px, calc(100vh - 260px));
     }
 
     .assistant-baby-card {
