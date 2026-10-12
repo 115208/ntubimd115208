@@ -4,6 +4,28 @@
 {% block title %}首頁{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index.css' %}">
+<style>
+    /* 手機版：加入碼按鈕放進和內容區同寬的外框 (max-w-md + px-6)，右緣自然與白框對齊 */
+    @media (max-width: 767px) {
+        .join-wrap {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 74px;
+            z-index: 40;
+            max-width: 28rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+        .join-wrap .join {
+            position: static;
+            pointer-events: auto;
+        }
+    }
+</style>
 {% endblock %}
 {% block content %}
     <main class="mx-auto pb-28 md:pb-20 max-w-md md:max-w-none w-full transition-all duration-500 ease-in-out md:px-8 lg:px-16 xl:px-32 2xl:px-64">
@@ -354,6 +376,7 @@
 
         <!-- Floating Join Code Button：加入碼只顯示給個案擁有者，協助者不需要也不該看到 -->
         {% if is_case_owner %}
+        <div class="join-wrap">
         <div class="join"
              onclick="if ('{{ join_code }}') { navigator.clipboard.writeText('{{ join_code }}').then(() => { const t = document.getElementById('join-copy-toast'); if (t) { t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000); } }); }"
              title="點擊可複製加入碼"
@@ -361,6 +384,7 @@
              tabindex="0">
             <span class="material-symbols-outlined text-sm">vpn_key</span>
             <span class="font-bold text-[10px] tracking-wide">加入碼: {{ join_code|default:'尚未建立' }}</span>
+        </div>
         </div>
         <!-- 複製加入碼成功提示 Toast -->
         <div id="join-copy-toast" class="fixed bottom-24 right-4 z-50 bg-[#362459] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300">
@@ -428,7 +452,11 @@
         }
 
         // 以虛線標示年份：每個年份的起點畫一條虛線並標上年份（第一個年份只標年份、不畫虛線）
+        // 只會出現「有紀錄」的年份；若年份標籤擠在一起會重疊，則依紀錄筆數多的優先保留，
+        // 被擠掉的年份連同它的虛線一併不顯示，確保數字不會互相覆蓋。
+        let lastYearMarkerArgs = null;
         function renderYearMarkers(records, leftX, chartWidth) {
+            lastYearMarkerArgs = [records, leftX, chartWidth];
             const host = pregnancyChartSvg && pregnancyChartSvg.parentElement;
             if (!host) return;
 
@@ -445,33 +473,68 @@
             const total = records.length;
             const xOf = (index) => total === 1 ? 50 : leftX + ((index / (total - 1)) * chartWidth);
 
+            // 1) 依「有紀錄的日期」整理出每個年份的起點與筆數
+            const candidates = [];
             let prevYear = null;
             let prevIndex = null;
             records.forEach((item, index) => {
                 const d = getRecordDate(item);
                 if (!d) return;
                 const year = d.getFullYear();
-                if (year === prevYear) { prevIndex = index; return; }
-
+                if (year === prevYear) {
+                    candidates[candidates.length - 1].count += 1;
+                    prevIndex = index;
+                    return;
+                }
                 const isFirst = prevYear === null;
                 // 虛線放在「上一年最後一筆」與「新年份第一筆」的中間
                 const lineX = isFirst ? leftX : (xOf(prevIndex) + xOf(index)) / 2;
-
-                if (!isFirst) {
-                    const line = document.createElement('div');
-                    line.style.cssText = `position:absolute;top:0;bottom:0;left:${lineX}%;border-left:1.5px dashed rgba(101,81,138,0.35);`;
-                    layer.appendChild(line);
-                }
-
-                const label = document.createElement('span');
-                label.textContent = `${year}`;
-                label.style.cssText = `position:absolute;top:0;left:${lineX}%;margin-left:${isFirst ? '0' : '4px'};font-size:10px;font-weight:800;line-height:1;color:rgba(101,81,138,0.75);`;
-                layer.appendChild(label);
-
+                candidates.push({ year, lineX, isFirst, count: 1 });
                 prevYear = year;
                 prevIndex = index;
             });
+
+            // 2) 量出每個標籤的實際寬度（px），換算位置
+            const hostWidth = host.clientWidth || 1;
+            const GAP = 6;
+            candidates.forEach((c) => {
+                const label = document.createElement('span');
+                label.textContent = `${c.year}`;
+                label.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;font-size:10px;font-weight:800;line-height:1;white-space:nowrap;';
+                layer.appendChild(label);
+                c.width = label.offsetWidth;
+                layer.removeChild(label);
+                const left = (c.lineX / 100) * hostWidth + (c.isFirst ? 0 : 4);
+                c.left = Math.max(0, Math.min(left, hostWidth - c.width));
+            });
+
+            // 3) 紀錄筆數多的年份優先放置；與已放置的標籤重疊就不顯示
+            const placed = [];
+            [...candidates]
+                .sort((x, y) => (y.count - x.count) || (y.year - x.year))
+                .forEach((c) => {
+                    const overlap = placed.some((o) => c.left < o.left + o.width + GAP && o.left < c.left + c.width + GAP);
+                    if (!overlap) placed.push(c);
+                });
+
+            // 4) 只畫保留下來的年份（由舊到新）
+            placed.sort((x, y) => x.year - y.year).forEach((c) => {
+                if (!c.isFirst) {
+                    const line = document.createElement('div');
+                    line.style.cssText = `position:absolute;top:0;bottom:0;left:${c.lineX}%;border-left:1.5px dashed rgba(101,81,138,0.35);`;
+                    layer.appendChild(line);
+                }
+                const label = document.createElement('span');
+                label.textContent = `${c.year}`;
+                label.style.cssText = `position:absolute;top:0;left:${c.left}px;font-size:10px;font-weight:800;line-height:1;white-space:nowrap;color:rgba(101,81,138,0.75);`;
+                layer.appendChild(label);
+            });
         }
+
+        // 視窗大小改變時（例如手機旋轉），標籤的像素位置要重算
+        window.addEventListener('resize', () => {
+            if (lastYearMarkerArgs) renderYearMarkers(...lastYearMarkerArgs);
+        });
 
         function renderPregnancyChart(data = pregnancyChartVisibleData, mode = 'caregiver') {
             if (!pregnancyChartSvg || !pregnancyChartYAxisLabels || !pregnancyChartXAxisLabels || !pregnancyChartEmptyState) {
