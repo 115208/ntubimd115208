@@ -35,7 +35,7 @@ HISTORY_MESSAGE_LIMIT = 6
 HISTORY_MAX_CHARS = 2000
 
 # DEFAULT_N8N_RAG_WEBHOOK_URL = "http://localhost:5678/webhook/RAG"
-DEFAULT_N8N_RAG_WEBHOOK_URL = "https://colocolo.app.n8n.cloud/webhook/RAG"
+DEFAULT_N8N_RAG_WEBHOOK_URL = "https://cologrowth.app.n8n.cloud/webhook/RAG"
 
 EXPECTED_N8N_RAG_WEBHOOK_PATH = "/webhook/RAG"
 
@@ -720,4 +720,3 @@ def qa_delete_conversation(request):
 
     django_messages.success(request, "已刪除對話。")
     return redirect(reverse("qa_conversation"))
-
