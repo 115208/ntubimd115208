@@ -10,46 +10,6 @@ from views.pregnancycase import get_pregnancy_status
 from views.session_utils import get_current_user_profile
 
 
-def _fill_forward_growth_data(records):
-    sorted_records = sorted(
-        records,
-        key=lambda r: (r.date.date() if hasattr(r.date, 'date') else r.date),
-    )
-
-    last_height = last_weight = last_head = last_chest = None
-    result = []
-
-    for rec in sorted_records:
-        filled_height = rec.height if rec.height is not None else last_height
-        filled_weight = rec.weight if rec.weight is not None else last_weight
-        filled_head = rec.headcircumference if rec.headcircumference is not None else last_head
-        filled_chest = rec.chestcircumference if rec.chestcircumference is not None else last_chest
-
-        result.append({
-            'record': rec,
-            'date': rec.date.date() if hasattr(rec.date, 'date') else rec.date,
-            'height': filled_height,
-            'weight': filled_weight,
-            'headcircumference': filled_head,
-            'chestcircumference': filled_chest,
-            'is_carried_height': (rec.height is None and filled_height is not None),
-            'is_carried_weight': (rec.weight is None and filled_weight is not None),
-            'is_carried_head': (rec.headcircumference is None and filled_head is not None),
-            'is_carried_chest': (rec.chestcircumference is None and filled_chest is not None),
-        })
-
-        if rec.height is not None:
-            last_height = rec.height
-        if rec.weight is not None:
-            last_weight = rec.weight
-        if rec.headcircumference is not None:
-            last_head = rec.headcircumference
-        if rec.chestcircumference is not None:
-            last_chest = rec.chestcircumference
-
-    return result
-
-
 def _get_calendar_data(records, selected_date):
     year, month = selected_date.year, selected_date.month
     first_weekday, days_in_month = calendar.monthrange(year, month)
@@ -199,8 +159,6 @@ def baby(request):
             latest_r = records[0]
             selected_date = latest_r.date.date() if hasattr(latest_r.date, 'date') else latest_r.date
 
-    filled_records = _fill_forward_growth_data(records)
-    filled_by_date = {item['date']: item for item in filled_records}
     selected_day_records = [
         r for r in records
         if (r.date.date() if hasattr(r.date, 'date') else r.date) == selected_date
@@ -240,21 +198,6 @@ def baby(request):
         primary.milestones = all_m
         primary.note_text = '\n'.join(all_n)
         selected_day_record = primary
-
-        filled = filled_by_date.get(selected_date)
-        if filled and selected_day_record:
-            if selected_day_record.height is None and filled['height'] is not None:
-                selected_day_record.height = filled['height']
-                selected_day_record.height_carried = True
-            if selected_day_record.weight is None and filled['weight'] is not None:
-                selected_day_record.weight = filled['weight']
-                selected_day_record.weight_carried = True
-            if selected_day_record.headcircumference is None and filled['headcircumference'] is not None:
-                selected_day_record.headcircumference = filled['headcircumference']
-                selected_day_record.head_carried = True
-            if selected_day_record.chestcircumference is None and filled['chestcircumference'] is not None:
-                selected_day_record.chestcircumference = filled['chestcircumference']
-                selected_day_record.chest_carried = True
 
     if active_baby:
         summary = {
