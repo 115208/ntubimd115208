@@ -14,8 +14,7 @@ from views.pregnancycase import (
     sync_active_selection_from_request,
 )
 from views.session_utils import get_current_user_profile
-from views.supabase_storage import delete_image, upload_image
-from views.upload_utils import InvalidImageError, validate_image_upload
+from views.upload_utils import InvalidImageError, delete_image, upload_image, validate_image_upload
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -319,9 +318,12 @@ def update_profile(request):
         try:
             # 前端的 accept="image/*" 擋不住 curl，一律由後端依檔頭決定副檔名
             validate_image_upload(avatar_file)
+            # 檔名固定為 user_id，並覆蓋同 user_id 的所有舊副檔名檔案
             new_avatar = upload_image(
                 avatar_file,
-                folder=f'avatars/{current_user.user_id}',
+                folder='avatars',
+                name=str(current_user.user_id),
+                overwrite=True,
             )
             current_user.avatar = new_avatar
         except InvalidImageError as e:
@@ -333,15 +335,17 @@ def update_profile(request):
 
     try:
         current_user.save()
+        # 新舊路徑相同代表已被直接覆蓋，不能再刪；
+        # 不同（換副檔名，或舊的是隨機檔名）才刪舊檔
         if new_avatar and old_avatar != new_avatar:
             delete_image(old_avatar)
         messages.success(request, '個人資料已儲存')
     except IntegrityError:
-        if new_avatar:
+        if new_avatar and new_avatar != old_avatar:
             delete_image(new_avatar)
         messages.error(request, '儲存失敗：資料與其他帳號重複，請確認電子郵件或頭像。')
     except Exception:
-        if new_avatar:
+        if new_avatar and new_avatar != old_avatar:
             delete_image(new_avatar)
         messages.error(request, '儲存發生錯誤，請稍後再試。')
 

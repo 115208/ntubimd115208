@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect
 from django.db import ProgrammingError, transaction
 from django.utils import timezone
@@ -15,8 +13,7 @@ from views.pregnancycase import (
 )
 from views.session_utils import get_current_user_profile
 from views import baby_utils
-from views.upload_utils import InvalidImageError, safe_image_name, validate_image_upload
-from views.supabase_storage import upload_image, delete_image
+from views.upload_utils import InvalidImageError, delete_image, safe_image_name, upload_image, validate_image_upload
 from core.models import FamilyMember
 
 
@@ -111,43 +108,13 @@ MARKER_VALUE_MAP = {
 MARKER_LABEL_TO_VALUE = {value: key for key, value in MARKER_VALUE_MAP.items()}
 
 
-def _delete_prenatal_photo(photo_url):
-    """刪除產檢照片。Supabase 網址 → 刪 Storage；舊的本機 /static/media/ 路徑 → 刪本機檔。"""
-    if not photo_url:
-        return
-    photo_url = str(photo_url)
-    if photo_url.startswith(('http://', 'https://')):
-        delete_image(photo_url)
-        return
-
-    # ── 舊資料相容：本機 static/media 檔案 ──
-    storage = FileSystemStorage(
-        location=settings.BASE_DIR / 'core' / 'static' / 'media',
-        base_url='/static/media/',
-    )
-    relative_name = photo_url
-    if relative_name.startswith('/static/media/'):
-        relative_name = relative_name[len('/static/media/'):]
-    elif relative_name.startswith('static/media/'):
-        relative_name = relative_name[len('static/media/'):]
-    elif relative_name.startswith('/static/'):
-        relative_name = relative_name[len('/static/'):]
-    relative_name = relative_name.lstrip('/')
-    # 只允許刪除 prenatalrecord/ 底下的檔案，擋掉 ../ 等路徑穿越
-    if not relative_name.startswith('prenatalrecord/'):
-        return
-    if '..' in relative_name.replace('\\', '/').split('/'):
-        return
-    storage.delete(relative_name)
-
-
 def _delete_prenatal_records_for(pregnancyrecord_ids):
     """刪除產檢紀錄時一併清掉照片（Supabase 或舊本機檔），避免孤兒檔案。"""
     if not pregnancyrecord_ids:
         return
     rows = Prenatalrecord.objects.filter(pregnancyrecord_id__in=pregnancyrecord_ids)
     for photo in rows.values_list('photo', flat=True):
-        _delete_prenatal_photo(photo)
+        delete_image(photo)
     rows.delete()
 
 
@@ -156,7 +123,7 @@ def _replace_prenatal_photo(new_photo_url, existing_photo=''):
     if not new_photo_url:
         return existing_photo or ''
     if existing_photo and existing_photo != new_photo_url:
-        _delete_prenatal_photo(existing_photo)
+        delete_image(existing_photo)
     return new_photo_url
 
 
@@ -536,7 +503,7 @@ def pregnancyrecord_add(request):
                     if not errors:
                         uploaded_photo_url = upload_image(
                             uploaded_photo,
-                            folder=f'prenatal_records/{pregnancy_case.pk if pregnancy_case else "user_" + str(current_user.pk)}',
+                            folder=f'prenatalrecord/{pregnancy_case.pk if pregnancy_case else "user_" + str(current_user.pk)}',
                         ) or ''
                 except InvalidImageError as exc:
                     errors.append(str(exc))
