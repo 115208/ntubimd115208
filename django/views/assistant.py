@@ -22,7 +22,7 @@ from views.health_safety import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ASSISTANT_WEBHOOK_URL = "https://cologrowth.app.n8n.cloud/webhook/CoLoGrowth"
+DEFAULT_ASSISTANT_WEBHOOK_URL = "https://cologrowth1028.app.n8n.cloud/webhook/CoLoGrowth"
 
 RATE_LIMIT_SESSION_KEY = "assistant_rate_limit_timestamps"
 
