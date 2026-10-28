@@ -7,7 +7,7 @@ from core.models import BabyInformation, BabyRecord, FamilyMember
 from views import baby_utils
 from views.pregnancycase import resolve_active_pregnancy_case, validate_birth_datetime
 from views.session_utils import get_current_user_profile
-from views.supabase_storage import delete_image
+from views.upload_utils import delete_image
 # validate_birth_vitals 已集中定義於 baby_utils，這裡透過 baby_utils.validate_birth_vitals 呼叫
 
 

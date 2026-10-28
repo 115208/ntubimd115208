@@ -9,6 +9,45 @@
             display: none;
         }
     }
+
+    /* ── 小螢幕（手機、窄視窗）版面：與手機實機畫面一致 ──
+       用 body main 開頭 + !important，避免被 babyinformation.css 內較舊的規則蓋掉 */
+    @media (max-width: 767px) {
+        /* 基本資料：暱稱 / 出生週數；生產方式 / 出生時間（兩欄） */
+        body main .baby-summary-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            column-gap: 1.5rem !important;
+            row-gap: 0.5rem !important;
+        }
+        /* 剛出生紀錄：身高 / 體重 / 頭圍 / 胸圍 排成一列 */
+        body main .birth-record-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 0.5rem !important;
+        }
+        body main .birth-record-grid > div {
+            min-width: 0 !important;
+            padding: 0.5rem 0.25rem !important;
+            border-radius: 9999px !important;
+            white-space: nowrap;
+        }
+        /* 今日紀錄：身高 / 體重；頭圍 / 胸圍（2x2） */
+        body main .day-record-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 1rem !important;
+        }
+        body main .day-record-grid > div {
+            min-width: 0 !important;
+        }
+    }
+    /* 很窄的手機（例如 320px）再把數字縮小一點，避免擠出圓角膠囊 */
+    @media (max-width: 359px) {
+        body main .birth-record-grid > div p:last-child {
+            font-size: 0.75rem !important;
+        }
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -30,7 +69,7 @@
         <!-- Component 1: Compact Child Info Summary -->
         <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm relative overflow-hidden">
             <div class="mb-6">
-                <div class="grid grid-cols-2 gap-x-6 gap-y-2">
+                <div class="baby-summary-grid grid grid-cols-2 gap-x-6 gap-y-2">
                     <div>
                         <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">暱稱</p>
                         <p class="text-lg font-bold text-primary">{{ baby_summary.baby_name }}</p>
@@ -49,7 +88,7 @@
                     </div>
                 </div>
             </div>
-            <div class="relative grid grid-cols-4 gap-2 pt-6 pb-2 border-t border-surface-container-low mt-2">
+            <div class="birth-record-grid relative grid grid-cols-4 gap-2 pt-6 pb-2 border-t border-surface-container-low mt-2">
                 <span class="absolute top-1 left-2 bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">剛出生紀錄</span>
                 <div class="bg-[#d6beff4d] p-2 rounded-lg text-center mt-1">
                     <p class="text-[9px] font-bold text-primary uppercase">身高</p>
@@ -162,7 +201,7 @@
                     <!-- Data Summary List -->
                     <div class="space-y-4 px-2">
                         {% if has_day_data %}
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="day-record-grid grid grid-cols-2 gap-4">
                             <div class="p-4 bg-primary-container/30 rounded-2xl border border-secondary/10 flex flex-col justify-center items-center">
                                 <span class="text-xs font-bold text-on-surface-variant/80">身高</span>
                                 <span class="text-primary text-xl font-extrabold mt-1">{{ selected_day_record.height|default:'-' }} <span class="text-xs font-medium">cm</span></span>

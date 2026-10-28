@@ -5,8 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from views import baby_utils
-from views.upload_utils import InvalidImageError
-from views.supabase_storage import upload_image, delete_image
+from views.upload_utils import InvalidImageError, delete_image, upload_image
 
 MONTH_ABBR = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
@@ -214,6 +213,7 @@ def add_baby_record(request):
             photo_url = upload_image(
                 request.FILES.get('photo'),
                 folder=f'baby_records/{active_baby.pk}',
+                name=record_date_post.strftime('%Y%m%d'),
             )
         except InvalidImageError as exc:
             return _error(str(exc), record_date_post)
@@ -369,6 +369,7 @@ def edit_baby_record(request, babyrecord_id):
             photo_url = upload_image(
                 request.FILES.get('photo'),
                 folder=f'baby_records/{baby.pk}',
+                name=record_date_edit.strftime('%Y%m%d'),
             )
         except InvalidImageError as exc:
             return _error(str(exc), record_date_edit)
