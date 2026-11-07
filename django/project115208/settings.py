@@ -42,7 +42,10 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    for host in os.environ.get(
+        'DJANGO_ALLOWED_HOSTS',
+        'localhost,127.0.0.1,cologrowth.ntubimdbirc.tw',
+    ).split(',')
     if host.strip()
 ]
 
@@ -170,12 +173,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# 讓 Django 信任反向代理傳遞過來的 Host (解決 callback 變 IP 的問題)
-USE_X_FORWARDED_HOST = True
-
-# 讓 Django 信任反向代理傳遞過來的 HTTPS 協定 (解決 callback 變 http 的問題)
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 LANGUAGE_CODE = 'zh-Hant'
 
 TIME_ZONE = 'Asia/Taipei'
@@ -212,3 +209,15 @@ LOGGING = {
     },
     'root': {'handlers': ['console'], 'level': 'INFO'},
 }
+
+# CSRF 信任的來源（要含 https://）。HTTPS 網站的 POST（登出、存檔等）一定要有，
+# 否則會出現「Origin checking failed - ... does not match any trusted origins」。
+# 可用 django/.env 的 DJANGO_CSRF_TRUSTED_ORIGINS 覆寫，多個網域以逗號分隔。
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        'DJANGO_CSRF_TRUSTED_ORIGINS',
+        'https://cologrowth.ntubimdbirc.tw',
+    ).split(',')
+    if origin.strip()
+]

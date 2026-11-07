@@ -24,10 +24,10 @@ _SIGNATURES = (
 _ALL_EXTENSIONS = tuple(ext for ext, _ in _SIGNATURES)
 
 # 圖片存放在 core/static/media/<folder>/，資料庫存 /static/media/... 路徑
-MEDIA_URL = '/static/media/'
+MEDIA_URL = settings.MEDIA_URL
 _media_storage = FileSystemStorage(
-	location=settings.BASE_DIR / 'core' / 'static' / 'media',
-	base_url=MEDIA_URL,
+	location=settings.MEDIA_ROOT,
+	base_url=settings.MEDIA_URL,
 )
 
 ALLOWED_IMAGE_LABEL = 'JPG、PNG、GIF、WebP'
