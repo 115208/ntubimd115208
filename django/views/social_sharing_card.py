@@ -1,11 +1,30 @@
+import base64
+import binascii
+import logging
+import os
+import re
+import uuid
+
+from django.conf import settings
 from django.contrib import messages
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from core.models import BabyInformation, BabyGrowthMap, BabyStatus, BabyRecord, Prenatalrecord
+from django.views.decorators.http import require_POST
+
+from core.models import BabyStatus, BabyRecord, FamilyMember, Prenatalrecord
 from views import baby_utils
 from views.pregnancycase import is_pregnancy_ongoing
 from views.pregnancyrecords import records_for_case
 from views.session_utils import get_current_user_profile
+from views.upload_utils import InvalidImageError, validate_image_bytes
+
+logger = logging.getLogger(__name__)
+
+SHARING_CARD_DIR = 'sharing_cards'
+# 分享頁的 filename 直接來自網址，一定要用白名單擋掉 ../ 之類的路徑穿越
+SHARING_CARD_FILENAME_RE = re.compile(r'^card_[0-9a-f]{8,64}\.(?:png|jpg|gif|webp)$')
+
 
 def _format_photo_url(photo_str):
     if not photo_str:
@@ -14,6 +33,17 @@ def _format_photo_url(photo_str):
     if photo_str.startswith('http://') or photo_str.startswith('https://') or photo_str.startswith('/'):
         return photo_str
     return f'/media/{photo_str}'
+
+
+def _can_view_mom_records(user, case):
+    """養育者永遠可看；協助者需要 mom_records 權限（預設 off）。"""
+    if not case:
+        return False
+    if case.user_id == user.user_id:
+        return True
+    membership = FamilyMember.objects.filter(pregnancycase=case, user=user).first()
+    return baby_utils.has_permission(membership, 'mom_records', 'view', default='off')
+
 
 def social_sharing_card_view(request):
     """分享卡頁面"""
@@ -94,9 +124,11 @@ def social_sharing_card_view(request):
             'description': r.record or ''
         })
 
-    # 2. 產檢紀錄相片 (超音波照) - 嚴格限定為當前胎數 (baby.pregnancycase) 的紀錄，絕不抓取其他胎數
-    if baby.pregnancycase:
-        case_preg_records = records_for_case(baby.pregnancycase)
+    # 2. 產檢紀錄相片 (超音波照) - 限定當前胎數。
+    # 修正：超音波屬於媽媽紀錄，協助者必須有 mom_records 權限，且只能看到
+    # 該胎次最後月經日之後的紀錄（records_for_case 要帶 viewer）。
+    if baby.pregnancycase and _can_view_mom_records(user, baby.pregnancycase):
+        case_preg_records = records_for_case(baby.pregnancycase, viewer=user)
         prenatal_records = (
             Prenatalrecord.objects.filter(pregnancyrecord__in=case_preg_records)
             .exclude(photo__isnull=True)
@@ -127,25 +159,6 @@ def social_sharing_card_view(request):
         'current_date': timezone.localdate().strftime('%Y-%m-%d'),
     }
     return render(request, 'user/social_sharing_card.html', context)
-
-
-import os
-import re
-import base64
-import binascii
-import logging
-import uuid
-from django.http import Http404, JsonResponse
-from django.views.decorators.http import require_POST
-from django.conf import settings
-
-from views.upload_utils import InvalidImageError, validate_image_bytes
-
-logger = logging.getLogger(__name__)
-
-SHARING_CARD_DIR = 'sharing_cards'
-# 分享頁的 filename 直接來自網址，一定要用白名單擋掉 ../ 之類的路徑穿越
-SHARING_CARD_FILENAME_RE = re.compile(r'^card_[0-9a-f]{8,64}\.(?:png|jpg|gif|webp)$')
 
 
 @require_POST
@@ -220,4 +233,3 @@ def share_card_detail_view(request, filename):
         'filename': filename,
     }
     return render(request, 'user/share_card_detail.html', context)
-
