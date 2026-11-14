@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from zoneinfo import ZoneInfo
 
-from core.models import CareRecord, UserProfile, PregnancyRecord, BabyRecord, FamilyMember
+from core.models import CareRecord, PregnancyRecord, BabyRecord, FamilyMember
 from views import baby_utils
 from .pregnancyrecords import records_for_case
 from views.pregnancycase import (
@@ -66,8 +66,10 @@ def _build_pregnancy_chart_data(user, pregnancy_case=None):
 
     chart_rows = []
     if pregnancy_case:
+        # 修正：一定要帶 viewer。協助者只能看到分享個案最後月經日（含）之後的紀錄，
+        # 不能看到該胎次開始前的私人體重。
         records = (
-            records_for_case(pregnancy_case)
+            records_for_case(pregnancy_case, viewer=user)
             .filter(weight__isnull=False)
             .order_by('check_date', 'pregnancyrecord_id')
         )
@@ -106,20 +108,12 @@ def _build_pregnancy_chart_data(user, pregnancy_case=None):
             chart_rows.insert(0, lmp_row)
         else:
             initial_weight = chart_rows[0]['weight'] if chart_rows else None
-            if initial_weight is not None:
-                chart_rows.insert(0, {
-                    'date_iso': lmp_iso,
-                    'label': lmp_label,
-                    'weight': initial_weight,
-                    'is_lmp': True,
-                })
-            else:
-                chart_rows.insert(0, {
-                    'date_iso': lmp_iso,
-                    'label': lmp_label,
-                    'weight': None,
-                    'is_lmp': True,
-                })
+            chart_rows.insert(0, {
+                'date_iso': lmp_iso,
+                'label': lmp_label,
+                'weight': initial_weight,
+                'is_lmp': True,
+            })
 
     return chart_rows
 
@@ -166,19 +160,35 @@ def index(request):
         request, current_user, fallback=has_baby_selection
     )
     pregnancy_case = resolve_active_pregnancy_case(request, current_user)
-    pregnancy_chart_data = _build_pregnancy_chart_data(current_user, pregnancy_case)
-    baby_chart_data = _build_baby_chart_data(active_baby)
     pregnancy_progress = build_pregnancy_progress(pregnancy_case, today)
+
+    is_case_owner = bool(pregnancy_case and pregnancy_case.user_id == current_user.user_id)
+    membership = None
+    if pregnancy_case and not is_case_owner:
+        membership = FamilyMember.objects.filter(
+            pregnancycase=pregnancy_case, user=current_user
+        ).first()
+
+    # 修正：協助者要有 mom_records 權限才看得到媽媽的體重圖表。
+    # 預設 'off'，與 handle_join_request 核准時的預設值一致。
+    can_view_mom_records = True
+    if pregnancy_case and not is_case_owner:
+        can_view_mom_records = baby_utils.has_permission(
+            membership, 'mom_records', 'view', default='off'
+        )
+    pregnancy_chart_data = (
+        _build_pregnancy_chart_data(current_user, pregnancy_case)
+        if can_view_mom_records else []
+    )
+    baby_chart_data = _build_baby_chart_data(active_baby)
 
     can_view_care = True
     can_edit_care = True
-    is_case_owner = bool(pregnancy_case and pregnancy_case.user_id == current_user.user_id)
     care_queryset = CareRecord.objects.select_related(
         'carestatus', 'pregnancycase'
     ).order_by('recordtime', 'carerecord_id')
     if pregnancy_case:
         if not is_case_owner:
-            membership = FamilyMember.objects.filter(pregnancycase=pregnancy_case, user=current_user).first()
             can_view_care = baby_utils.has_permission(membership, 'care_records', 'view', default='view')
             can_edit_care = baby_utils.has_permission(membership, 'care_records', 'edit', default='view')
         care_queryset = care_queryset.filter(
@@ -205,14 +215,7 @@ def index(request):
     record_days = set()
     completion_by_day = {}
     for rec in window_records:
-        rec_time = rec.recordtime
-        if isinstance(rec_time, datetime.datetime):
-            if timezone.is_aware(rec_time):
-                d = timezone.localtime(rec_time, TAIWAN_TZ).date()
-            else:
-                d = rec_time.date()
-        else:
-            d = rec_time
+        d = _care_record_local_date(rec)
         record_days.add(d)
         completion_by_day.setdefault(d, {'total': 0, 'done': 0})
         completion_by_day[d]['total'] += 1
@@ -271,7 +274,8 @@ def index(request):
         'current_user': current_user,
         'can_view_care': can_view_care,
         'can_edit_care': can_edit_care,
+        'can_view_mom_records': can_view_mom_records,
         'is_case_owner': is_case_owner,
         'care_error_message': CARE_ERROR_MESSAGES.get(request.GET.get('care_error')),
     }
-    return render(request, 'index/index.html', context)
+    return render(request, 'index/index.html', context)
