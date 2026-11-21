@@ -189,7 +189,7 @@ def upload_sharing_card(request):
     except (binascii.Error, ValueError):
         return JsonResponse({'status': 'error', 'message': '圖片內容無法解碼。'}, status=400)
 
-    # 副檔名一律由實際檔頭決定，不採用前端宣告的 mime type，
+    # 副檔名一律由實際檔頭決定，不採用前端宣告的 mime type
     # 避免 .html / .svg 被存到同源路徑造成儲存型 XSS
     try:
         extension = validate_image_bytes(file_bytes)
